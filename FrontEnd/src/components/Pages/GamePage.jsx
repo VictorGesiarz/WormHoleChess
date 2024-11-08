@@ -1,9 +1,16 @@
 import React from "react";
+import ChessGame from "../Game/ChessGame";
 import "./MainPage.css";
 
 const GamePage = () => {
     return (
-		<p>Game Page</p>
+        <div className="GamePage">
+            <h1>WormHoleChess</h1>
+
+            <div className="ChessGame">
+                < ChessGame />
+            </div>
+        </div>
     );
 };
 

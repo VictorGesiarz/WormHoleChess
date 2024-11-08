@@ -1,29 +1,23 @@
-import { React, Component } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
 
+const Navbar = () => {
+    const navigate = useNavigate(); // Works here because it's a functional component
 
-class Navbar extends Component {
-    constructor() {
-        super();
-    };
-
-    navigate = useNavigate(); // Hook to access navigation
-
-    render() {
-        return (
-            <nav className="navbar">
-                <div className="navbar-panel">
-                    VG
-                </div>
-                <ul className="navbar-links">
-                    <li><button onClick={this.navigate("/home")}>Home</button></li>
-                    <li><button onClick={this.navigate("/about")}>About</button></li>
-                    <li><button onClick={this.navigate("/rules")}>Rules</button></li>
-                </ul>
-            </nav>
-        );
-    };
+    return (
+        <nav className="navbar">
+            <div className="navbar-panel">
+                VG
+            </div>
+            <ul className="navbar-links">
+                <li><button onClick={() => navigate("/home")}>Home</button></li>
+                <li><button onClick={() => navigate("/game")}>Game</button></li>
+                <li><button onClick={() => navigate("/about")}>About</button></li>
+                <li><button onClick={() => navigate("/rules")}>Rules</button></li>
+            </ul>
+        </nav>
+    );
 };
 
 export default Navbar;
