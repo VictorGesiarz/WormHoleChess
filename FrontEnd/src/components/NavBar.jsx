@@ -8,7 +8,7 @@ const Navbar = () => {
     return (
         <nav className="navbar">
             <div className="navbar-panel">
-                VG
+                WormHoleChess
             </div>
             <ul className="navbar-links">
                 <li><button onClick={() => navigate("/home")}>Home</button></li>
