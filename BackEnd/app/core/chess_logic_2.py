@@ -1,10 +1,14 @@
+
+from pieces import Piece
+
 class Tile:
-    def __init__(self, name: str, side: str, row: int, col: str, additional: int = None):
+    def __init__(self, name: str, side: str, row: int, col: str, additional: int = None, piece: Piece = None):
         self.name = name
         self.side = side
         self.row = row
         self.col = col
         self.additional = additional
+        self.piece = piece
 
         # Standard neighbors
         self.neighbors = {
@@ -17,6 +21,9 @@ class Tile:
         """Link a neighboring tile in a specific direction."""
         if direction in self.neighbors:
             self.neighbors[direction] = tile
+
+    def is_pentagon(self) -> bool: 
+        return self.additional
 
     def __str__(self) -> str:
         return f"{self.name} ({self.side} side, Row {self.row}, Col {self.col})"
