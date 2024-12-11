@@ -1,12 +1,9 @@
 import React from "react";
 import ChessGame from "../Game/ChessGame";
-import "./MainPage.css";
 
 const GamePage = () => {
     return (
-        <div className="GamePage">
-            <h1>WormHoleChess</h1>
-
+        <div className="page GamePage">
             <div className="ChessGame">
                 < ChessGame />
             </div>

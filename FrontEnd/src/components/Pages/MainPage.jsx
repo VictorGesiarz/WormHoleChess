@@ -3,10 +3,16 @@ import "./MainPage.css";
 
 const MainPage = () => {
     return (
-        <div className="MainPage">
+        <div className="page MainPage">
             <h1>What is WormHoleChess</h1>
 
-            <p>Some text here explaining the game. Lorem, ipsum dolor sit amet consectetur adipisicing elit. Quis nesciunt cumque perspiciatis exercitationem deleniti beatae pariatur eaque eos esse, tempore ad facere accusamus nulla unde dolore cum incidunt? Nobis ex nam minima blanditiis. Delectus debitis tempora fugiat praesentium quam et quidem inventore ducimus est eaque modi iure nemo, at tempore? Quam labore possimus error harum officiis asperiores, voluptate velit quisquam rem autem suscipit vel consequatur voluptatem iure enim molestiae magnam corporis itaque nobis quibusdam, consectetur facere adipisci! Id velit aliquam quas, eos consequuntur placeat laborum eum dolorum laudantium, magnam reprehenderit minima possimus voluptatibus eligendi numquam officiis iste? Magnam, ab repellendus!</p>
+            <p>
+                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Dolorem maxime excepturi animi officia laboriosam eligendi possimus magnam quidem tempora, praesentium odio. Distinctio expedita quod sapiente nulla nobis soluta vel ea dignissimos earum repellendus vero voluptate, ipsa architecto tenetur dolorum neque in amet. Eius ullam ab, doloremque maxime similique consectetur mollitia assumenda rerum recusandae molestias earum minus reprehenderit nihil at magni soluta voluptas autem ipsum nostrum, enim incidunt rem distinctio dolor aliquid. Animi eum quisquam dolorem aspernatur repellendus, nulla laborum perferendis eos rerum voluptate similique reprehenderit impedit numquam aperiam dignissimos deleniti magnam laudantium tempore quas at vero autem. Ipsam, blanditiis ut!
+            </p>
+
+            <p>
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat, numquam obcaecati. Praesentium iure quo ab magni ducimus quae illum fugiat, nihil quis? Magnam fugit fuga nihil voluptates officiis? Saepe recusandae mollitia quae perferendis molestiae, alias voluptatum corporis iure nulla cupiditate, eum ea exercitationem dolorem aliquam atque quam soluta aspernatur, numquam necessitatibus fuga! Officiis dignissimos consectetur quis magnam. Deleniti molestiae at delectus minus doloribus omnis corporis culpa vitae, deserunt magni? Esse animi magni fugiat corrupti quasi. Magni, reiciendis? Minus dicta obcaecati natus. Earum ipsa laboriosam distinctio laborum excepturi perferendis iste architecto? Sit amet sequi deleniti possimus aperiam commodi culpa, repellendus asperiores.
+            </p>
         </div>
     );
 };

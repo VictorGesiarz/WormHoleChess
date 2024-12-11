@@ -1,16 +1,16 @@
 import React from "react";
-import "./MainPage.css";
 
 const RulesPage = () => {
 	return (
-		<div className="RulesPage">
+		<div className="page RulesPage">
 			<h1>Rules Page</h1>
-			<li>
-				<p>Rule number 1</p>
-				<p>Rule number 2</p>
-				<p>Rule number 3</p>
-				<p>Rule number 4</p>
-			</li>
+
+			<ol>
+				<li>Rule Number 1</li>
+				<li>Rule Number 2</li>
+				<li>Rule Number 3</li>
+				<li>Rule Number 4</li>
+			</ol>
 		</div>
 	);
 };
