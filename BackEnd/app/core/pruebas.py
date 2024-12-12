@@ -88,9 +88,11 @@ def create_board():
 
     tower = Tower(b.tiles['c1_T'], 1)
     bishop = Bishop(b.tiles['a1_T'], 0)
-    b.add_pieces([tower, bishop])
+    king = King(b.tiles['b3_T'], 0)
+    knight = Knight(b.tiles['d4_T'], 0)
+    b.add_pieces([tower, bishop, king, knight])
 
-    positions = bishop.get_movements()
+    positions = knight.get_movements()
     for pos in positions: 
     	print(pos)
 

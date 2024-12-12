@@ -45,6 +45,12 @@ class Tile:
         if self.pentagon: 
             self.additional_relations = {}
 
+    def __hash__(self):
+        return hash(self.name)
+
+    def __eq__(self, other):
+        return self.name == other.name
+
     def set_neighbors(self, neighbors: dict[Tile]) -> None: 
         self.neighbors = neighbors
         self.make_neighbors_inv()
