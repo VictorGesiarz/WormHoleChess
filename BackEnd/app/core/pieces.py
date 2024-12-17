@@ -74,6 +74,7 @@ class Piece:
 class Tower(Piece):
     def __init__(self, position: Tile, team: int) -> None:
         super().__init__(position, team)
+        self.first_move = False # False when the player hasn't moved the pawn yet. 
 
     def get_movements(self) -> list[Tile]:
         directions = [D.UP, D.DOWN, D.LEFT, D.RIGHT]
@@ -161,6 +162,7 @@ class Queen(Piece):
 class King(Piece): 
     def __init__(self, position: Tile, team: int) -> None:
         super().__init__(position, team)
+        self.first_move = False # False when the player hasn't moved the pawn yet. 
         
     def get_movements(self) -> list[Tile]:
         directions = [D.UP_LEFT, D.UP_RIGHT, D.DOWN_LEFT, D.DOWN_RIGHT,

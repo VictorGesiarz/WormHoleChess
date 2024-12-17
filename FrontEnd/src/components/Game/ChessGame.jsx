@@ -11,9 +11,8 @@ const ChessGame = () => {
 			camera={{ position: [0, 10, 10], fov: 50 }}
 			style={{ width: `${CANVAS_WIDTH}px`, height: `${CANVAS_HEIGHT}px` }}
 		>
-			{/* Ambient light and directional light */}
+			{/* Ambient light */}
 			<ambientLight intensity={0.5} />
-			<directionalLight position={[10, 10, 5]} intensity={1} />
 
 			{/* Orbit Controls for camera movement */}
 			<OrbitControls />
