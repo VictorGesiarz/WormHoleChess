@@ -88,17 +88,17 @@ def create_board():
 
     tower = Tower(b.tiles['c1_T'], 1)
     bishop = Bishop(b.tiles['a1_T'], 0)
-    knight = Knight(b.tiles['d4_T'], 0)
-    queen = Queen(b.tiles['f3'], 0)
+    knight = Knight(b.tiles['c3_T'], 0)
+    queen = Queen(b.tiles['f3_T'], 0)
     
     # implemented but no taking into account checks, and possible checks 
     king = King(b.tiles['b3_T'], 0)
     
     # implement
-    pawn = Pawn(b.tiles['g2_T'], 0)
+    # pawn = Pawn(b.tiles['g2_T'], 0)
     b.add_pieces([tower, bishop, king, knight])
 
-    positions = knight.get_movements()
+    positions = tower.get_movements()
     for pos in positions: 
     	print(pos)
 

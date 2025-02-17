@@ -6,7 +6,7 @@ const SideBar = () => {
     const navigate = useNavigate();
 
     return (
-        <nav className="sidebar">
+        <nav className="widget sidebar">
             <div className="sidebar-title">
                 WormHoleChess
             </div>
@@ -15,6 +15,7 @@ const SideBar = () => {
                 <li><button onClick={() => navigate("/game")}>Game</button></li>
                 <li><button onClick={() => navigate("/about")}>About</button></li>
                 <li><button onClick={() => navigate("/rules")}>Rules</button></li>
+                <li><button onClick={() => navigate("/pruebas")}>Pruebas</button></li>
             </ul>
         </nav>
     );

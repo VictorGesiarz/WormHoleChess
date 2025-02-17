@@ -27,8 +27,8 @@ const Piece = ({ type, position, onClick }) => {
 const Pieces = () => {
   // Example: Map over pieces data
   const pieces = [
-    { type: "pawn", position: [0, 0.5, 0], id: 1 },
-    { type: "knight", position: [1, 0.5, 0], id: 2 },
+    // { type: "pawn", position: [0, 0.5, 0], id: 1 },
+    // { type: "knight", position: [1, 0.5, 0], id: 2 },
     // Add more pieces as needed
   ];
 

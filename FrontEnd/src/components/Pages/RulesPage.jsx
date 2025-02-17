@@ -2,7 +2,7 @@ import React from "react";
 
 const RulesPage = () => {
 	return (
-		<div className="page RulesPage">
+		<div className="widget page RulesPage">
 			<h1>Rules Page</h1>
 
 			<ol>

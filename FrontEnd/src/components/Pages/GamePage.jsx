@@ -3,7 +3,7 @@ import ChessGame from "../Game/ChessGame";
 
 const GamePage = () => {
     return (
-        <div className="page GamePage">
+        <div className="widget page GamePage">
             <div className="ChessGame">
                 < ChessGame />
             </div>
