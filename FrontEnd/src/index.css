@@ -58,7 +58,7 @@ p {
     min-height: calc(100vh - 100px);;
 }
 
-.GamePage {
+.center-page {
     display: flex;
     justify-content: center;
     align-items: center;

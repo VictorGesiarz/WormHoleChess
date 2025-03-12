@@ -1,0 +1,69 @@
+.lobby-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 20px;
+    width: 600px;
+}
+
+.lobby-option {
+    padding: 2rem;
+    text-align: center;
+    border-radius: 15px;
+    background-color: #121417;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.lobby-option.left {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.lobby-option.right {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.lobby-info {
+    grid-column: span 2; /* Makes this div take both columns */
+    text-align: center;
+    padding: 2rem;
+    background-color: #121417;
+    border-radius: 15px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    height: 400px;
+}
+
+.lobby-option h3, .lobby-info h3 {
+    margin-bottom: 1.5rem;
+}
+
+.lobby-info ul {
+    list-style-type: none; /* Remove list symbols */
+    padding: 0;
+    margin-bottom: 25px;
+}
+
+.lobby-info ul li {
+    padding: 10px 0;
+    border-bottom: 1px solid white;
+    position: relative;
+}
+
+
+.remove-button {
+    padding: 0.3rem;
+    background-color: transparent;
+    border: none;
+    border-radius: 5px;
+    color: #EDEDED;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    position: absolute;
+    right: 1rem;
+}
+
+.remove-button:hover {
+    background-color: #40444B;
+}

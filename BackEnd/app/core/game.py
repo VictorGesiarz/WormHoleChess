@@ -1,3 +1,11 @@
+from typing import List, Dict
+import json 
+
+from core.chess_logic import D, Tile, Board
+from core.pieces import Tower, Knight, Bishop, Queen, King, Pawn
+from core.ai import * 
+
+
 
 
 class GameManager:
@@ -6,8 +14,15 @@ class GameManager:
 
 
 class Game:
-	def __init__(self) -> None:
-		pass
+    def __init__(self, game_id: str, players: List[str], initial_state: Dict):
+        self.game_id = game_id
+        self.players = players 
+        self.state = initial_state
+
+        print(game_id)
+
+    def is_player_in_game(self, username):
+        return username in self.players
 
 
 class Player:
@@ -15,8 +30,8 @@ class Player:
         self.player_id = player_id
         self.name = name
         self.color = color
-        self.pieces = []  # List of Piece instances
+        self.pieces = {}
         self.is_in_check = False
 
-    def lose_piece(self, piece):
+    def loose_piece(self, piece):
         self.pieces.remove(piece)

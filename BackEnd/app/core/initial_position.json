@@ -1,0 +1,77 @@
+{
+	"white": {
+		"pawn1": "h2_T",
+		"pawn2": "g2_T",
+		"pawn3": "f2_T",
+		"pawn4": "e2_T",
+		"pawn5": "d2_T",
+		"pawn6": "c2_T",
+		"pawn7": "b2_T",
+		"pawn8": "a2_T",
+		"rook1": "h1_T",
+		"rook2": "a1_T", 
+		"knight1": "g1_T", 
+		"knight2": "b1_T", 
+		"bishop1": "f1_T",
+		"bishop2": "c1_T",
+		"queen": "d1_T",
+		"king": "e1_T"
+	},
+
+	"black": {
+		"pawn1": "h7_T",
+		"pawn2": "g7_T",
+		"pawn3": "f7_T",
+		"pawn4": "e7_T",
+		"pawn5": "d7_T",
+		"pawn6": "c7_T",
+		"pawn7": "b7_T",
+		"pawn8": "a7_T",
+		"rook1": "h8_T",
+		"rook2": "a8_T", 
+		"knight1": "g8_T", 
+		"knight2": "b8_T", 
+		"bishop1": "f8_T",
+		"bishop2": "c8_T",
+		"queen": "d8_T",
+		"king": "e8_T"
+	}, 
+
+	"blue": {
+		"pawn1": "h2_B",
+		"pawn2": "g2_B",
+		"pawn3": "f2_B",
+		"pawn4": "e2_B",
+		"pawn5": "d2_B",
+		"pawn6": "c2_B",
+		"pawn7": "b2_B",
+		"pawn8": "a2_B",
+		"rook1": "h1_B",
+		"rook2": "a1_B", 
+		"knight1": "g1_B", 
+		"knight2": "b1_B", 
+		"bishop1": "f1_B",
+		"bishop2": "c1_B",
+		"queen": "d1_B",
+		"king": "e1_B"
+	},
+
+	"red": {
+		"pawn1": "h7_B",
+		"pawn2": "g7_B",
+		"pawn3": "f7_B",
+		"pawn4": "e7_B",
+		"pawn5": "d7_B",
+		"pawn6": "c7_B",
+		"pawn7": "b7_B",
+		"pawn8": "a7_B",
+		"rook1": "h8_B",
+		"rook2": "a8_B", 
+		"knight1": "g8_B", 
+		"knight2": "b8_B", 
+		"bishop1": "f8_B",
+		"bishop2": "c8_B",
+		"queen": "d8_B",
+		"king": "e8_B"
+	}
+}

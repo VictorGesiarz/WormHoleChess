@@ -1,5 +1,5 @@
 
-from chess_logic import Tile, D
+from core.chess_logic import Tile, D
 
 
 class Piece: 

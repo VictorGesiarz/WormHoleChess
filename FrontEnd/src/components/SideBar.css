@@ -1,0 +1,23 @@
+.sidebar-auth {
+    margin-top: 2rem;
+    text-align: center;
+    width: 100%;
+}
+
+.login-btn,
+.logout-btn {
+    color: #EDEDED;
+    background-color: #2A2D33;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.75rem;
+    width: 100%;
+    border-radius: 4px;
+    transition: 0.2s;
+}
+
+.login-btn:hover,
+.logout-btn:hover {
+    background-color: #40444B;
+}

@@ -7,6 +7,16 @@ name = "pypi"
 fastapi = {extras = ["all"], version = "*"}
 chess = "*"
 pympler = "*"
+databases = {extras = ["postgresql"], version = "*"}
+pyjwt = "*"
+sqlalchemy = "*"
+psycopg2 = "*"
+passlib = "*"
+bcrypt = "*"
+python-jose = {extras = ["cryptography"], version = "*"}
+python-multipart = "*"
+websockets = "*"
+watchdog = "*"
 
 [dev-packages]
 
