@@ -1,23 +1,25 @@
-import { useState, useRef, useEffect, useContext } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { decodeToken } from "../../utils/auth";
-import { AuthContext } from "../../utils/AuthContext";
+import { useAuth } from "../../utils/AuthContext";
+import { useWebSocket } from "../../utils/WebSocketProvider";
+import { API_BASE_URL, API_WEB_SOCKET_URL } from "../../utils/ApiUrls";
 import "./LobbyPage.css";
 
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const API_WEB_SOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL;
+const availableColors = ["white", "black", "blue", "red"]; 
 
 
 const LobbyPage = () => {
-    const { token } = useContext(AuthContext);
-    const navigate = useNavigate();
+    const { token } = useAuth();
+    const { socket, connectWebSocket, disconnectWebSocket } = useWebSocket();
+    const navigate = useNavigate(); 
 
     const user = decodeToken(token); 
     const [gameCode, setGameCode] = useState("");
     const [players, setPlayers] = useState([]);
-    const [socket, setSocket] = useState(null);
+    const [playerColors, setPlayerColors] = useState(new Array(4).fill("None"));
     const isHost = useRef(false);
 
 
@@ -61,7 +63,6 @@ const LobbyPage = () => {
             return;
         }
 
-        const data = await response.json();
         fetchLobbyPlayers(gameCode);
         connectWebSocket(gameCode, user.user_id);
         isHost.current = false;
@@ -84,6 +85,14 @@ const LobbyPage = () => {
         }
     
         fetchLobbyPlayers(gameCode);
+    };
+
+
+    const removeCurrentUser = () => {
+        setGameCode(null);
+        setPlayers([]);
+        setSocket(null);
+        isHost.current = false;
     };
 
 
@@ -122,60 +131,72 @@ const LobbyPage = () => {
             return;
         }
     
-        // Step 1: Check if the lobby exists
-        const lobbyResponse = await fetch(`${API_BASE_URL}/lobby/start/${gameCode}`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
+        setPlayerColors((prevPlayerColors) => {
+            const requestBody = {
+                colors: prevPlayerColors, // Now we are correctly accessing the latest colors
+            };
+    
+            console.log(prevPlayerColors); 
+
+            fetch(`${API_BASE_URL}/lobby/start/${gameCode}`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json", 
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(requestBody) // Convert body to JSON
+            }).then(response => {
+                if (!response.ok) {
+                    alert("Lobby does not exist or has expired.");
+                }
+            }).catch(error => console.error("Error starting game:", error));
+    
+            return prevPlayerColors; // Return the current state to avoid modifying it here
         });
-    
-        if (!lobbyResponse.ok) {
-            alert("Lobby does not exist or has expired.");
-            return;
-        }
-    };
-    
-
-    const removeCurrentUser = () => {
-        setGameCode(null);
-        setPlayers([]);
-        setSocket(null);
-        isHost.current = false;
     };
 
 
-    const connectWebSocket = (code) => {
-        const ws = new WebSocket(`${API_WEB_SOCKET_URL}/${code}`);
-    
-        ws.onopen = () => {
-            // Send authentication message with the token
-            ws.send(JSON.stringify({ type: "auth", token }));
-        };
-    
-        ws.onmessage = (event) => {
+    const handleColorChange = (index, color) => {
+        setPlayerColors((prev) => {
+            const updatedColors = [...prev];
+            updatedColors[index] = color === "None" ? null : color; // Remove color if "None" is selected
+            return updatedColors;
+        });
+    };
+
+    const getAvailableColors = (index) => {
+        const selectedColors = playerColors.filter(Boolean); // Remove nulls
+        return availableColors.filter((color) => color === playerColors[index] || !selectedColors.includes(color));
+    };
+
+
+    // Handle socket messages for the lobby. 
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleLobbyMessage = (event) => {
             const data = JSON.parse(event.data);
-    
+
             if (data.type === "auth_success") {
                 console.log("Authenticated successfully!");
             } else if (data.type === "auth_failed") {
                 console.error("Authentication failed!");
-                ws.close();
-
+                disconnectWebSocket();
             } else if (data.type === "game_start") {
-                navigate(`/game/${code}`, { state: { gameCode: code } });
-
+                navigate(`/game/${gameCode}`);
             } else if (data.type === "player_removed" || data.type === "player_joined" || data.type === "bot_added") {
-                fetchLobbyPlayers(code);
+                fetchLobbyPlayers(gameCode);
             } else if (data.type === "you_are_removed" || data.type === "lobby_expired") {
                 removeCurrentUser();
             }
         };
-    
-        ws.onclose = () => {
-            console.log("WebSocket closed");
+
+        socket.addEventListener("message", handleLobbyMessage);
+
+        return () => {
+            socket.removeEventListener("message", handleLobbyMessage);
         };
-    
-        setSocket(ws);
-    };
+    }, [socket, gameCode]);
 
 
     return (
@@ -183,8 +204,8 @@ const LobbyPage = () => {
             <div className="lobby-box">
                 <div className="lobby-option left">
                     <h3>Create Lobby</h3>
-                    <button onClick={createLobby} className="button">Create</button>
-                    <button onClick={createBotLoby} className="button">Create Bot Lobby</button>
+                    <button onClick={createLobby} className="button">Play Online</button>
+                    <button onClick={createBotLoby} className="button">Watch bot game</button>
                 </div>
 
                 <div className="lobby-option right">
@@ -205,7 +226,23 @@ const LobbyPage = () => {
                         <ul>
                             {players.length > 0 ? players.map((player, index) => (
                                 <li key={index}>
-                                    {player}
+                                    {/* Player Name */}
+                                    <span>{player}</span>
+
+                                    {/* Color Dropdown */}
+                                    {isHost.current && (
+                                        <select className="color-dropdown" value={playerColors[index] || "None"} onChange={(e) => handleColorChange(index, e.target.value)}>
+                                            <option value="None">None</option>
+                                            {getAvailableColors(index).map((color) => (
+                                                <option key={color} value={color}>{color}</option>
+                                            ))}
+                                        </select>
+                                    )}
+
+                                    {/* Remove Player Button */}
+                                    {isHost.current && index === 0 && (
+                                        <div className="empty-div"></div>
+                                    )}
                                     {isHost.current && index > 0 && (
                                         <button onClick={() => removePlayer(player)} className="remove-button">X</button>
                                     )}

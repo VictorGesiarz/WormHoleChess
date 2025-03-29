@@ -26,7 +26,7 @@ class Piece:
         }
     }
     
-    def __init__(self, position: Tile, team: int) -> None:
+    def __init__(self, position: Tile, team: str) -> None:
         self.position = position 
         self.position.piece = self
         self.team = team
@@ -66,9 +66,26 @@ class Piece:
     
     def move(self, to: Tile) -> bool:
         if to in self.get_movements(): 
-            self.position = to
+            self.position.piece = None  
+            self.position = to  
+            to.piece = self  
             return True
         return False 
+    
+    @staticmethod
+    def get_piece_type(name: str) -> "Piece": 
+        if "rook" in name: 
+            return Tower
+        elif "knight" in name: 
+            return Knight
+        elif "bishop" in name:
+            return Bishop
+        elif "queen" in name: 
+            return Queen
+        elif "king" in name:
+            return King
+        elif "pawn" in name: 
+            return Pawn
 
     
 class Tower(Piece):
@@ -182,7 +199,7 @@ class Pawn(Piece):
         
     def get_movements(self) -> list[Tile]:
         limit = 1 if self.first_move else 2
-        direction = [Piece.teams['direction']]
+        direction = [Piece.teams[self.team]['direction']]
         if self.position.pentagon: directions += [D.ADDITIONAL_STRAIGHT] 
         positions = []
         for direction in directions: 

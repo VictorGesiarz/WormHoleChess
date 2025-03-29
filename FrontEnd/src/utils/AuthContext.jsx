@@ -1,7 +1,7 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import { verifyToken } from "../utils/auth";
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem("token"));
@@ -42,3 +42,5 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
+
+export const useAuth = () => useContext(AuthContext);

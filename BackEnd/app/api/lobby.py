@@ -5,9 +5,12 @@ import asyncio
 import uuid
 import time
 
+from core.constants import * 
+from schemas.game import StartGameRequest
 from api.game import start_game
 from services.user_service import user_dependency
 from api.websockets.events import notify_all_players, notify_player
+
 
 router = APIRouter(prefix="/lobby", tags=["lobby"])
 
@@ -28,13 +31,13 @@ lobbies: Dict[str, Dict[str, Dict[str, str]]] = {}
                 "difficulty": "easy"
             }
         },
-        "expires_at": "timestamp"
+        "expires_at": "timestamp", 
+        "colors": List["color"],
+        "time": int
     }
 } """
 
 player_lobby_map: Dict[str, str] = {}  # {player_id: game_code}
-
-LOBBY_EXPIRATION_TIME = 60 * 10
 
 
 def generate_game_code() -> str:
@@ -80,7 +83,7 @@ async def create_lobby(user: user_dependency):
     game_code = generate_game_code()
 
     if game_code not in lobbies:
-        lobbies[game_code] = {'host': user.id, 'players': {}, 'bots': {}, 'expires_at': time.time() + LOBBY_EXPIRATION_TIME}
+        lobbies[game_code] = {'host': user.id, 'players': {}, 'bots': {}, 'expires_at': time.time() + LOBBY_EXPIRATION_TIME, "time": DEFAULT_GAME_TIME}
     else: 
         raise HTTPException(status_code=400, detail="Game code already exists")
 
@@ -203,24 +206,39 @@ async def get_lobby_players(game_code: str, user: user_dependency):
 
 
 @router.post("/start/{game_code}")
-async def start_game_lobby(game_code: str, user: user_dependency):
+async def start_game_lobby(game_code: str, colors: StartGameRequest, user: user_dependency):
     """Starts the game if there are exactly 2 players."""
+    
+    print(lobbies)
 
     if game_code not in lobbies:
+        print("HERE")
         raise HTTPException(status_code=404, detail="Lobby not found")
 
     if user.id != lobbies[game_code]['host']:
+        print("HERE1")
         raise HTTPException(status_code=403, detail="Only the host can start the game")
 
     if len(lobbies[game_code]['players']) + len(lobbies[game_code]['bots']) != 4:
+        print("HERE2")
         raise HTTPException(status_code=400, detail="Game cannot start until there are exactly 4 players or bots")
+
+    colors_set = {color for color in colors.colors if color != 'None'}
+
+    if any(color not in TEAMS for color in colors_set):
+        raise HTTPException(status_code=400, detail="Unexpected color found")
+
+    if len(colors_set) + colors.colors.count('None') != 4:
+        raise HTTPException(status_code=400, detail="Invalid colors selected")
 
     # Notify both players via WebSockets
     await notify_all_players(lobbies[game_code], message={"type": "game_start", "game_code": game_code})
 
     # Start the game
+    lobbies[game_code]['colors'] = colors.colors
     start_game(game_code, lobbies[game_code])
-
+    del lobbies[game_code]
+    
     return {"message": "Game started"}
 
 

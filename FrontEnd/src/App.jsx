@@ -1,6 +1,8 @@
-import React, { useContext } from "react";
+import React, { } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, AuthContext } from "./utils/AuthContext";
+
+import { AuthProvider, useAuth } from "./utils/AuthContext";
+import { WebSocketProvider } from "./utils/WebSocketProvider";
 
 import SideBar from "./components/SideBar";
 import LoginPage from "./components/Pages/Authentication/LoginPage";
@@ -13,13 +15,13 @@ import GamePage from "./components/Pages/GamePage";
 
 
 const PrivateRoute = ({ children }) => {
-    const { isAuthenticated } = useContext(AuthContext);
+    const { isAuthenticated } = useAuth();
     return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
 // Layout for pages with Sidebar
 const MainLayout = ({ children }) => {
-    const { token, logout } = useContext(AuthContext);
+    const { token, logout } = useAuth(); 
     return (
         <div className="container">
             <SideBar token={token} logout={logout} />
@@ -36,22 +38,24 @@ const AuthLayout = ({ children }) => {
 function App() {
     return (
         <AuthProvider>
-            <Router>
-                <Routes>
-                    {/* Authentication Routes */}
-                    <Route path="/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
-                    <Route path="/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
+            <WebSocketProvider>
+                <Router>
+                    <Routes>
+                        {/* Authentication Routes */}
+                        <Route path="/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
+                        <Route path="/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
 
-                    {/* Public Pages */}
-                    <Route path="/" element={<MainLayout><MainPage /></MainLayout>} />
-                    <Route path="/about" element={<MainLayout><AboutPage /></MainLayout>} />
-                    <Route path="/rules" element={<MainLayout><RulesPage /></MainLayout>} />
+                        {/* Public Pages */}
+                        <Route path="/" element={<MainLayout><MainPage /></MainLayout>} />
+                        <Route path="/about" element={<MainLayout><AboutPage /></MainLayout>} />
+                        <Route path="/rules" element={<MainLayout><RulesPage /></MainLayout>} />
 
-                    {/* Protected Routes */}
-                    <Route path="/lobby" element={<PrivateRoute><MainLayout><LobbyPage /></MainLayout></PrivateRoute>} />
-                    <Route path="/game/:gameCode" element={<PrivateRoute><MainLayout><GamePage /></MainLayout></PrivateRoute>} />
-                </Routes>
-            </Router>
+                        {/* Protected Routes */}
+                        <Route path="/lobby" element={<PrivateRoute><MainLayout><LobbyPage /></MainLayout></PrivateRoute>} />
+                        <Route path="/game/:gameCode" element={<PrivateRoute><MainLayout><GamePage /></MainLayout></PrivateRoute>} />
+                    </Routes>
+                </Router>
+            </WebSocketProvider>
         </AuthProvider>
     );
 }

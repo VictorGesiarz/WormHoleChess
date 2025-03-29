@@ -17,6 +17,7 @@ python-jose = {extras = ["cryptography"], version = "*"}
 python-multipart = "*"
 websockets = "*"
 watchdog = "*"
+python-chess = "*"
 
 [dev-packages]
 

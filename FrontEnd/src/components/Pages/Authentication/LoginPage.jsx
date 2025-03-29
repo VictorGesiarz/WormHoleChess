@@ -1,8 +1,8 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5"; 
 
-import { AuthContext } from "../../../utils/AuthContext";
+import { useAuth } from "../../../utils/AuthContext";
 
 import "./LoginPage.css";
 
@@ -11,7 +11,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 
 function LoginPage() {
-    const { token, login } = useContext(AuthContext);
+    const { token, login } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();

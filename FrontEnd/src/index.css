@@ -7,19 +7,16 @@
 body {
     width: 100%;
     height: 100vh;
-    /* display: flex;
-    justify-content: center; */
-    /* align-items: center; */
-
+    
     background-color: #15191C;
-    color: #EDEDED; /* Light text for contrast */
+    color: #EDEDED; 
 
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     font-weight: 400;
 }
 
-p {
+.text-block {
     margin: 20px;
 }
 
@@ -34,11 +31,11 @@ p {
     padding-inline: 3rem;
     margin-inline: auto;
 
-    padding-block: 50px;
+    padding-block: 25px;
     display: grid;
     align-items: start;
-    grid-template-columns: 300px 1100px;
-    gap: 75px; 
+    grid-template-columns: 250px 1200px;
+    gap: 25px; 
 }
 
 .widget {
@@ -52,10 +49,10 @@ p {
 .page {
     grid-column: 2;
 
-    padding: 50px;
+    padding: 25px;
     width: 100%;
     max-width: 100%;
-    min-height: calc(100vh - 100px);;
+    min-height: calc(100vh - 50px);;
 }
 
 .center-page {
@@ -64,49 +61,4 @@ p {
     align-items: center;
     width: 100%;
     height: 100%;
-    /* background-color: black; */
-}
-
-.sidebar {
-    grid-column: 1;
-    position: sticky; 
-    top: 5vh; 
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 2rem;
-}
-
-.sidebar-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 2rem;
-    color: #EDEDED; 
-}
-
-.sidebar-links {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    width: 100%; 
-    text-align: center;
-}
-
-.sidebar-links li button {
-    color: #EDEDED; 
-    background: none;
-    border: none;
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0.75rem;
-    width: 100%;
-    border-radius: 4px;
-}
-
-.sidebar-links li button:hover {
-    background-color: #2A2D33; 
-    color: #FFFFFF; 
 }

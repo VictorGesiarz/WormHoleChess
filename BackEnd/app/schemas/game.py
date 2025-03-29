@@ -9,4 +9,4 @@ class Player(BaseModel):
 
 
 class StartGameRequest(BaseModel):
-    players: List[str]
+    colors: List[str]

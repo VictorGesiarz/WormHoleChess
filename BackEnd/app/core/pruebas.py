@@ -96,6 +96,7 @@ def create_board():
     
     # implement
     # pawn = Pawn(b.tiles['g2_T'], 0)
+    
     b.add_pieces([tower, bishop, king, knight])
 
     positions = tower.get_movements()

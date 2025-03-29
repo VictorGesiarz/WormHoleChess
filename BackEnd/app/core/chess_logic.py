@@ -95,6 +95,9 @@ class Board:
         for tile in tiles: 
             self.add_tile(tile)
 
+    def add_piece(self, piece: Piece) -> None:
+        self.pieces.append(piece)
+
     def add_pieces(self, pieces: list[Piece]) -> None:
         for piece in pieces:
             self.pieces.append(piece)

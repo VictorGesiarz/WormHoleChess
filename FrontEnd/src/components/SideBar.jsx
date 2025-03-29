@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { AuthContext } from "../utils/AuthContext";
+import { useAuth } from "../utils/AuthContext";
 
 import "./SideBar.css";
 
@@ -12,7 +12,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const SideBar = () => {
     const navigate = useNavigate();
     const [email, setEmail] = useState(null);
-    const { token, logout } = useContext(AuthContext);
+    const { token, logout } = useAuth(); 
 
     useEffect(() => {
         const fetchEmail = async () => {
@@ -47,11 +47,12 @@ const SideBar = () => {
                 <li><button onClick={() => navigate("/rules")}>Rules</button></li>
                 <li><button onClick={() => navigate("/pruebas")}>Pruebas</button></li>
             </ul>
-            
+
             <div className="sidebar-auth">
                 {token ? (
                     <div className="logged-in">
                         <p>Logged in as <strong>{email || "Loading..."}</strong></p>
+                        <br></br>
                         <button className="logout-btn" onClick={() => { logout(); navigate("/"); }}>Logout</button>
                     </div>
                 ) : (
