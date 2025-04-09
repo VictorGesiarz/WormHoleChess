@@ -1,8 +1,8 @@
-import chess
+import engine
 import chess.engine
 
 # Create a new chess board
-board = chess.Board()
+board = engine.Board()
 
 # Play until the game ends
 while not board.is_game_over():
@@ -10,7 +10,7 @@ while not board.is_game_over():
     move = input("Enter your move (e.g., e2e4): ")
 
     try:
-        chess_move = chess.Move.from_uci(move)  # Convert input to a chess move
+        chess_move = engine.Move.from_uci(move)  # Convert input to a chess move
         if chess_move in board.legal_moves:
             board.push(chess_move)  # Make the move
         else:

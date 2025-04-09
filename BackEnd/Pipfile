@@ -18,6 +18,7 @@ python-multipart = "*"
 websockets = "*"
 watchdog = "*"
 python-chess = "*"
+pandas = "*"
 
 [dev-packages]
 
