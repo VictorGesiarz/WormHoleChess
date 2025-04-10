@@ -1,3 +1,4 @@
+from typing import Dict, List
 
 from engine.core.base.Tile import Tile, D
 from engine.core.Player import Player
@@ -18,7 +19,7 @@ class Piece:
     def get_pos(self) -> Tile:
         return self.position
     
-    def get_movements(self):
+    def get_movements(self) -> List[Tile]:
         ...
     
     def trace_direction(self, last: Tile, current: Tile, limit: int, collisions: bool = True, can_eat: bool = True) -> list[Tile]:
@@ -65,6 +66,7 @@ class Piece:
     def move(self, to: Tile, validate: bool = True) -> bool:
         if validate and to not in self.get_movements(): 
             return False
+        
         self.position.piece = None  
         self.position = to  
         to.piece = self  

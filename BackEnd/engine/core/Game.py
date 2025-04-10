@@ -50,8 +50,11 @@ class Game:
     def get_movements(self) -> List[Tile]: 
         """ Returns a list of possible movements for the current player. """
         player = self.players[self.turn]
-        movements = player.get_all_possible_moves()
-        legal_movements = player.filter_legal_moves(movements)
+        if player.alive: 
+            movements = player.get_all_possible_moves()
+            legal_movements = player.filter_legal_moves(movements)
+            return legal_movements
+        return []
 
     def get_pieces_state(self) -> Dict[str, Dict[str, List[str]]]: 
         pieces_state = {}

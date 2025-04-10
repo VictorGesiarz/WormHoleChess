@@ -36,32 +36,38 @@ class Player:
             return self.team == other
         return self.team == other.team
 
-    def to_dict(self) -> Dict[str, str]: 
-        return {
-            "username": self.username,
-            "color": self.color,
-            "alive": self.alive
-        }
-
     def add_piece(self, piece: Piece) -> None: 
         self.pieces[piece.type].append(piece)
 
-    def lose_piece(self, piece: Piece):
+    def lose_piece(self, piece: Piece) -> None:
+        if piece not in self.pieces[piece.type]:
+            raise ValueError("Piece not found in player's pieces.")
+
         piece.captured = True
         self.dead_pieces.append(piece)
 
     def move(self, from_: Tile, to: Tile) -> None: 
-        piece = self.pieces[from_.]
-        for piece in self.pieces.values():
-            if piece.tile == from_:
-                piece.move(to)
-                break
+        if from_ == to: 
+            raise ValueError("Cannot move to the same tile.")
+        if from_.piece is None:
+            raise ValueError("No piece to move from the tile.")
+        if from_.piece.team != self:
+            raise ValueError("Cannot move a piece that does not belong to the player.")
+        if from_.piece.captured: 
+            raise ValueError("Cannot move a captured piece.")
+        if to.piece is not None:
+            raise ValueError("Cannot move to a tile that is already occupied.")
+
+        piece_from = from_.piece
+        piece_to = to.piece
+        piece_from.move(to, validate=False)
 
     def get_all_possible_moves(self) -> List[Tile]:
-        """ Returns a list of possible moves [(piece, target_tile), ...] """
+        """ Returns a list of possible moves [(from_tile, to_tile), ...] """
         moves = []
         for piece in self.pieces.values():
-            moves.extend((piece, move) for move in piece.get_movements())
+            from_ = piece.tile
+            moves.extend((from_, move) for move in piece.get_movements())
         return moves
     
     def filter_legal_moves(self, moves: List[Tile]) -> List[Tile]:
