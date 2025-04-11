@@ -14,8 +14,14 @@ class Piece:
         self.first_move = True # True when the player hasn't moved the piece yet.
         self.type = self.__class__.__name__
         
+        self.captured_position = None
         self.team.add_piece(self)
-        
+    
+    def __eq__(self, other: "Piece") -> bool:
+        if other is None: 
+            return False
+        return self.position == other.position and self.team == other.team and self.type == other.type
+
     def get_pos(self) -> Tile:
         return self.position
     
@@ -40,7 +46,6 @@ class Piece:
             return []
         elif collisions and current.piece is not None: 
             if self.team == current.piece.team or not can_eat: 
-                print("HI2")
                 return []
             return [current]
         
@@ -74,9 +79,16 @@ class Piece:
         return True
     
     def capture(self) -> None:
+        self.captured_position = self.position
         self.position.piece = None  
         self.position = None  
         self.captured = True
+
+    def revive(self) -> None: 
+        self.captured = False
+        self.position = self.captured_position
+        self.captured_position = None
+        self.position.piece = self
     
     @staticmethod
     def get_piece_type(name: str) -> "Piece": 

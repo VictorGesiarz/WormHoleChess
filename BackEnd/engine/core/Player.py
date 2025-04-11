@@ -22,7 +22,7 @@ class Player:
             "Knight": [],
             "Bishop": [],
             "Queen": [],
-            "King": None, 
+            "King": [], 
             "Pawn": []
         }
         self.dead_pieces = [] # The pieces that the player lost
@@ -40,47 +40,32 @@ class Player:
         self.pieces[piece.type].append(piece)
 
     def lose_piece(self, piece: Piece) -> None:
-        if piece not in self.pieces[piece.type]:
-            raise ValueError("Piece not found in player's pieces.")
+        if piece in self.pieces[piece.type]:
+            piece.capture()
+            # self.dead_pieces.append(piece)
 
-        piece.captured = True
-        self.dead_pieces.append(piece)
-
-    def move(self, from_: Tile, to: Tile) -> None: 
-        if from_ == to: 
-            raise ValueError("Cannot move to the same tile.")
-        if from_.piece is None:
-            raise ValueError("No piece to move from the tile.")
-        if from_.piece.team != self:
-            raise ValueError("Cannot move a piece that does not belong to the player.")
-        if from_.piece.captured: 
-            raise ValueError("Cannot move a captured piece.")
-        if to.piece is not None:
-            raise ValueError("Cannot move to a tile that is already occupied.")
-
-        piece_from = from_.piece
-        piece_to = to.piece
-        piece_from.move(to, validate=False)
+    def revive_piece(self, piece: Piece) -> None: 
+        if piece in self.pieces[piece.type]: 
+            piece.revive()
 
     def get_all_possible_moves(self) -> List[Tile]:
         """ Returns a list of possible moves [(from_tile, to_tile), ...] """
         moves = []
-        for piece in self.pieces.values():
-            from_ = piece.tile
-            moves.extend((from_, move) for move in piece.get_movements())
+        for piece_type in self.pieces.values():
+            for piece in piece_type:
+                if not piece.captured: 
+                    from_ = piece.position
+                    moves.extend((from_, move) for move in piece.get_movements())
         return moves
-    
-    def filter_legal_moves(self, moves: List[Tile]) -> List[Tile]:
-        ...
 
 
 class Bot(Player): 
     def __init__(self, number: int, username: str, color: str):
         super().__init__(number, username, None, color, time=float("inf"), type="bot")
 
-    def make_move(self, game: Game) -> None:
+    def make_move(self) -> None:
         """ Implements a basic bot move strategy. """
-        possible_moves = self.get_all_possible_moves(game.board)
+        possible_moves = self.get_all_possible_moves()
         
         if possible_moves:
             piece, move = random.choice(possible_moves)
