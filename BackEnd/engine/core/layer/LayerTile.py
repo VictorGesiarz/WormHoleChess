@@ -1,6 +1,12 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from typing import Dict
 
-from engine.core.layer.LayerPieces import LayerPiece
+if TYPE_CHECKING:
+    from engine.core.layer.LayerPieces import LayerPiece
+    from engine.core.layer.LayerBoard import LayerBoard
+
 
 class LayerTile: 
     def __init__(self, name: str) -> None: 

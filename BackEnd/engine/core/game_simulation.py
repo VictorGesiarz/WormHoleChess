@@ -1,21 +1,28 @@
 import random
 import time
 
-from engine.core.Game import Game
-from engine.core.Player import Player
+from engine.core.ChessFactory import ChessFactory
 
 
 def simulate_game(): 
-    players = [Player(0), Player(1), Player(2), Player(3)]
-    game = Game(players)
+    game = ChessFactory.create_game(
+        player_data = [
+            ("white", "player"),
+            ("black", "bot", "random"),
+            ("blue", "bot", "random"),
+            ("red", "bot", "random"),
+        ], 
+        mode = "base",
+        size = "big"
+    )
 
-    max_turns = 200 # 50 per player
+    max_turns = 100 # 25 per player
     times = []
     while not game.is_finished() and max_turns > 0: 
         move_calc_time = time.time()
         moves = game.get_movements()
         move_calc_time = time.time() - move_calc_time
-        print(f"Move calculation time: {move_calc_time:.4f}s")
+        # print(f"Move calculation time: {move_calc_time:.4f}s")
         times.append(move_calc_time)
         # print(moves)
 

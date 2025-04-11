@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import random 
 
 from engine.core.constants import COLOR_TO_NUMBER, NUMBER_TO_COLOR
@@ -8,7 +8,9 @@ from engine.core.constants import COLOR_TO_NUMBER, NUMBER_TO_COLOR
 if TYPE_CHECKING:
     from engine.core.Game import Game
     from engine.core.base.Pieces import Piece
+    from engine.core.layer.LayerPieces import LayerPiece
     from engine.core.base.Tile import Tile
+    from engine.core.layer.LayerTile import LayerTile
 
 class Player:
     def __init__(self, team: int,  type: str = "player"):
@@ -36,19 +38,19 @@ class Player:
             return self.team == other
         return self.team == other.team
 
-    def add_piece(self, piece: Piece) -> None: 
+    def add_piece(self, piece: Piece | LayerPiece) -> None: 
         self.pieces[piece.type].append(piece)
 
-    def lose_piece(self, piece: Piece) -> None:
+    def lose_piece(self, piece: Piece | LayerPiece) -> None:
         if piece in self.pieces[piece.type]:
             piece.capture()
             # self.dead_pieces.append(piece)
 
-    def revive_piece(self, piece: Piece) -> None: 
+    def revive_piece(self, piece: Piece | LayerPiece) -> None: 
         if piece in self.pieces[piece.type]: 
             piece.revive()
 
-    def get_all_possible_moves(self) -> List[Tile]:
+    def get_all_possible_moves(self) -> List[Tile | LayerTile]:
         """ Returns a list of possible moves [(from_tile, to_tile), ...] """
         moves = []
         for piece_type in self.pieces.values():
@@ -60,13 +62,15 @@ class Player:
 
 
 class Bot(Player): 
-    def __init__(self, number: int, username: str, color: str):
-        super().__init__(number, username, None, color, time=float("inf"), type="bot")
+    def __init__(self, team: int, difficulty: str = "random"):
+        super().__init__(team, type="bot")
+        self.difficulty = difficulty
 
-    def make_move(self) -> None:
-        """ Implements a basic bot move strategy. """
-        possible_moves = self.get_all_possible_moves()
-        
-        if possible_moves:
-            piece, move = random.choice(possible_moves)
-            self.move(piece, move) 
+    def choose_move(self, moves: List[Tuple[Tile | LayerTile]]) -> Tuple[Tile | LayerTile]:
+        if self.difficulty == "random":
+            if len(moves) > 0: 
+                random_move = random.choice(moves)
+                return random_move
+            return None
+        else: 
+            raise NotImplemented(f"Difficulty level {self.difficulty} not implemented")

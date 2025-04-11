@@ -1,34 +1,78 @@
+from typing import Literal, List, Dict, Tuple
+import json
+
 from engine.core.base.Board import Board
 from engine.core.layer.LayerBoard import LayerBoard
 from engine.core.base.Pieces import Piece
 from engine.core.layer.LayerPieces import LayerPiece
-from engine.logic.move_generator import SpeedMoveGenerator, MemoryMoveGenerator
+from engine.core.Player import Player, Bot
+from engine.core.Game import Game
+from engine.core.constants import COLOR_TO_NUMBER, NUMBER_TO_COLOR
 
+
+default_initial_positions_file = './engine/core/assets/initial_position.json'
 
 class ChessFactory:
     @staticmethod
-    def create_board(mode):
-        if mode == "speed":
+    def create_game(player_data: List[str],
+                    mode: str = Literal['base', 'layer'],
+                    size: str = Literal['big', 'small'],
+                    initial_positions: str | Dict[str, str] = default_initial_positions_file) -> Game:
+        
+        board = ChessFactory.create_board(mode, size)
+        players = ChessFactory.create_players(player_data)
+        
+        if isinstance(initial_positions, str):
+            initial_positions = ChessFactory.load_initial_positions(initial_positions)
+        ChessFactory.initialize_pieces(board, players, initial_positions, mode)
+        
+        return Game(board, players, turn=0)
+    
+    @staticmethod
+    def initialize_pieces(board: Board, players: List[Player], initial_positions: str, mode: str) -> None: 
+        for player in players:
+            player_pieces_positions = initial_positions[NUMBER_TO_COLOR[player.team]]
+            for piece_name, piece_positions in player_pieces_positions.items(): 
+                for position in piece_positions: 
+                    tile = board[position]
+                    piece = ChessFactory.create_piece(piece_name, mode, tile, player)
+    
+    @staticmethod
+    def create_players(player_data: List[Tuple[str]]) -> List[Player]:
+        number_of_players = len(player_data)
+        if number_of_players not in (2, 4):
+            raise ValueError("Number of players must be 2 or 4")
+        
+        players = []
+        for data in player_data:
+            if data[1] == "player": 
+                player = Player(COLOR_TO_NUMBER[data[0]])
+            elif data[1] == "bot":
+                player = Bot(COLOR_TO_NUMBER[data[0]], data[2])
+            players.append(player)
+        return players
+    
+    @staticmethod
+    def create_board(mode: str, size: str) -> Board:
+        if mode == "base":
             return Board()
-        elif mode == "memory":
+        elif mode == "layer":
             return LayerBoard()
         else:
             raise ValueError("Invalid mode: choose 'speed' or 'memory'")
 
     @staticmethod
-    def create_move_generator(mode):
-        if mode == "speed":
-            return SpeedMoveGenerator()
-        elif mode == "memory":
-            return MemoryMoveGenerator()
-        else:
-            raise ValueError("Invalid mode: choose 'speed' or 'memory'")
+    def create_piece(piece_name, mode, tile, player):
+        if mode == "base":
+            PieceObject = Piece.get_piece_type(piece_name)
+            piece = PieceObject(tile, player)
+        elif mode == "layer":
+            PieceObject = LayerPiece.get_piece_type(piece_name)
+            piece = PieceObject(tile, player)
+        return
 
     @staticmethod
-    def create_piece(piece_type, mode, position):
-        if mode == "speed":
-            return Piece(piece_type, position)
-        elif mode == "memory":
-            return LayerPiece(piece_type, position)
-        else:
-            raise ValueError("Invalid mode: choose 'speed' or 'memory'")
+    def load_initial_positions(file_path: str) -> Dict[str, str]:
+        with open(file_path, 'r') as file:
+            initial_positions = json.load(file)
+        return initial_positions

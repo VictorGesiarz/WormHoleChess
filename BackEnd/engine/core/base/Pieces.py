@@ -21,9 +21,6 @@ class Piece:
         if other is None: 
             return False
         return self.position == other.position and self.team == other.team and self.type == other.type
-
-    def get_pos(self) -> Tile:
-        return self.position
     
     def get_movements(self) -> List[Tile]:
         ...
@@ -62,11 +59,6 @@ class Piece:
             positions += self.trace_direction(current, next_tile, limit-1, collisions=collisions)
 
         return positions 
-    
-    def check_tile(self, tile: Tile) -> bool:
-        if tile.piece is not None:
-            return True
-        return False
     
     def move(self, to: Tile, validate: bool = True) -> bool:
         if validate and to not in self.get_movements(): 

@@ -4,8 +4,11 @@ import random
 import time
 
 from engine.core.base.Board import Board
-from engine.core.base.Tile import D, Tile
-from engine.core.base.Pieces import Piece, Tower, Knight, Bishop, Queen, King, Pawn
+from engine.core.layer.LayerBoard import LayerBoard
+from engine.core.base.Tile import Tile
+from engine.core.layer.LayerTile import LayerTile
+from engine.core.base.Pieces import Piece
+from engine.core.layer.LayerPieces import LayerPiece
 from engine.core.Player import Player, Bot
 from engine.core.constants import *
 from engine.ai import * 
@@ -15,22 +18,10 @@ initial_positions_file = './engine/core/assets/initial_position.json'
 
 
 class Game:
-    def __init__(self, players: List[Player], turn: int = COLOR_TO_NUMBER['white'], initial_positions_file: str = initial_positions_file) -> None:
+    def __init__(self, board: Board, players: List[Player], turn: int = COLOR_TO_NUMBER['white']) -> None:
         self.turn = turn 
         self.players = players
-        self.board = Board()
-        self.initialize_pieces(initial_positions_file)
-
-    def initialize_pieces(self, initial_positions_file: str) -> None: 
-        with open(initial_positions_file, 'r') as f: 
-            positions_json = json.load(f)
-        for player in self.players:
-            player_pieces_positions = positions_json[NUMBER_TO_COLOR[player.team]]
-            for piece_name, piece_positions in player_pieces_positions.items(): 
-                for position in piece_positions: 
-                    PieceObject = Piece.get_piece_type(piece_name)
-                    tile = self.board[position]
-                    piece = PieceObject(tile, player)
+        self.board = board
 
     def next_turn(self) -> None: 
         """ Changes to the next turn, skipping dead players and handling bots. """
@@ -42,10 +33,10 @@ class Game:
             self.next_turn()  # Skip dead players
 
         elif next_player.type == "bot":
-            next_player.make_move(self)  # Bot makes a move instantly
+            self.make_move_bot()
             self.next_turn()
 
-    def get_movements(self) -> List[Tile]: 
+    def get_movements(self) -> List[Tuple[Tile | LayerTile]]: 
         """ Returns a list of possible movements for the current player. """
         player = self.players[self.turn]
         if player.alive: 
@@ -54,7 +45,7 @@ class Game:
             return legal_movements
         return []
 
-    def filter_legal_moves(self, player: Player, moves: List[Tile]) -> List[Tile]:         
+    def filter_legal_moves(self, player: Player, moves: List[Tile | LayerTile]) -> List[Tile | LayerTile]:         
         legal_moves = []
 
         for move in moves:
@@ -68,25 +59,27 @@ class Game:
         self.check_player_state(player, legal_moves)
         return legal_moves
 
-    def is_in_check(self, player: Player) -> bool: 
-        for enemy_player in self.players: 
-            if enemy_player.team != player.team:
-                enemy_moves = enemy_player.get_all_possible_moves()
-                for move in enemy_moves: 
-                    oringin_tile = move[0]
-                    destination_tile = move[1]
-                    if destination_tile.piece == player.pieces['King'][0]:
-                        return True
+    def is_in_check(self, player: Player, trace_from_king=False) -> bool: 
+        if trace_from_king:
+            ...
+        else: 
+            for enemy_player in self.players: 
+                if enemy_player.team != player.team:
+                    enemy_moves = enemy_player.get_all_possible_moves()
+                    for move in enemy_moves: 
+                        oringin_tile = move[0]
+                        destination_tile = move[1]
+                        if destination_tile.piece == player.pieces['King'][0]:
+                            return True
         return False
 
-    def make_move(self, move: Tuple[Tile, Tile]) -> Piece | None: 
+    def make_move(self, move: Tuple[Tile | LayerTile]) -> Piece | LayerPiece | None: 
         origin_tile = move[0]
         destination_tile = move[1]
         
         moving_piece = origin_tile.piece
         captured_piece = destination_tile.piece
 
-        # Check if piece is
         if captured_piece is not None and captured_piece.team != moving_piece.team:
             captured_piece.team.lose_piece(captured_piece)
             # self.killed_pieces.append(captured_piece)
@@ -95,7 +88,7 @@ class Game:
 
         return captured_piece 
 
-    def undo_move(self, move: Tuple[Tile, Tile], captured_piece: Piece | None) -> None: 
+    def undo_move(self, move: Tuple[Tile | LayerTile], captured_piece: Piece | LayerPiece | None) -> None: 
         origin_tile = move[0]
         destination_tile = move[1]
 
@@ -107,7 +100,15 @@ class Game:
             captured_piece.team.revive_piece(captured_piece)
             # self.killed_pieces.remove(captured_piece)
 
-    def check_player_state(self, player: Player, moves: List[Tile]) -> bool:
+    def make_move_bot(self) -> None: 
+        player = self.players[self.turn]
+        moves = self.get_movements()
+        
+        if len(moves) > 0: 
+            move = player.choose_move(moves)
+            self.make_move(move)
+
+    def check_player_state(self, player: Player, moves: List[Tile | LayerTile]) -> bool:
         if not player.alive: 
             return False
         if len(moves) == 0: 
