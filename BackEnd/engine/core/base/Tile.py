@@ -54,9 +54,11 @@ class Tile:
     def __hash__(self):
         return hash(self.name)
 
-    def __eq__(self, other: "Tile" | None) -> bool:
+    def __eq__(self, other: "Tile" | str | None) -> bool:
         if other is None: 
             return False
+        if isinstance(other, str): 
+            return self.name == other
         return self.name == other.name
     
     def __str__(self) -> str:

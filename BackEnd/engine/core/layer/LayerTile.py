@@ -18,6 +18,10 @@ class LayerTile:
         return hash(self.name)
     
     def __eq__(self, other): 
+        if other is None: 
+            return False
+        if isinstance(other, str): 
+            return self.name == other
         return self.name == other.name
     
     def set_layer(self, layer: str, neighbors: Dict[str, "LayerTile"]) -> None: 

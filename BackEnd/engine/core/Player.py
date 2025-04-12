@@ -6,7 +6,6 @@ import random
 from engine.core.constants import COLOR_TO_NUMBER, NUMBER_TO_COLOR
 
 if TYPE_CHECKING:
-    from engine.core.Game import Game
     from engine.core.base.Pieces import Piece
     from engine.core.layer.LayerPieces import LayerPiece
     from engine.core.base.Tile import Tile

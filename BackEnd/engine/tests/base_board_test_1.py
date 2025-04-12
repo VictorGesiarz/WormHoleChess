@@ -1,22 +1,22 @@
-import random
+
+""" 
+Test of base board with: 
+ - No stopping after finding the king when looking for checks 
+ - Looking for the king from all the pieces, instead of casting from the king outside
+ - Doing random moves
+ - 200 moves limit, 50 per player
+"""
+
 import time
 
 from engine.core.ChessFactory import ChessFactory
 
-
 player_data = [
-    ("white", "player"),
-    ("black", "player"),
-    ("blue", "player"),
-    ("red", "player"),
+    ("white", "bot", "random"),
+    ("black", "bot", "random"),
+    ("blue", "bot", "random"),
+    ("red", "bot", "random"),
 ]
-
-# player_data = [
-#     ("white", "bot", "random"),
-#     ("black", "bot", "random"),
-#     ("blue", "bot", "random"),
-#     ("red", "bot", "random"),
-# ]
 
 def simulate_game(): 
     game_creation_time = time.time()
@@ -35,19 +35,6 @@ def simulate_game():
 
     while not game.is_finished() and max_turns > 0: 
         calculate_moves = game.get_turn()
-
-        if calculate_moves != -1: 
-            move_calc_time = time.time()
-            moves = game.get_movements()
-            move_calc_time = time.time() - move_calc_time
-            # print(f"Move calculation time: {move_calc_time:.4f}s")
-            total_calc_time += move_calc_time
-            # print(moves)
-
-            if len(moves) > 0: 
-                random_move = random.choice(moves)
-                game.make_move(random_move)
-
         game.next_turn()
         max_turns -= 1
 

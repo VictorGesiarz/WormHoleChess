@@ -14,27 +14,30 @@ from engine.core.constants import *
 from engine.ai import * 
 
 
-initial_positions_file = './engine/core/assets/initial_position.json'
-
-
 class Game:
     def __init__(self, board: Board, players: List[Player], turn: int = COLOR_TO_NUMBER['white']) -> None:
         self.turn = turn 
         self.players = players
+        self.number_of_players = len(players)
         self.board = board
 
-    def next_turn(self) -> None: 
-        """ Changes to the next turn, skipping dead players and handling bots. """
-        self.turn = (self.turn + 1) % 4
+    def check_size(self) -> None:
+        from pympler import asizeof
+        print(f"Game size: {asizeof.asizeof(self)} bytes")
 
-        next_player = self.players[self.turn]
-        
-        if not next_player.alive:
-            self.next_turn()  # Skip dead players
+    def next_turn(self) -> None:
+        self.turn = (self.turn + 1) % self.number_of_players
 
-        elif next_player.type == "bot":
+    def get_turn(self) -> int:
+        """ Returns the current turn and -1 if the current player lost or is a bot """ 
+        current_player = self.players[self.turn]
+
+        if not current_player.alive:
+            return -1
+        if current_player.type == "bot":
             self.make_move_bot()
-            self.next_turn()
+            return -1
+        return self.turn
 
     def get_movements(self) -> List[Tuple[Tile | LayerTile]]: 
         """ Returns a list of possible movements for the current player. """
@@ -42,6 +45,7 @@ class Game:
         if player.alive: 
             movements = player.get_all_possible_moves()
             legal_movements = self.filter_legal_moves(player, movements)
+            self.check_player_state(player, legal_movements)
             return legal_movements
         return []
 
@@ -56,7 +60,6 @@ class Game:
             
             self.undo_move(move, captured_piece)
 
-        self.check_player_state(player, legal_moves)
         return legal_moves
 
     def is_in_check(self, player: Player, trace_from_king=False) -> bool: 
