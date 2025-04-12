@@ -2,10 +2,11 @@ from typing import Dict, List
 
 from engine.core.base.Tile import Tile, D
 from engine.core.Player import Player
+from engine.core.constants import NUMBER_TO_COLOR
 
 
 class Piece: 
-    def __init__(self, position: Tile, team: Player) -> None:
+    def __init__(self, position: Tile, team: Player, add_to_player=True) -> None:
         self.position = position 
         self.position.piece = self
         self.board = position.board
@@ -15,13 +16,18 @@ class Piece:
         self.type = self.__class__.__name__
         
         self.captured_position = None
-        self.team.add_piece(self)
+
+        if add_to_player: 
+            self.team.add_piece(self)
     
     def __eq__(self, other: "Piece") -> bool:
         if other is None: 
             return False
         return self.position == other.position and self.team == other.team and self.type == other.type
     
+    def __str__(self):
+        return f"{NUMBER_TO_COLOR[self.team.team]} {self.type} at: {self.position}"
+
     def get_movements(self) -> List[Tile]:
         ...
     
@@ -114,8 +120,8 @@ class Tower(Piece):
         }
     }
 
-    def __init__(self, position: Tile, team: Player) -> None:
-        super().__init__(position, team)
+    def __init__(self, position: Tile, team: Player, add_to_player: bool = True) -> None:
+        super().__init__(position, team, add_to_player)
         self.first_move = True # True when the player hasn't moved the tower yet. 
         if self.position.name not in Tower.TOWERS[self.team.team]['initial_positions']:
             self.first_move = False
@@ -135,8 +141,8 @@ class Tower(Piece):
 
 
 class Knight(Piece): 
-    def __init__(self, position: Tile, team: Player) -> None:
-        super().__init__(position, team)
+    def __init__(self, position: Tile, team: Player, add_to_player: bool = True) -> None:
+        super().__init__(position, team, add_to_player)
         
     def get_movements(self) -> list[Tile]:
         horizontal = [D.LEFT, D.RIGHT]
@@ -176,8 +182,8 @@ class Knight(Piece):
         
         
 class Bishop(Piece): 
-    def __init__(self, position: Tile, team: Player) -> None:
-        super().__init__(position, team)
+    def __init__(self, position: Tile, team: Player, add_to_player: bool = True) -> None:
+        super().__init__(position, team, add_to_player)
         
     def get_movements(self, flatten: bool = True) -> list[Tile]:
         directions = [D.UP_LEFT, D.UP_RIGHT, D.DOWN_LEFT, D.DOWN_RIGHT]
@@ -194,8 +200,8 @@ class Bishop(Piece):
     
     
 class Queen(Piece): 
-    def __init__(self, position: Tile, team: Player) -> None:
-        super().__init__(position, team)
+    def __init__(self, position: Tile, team: Player, add_to_player: bool = True) -> None:
+        super().__init__(position, team, add_to_player)
         
     def get_movements(self, flatten: bool = True) -> list[Tile]:
         directions = [D.UP_LEFT, D.UP_RIGHT, D.DOWN_LEFT, D.DOWN_RIGHT,
@@ -276,8 +282,8 @@ class King(Piece):
         }
     }
 
-    def __init__(self, position: Tile, team: Player) -> None:
-        super().__init__(position, team)
+    def __init__(self, position: Tile, team: Player, add_to_player: bool = True) -> None:
+        super().__init__(position, team, add_to_player)
         self.first_move = True # True when the player hasn't moved the King yet. 
         if self.position.name != King.KINGS[self.team.team]['initial_position']:
             self.first_move = False
@@ -324,6 +330,65 @@ class King(Piece):
             return positions
         return []
     
+    def trace_from_king(self) -> bool: 
+        original_position = self.position
+
+        tower = Tower(original_position, self.team, add_to_player=False)
+        moves = tower.get_movements()
+        for move in moves: 
+            piece = move.piece
+            if piece and piece.type in ['Tower', 'Queen']: 
+                original_position.piece = self
+                return True
+            
+        bishop = Bishop(original_position, self.team, add_to_player=False)
+        moves = bishop.get_movements()
+        for move in moves: 
+            piece = move.piece
+            if piece and piece.type in ['Bishop', 'Queen']: 
+                original_position.piece = self
+                return True
+            
+        knight = Knight(original_position, self.team, add_to_player=False)
+        moves = knight.get_movements()
+        for move in moves: 
+            piece = move.piece
+            if piece and piece.type == 'Knight': 
+                original_position.piece = self
+                return True
+            
+        king = King(original_position, self.team, add_to_player=False)
+        moves = king.get_movements(include_castle=False)
+        for move in moves: 
+            piece = move.piece
+            if piece and piece.type in 'King': 
+                original_position.piece = self
+                return True
+
+        if self.pawn_atacking(original_position):
+            original_position.piece = self
+            return True
+        
+        original_position.piece = self
+        return False
+    
+    def pawn_atacking(self, position: Tile) -> bool:
+        """ We look at the diagonals, if there is a pawn we look at its atacking direction and if the current tile is in that direction then the pawn would be atacking the king. """
+        directions = [D.UP_LEFT, D.UP_RIGHT, D.DOWN_LEFT, D.DOWN_RIGHT]
+        if position.pentagon: 
+            directions += [D.ADDITIONAL_DIAGONAL]
+
+        for direction in directions: 
+            neighbour = position.neighbors[direction]
+            if neighbour:
+                piece = neighbour.piece
+                if piece and piece.type == 'Pawn': 
+                    moves = piece.get_movements(only_atacks=True)
+                    for move in moves: 
+                        if move == position: 
+                            return True 
+        return False
+
     def move(self, to: Tile, validate: bool = True) -> bool: 
         moved = False
         castle_movements = self.get_castle_movements()
@@ -397,8 +462,8 @@ class Pawn(Piece):
         }
     }
         
-    def __init__(self, position: Tile, team: Player) -> None:
-        super().__init__(position, team)
+    def __init__(self, position: Tile, team: Player, add_to_player: bool = True) -> None:
+        super().__init__(position, team, add_to_player)
         self.direction = Pawn.PAWNS[self.team.team]['direction']
         self.atack_directions = Pawn.PAWNS[self.team.team]['atacks']
         self.first_move = True # True when the player hasn't moved the pawn yet. 
@@ -407,20 +472,23 @@ class Pawn(Piece):
         self.quadrant = team # The quadrant is represented by the team number.
         self.change_quadrant() # Change the quadrant of the pawn when it is created to make sure it matches the initial position. 
 
-    def get_movements(self, flatten=True, remove_non_valid_atacks=True) -> list[Tile]:
+    def get_movements(self, flatten=True, remove_non_valid_atacks=True, only_atacks=False) -> list[Tile]:
         if self.is_promoting(): 
             return []
-        
-        limit = 1 if not self.first_move else 2
-        directions = [self.direction]
-        if self.position.pentagon: directions += [D.ADDITIONAL_STRAIGHT] 
-        
-        positions = []
-        for direction in directions: 
-            next_tile = self.position.neighbors[direction]
-            positions += self.trace_direction(self.position, next_tile, limit=limit, can_eat=False)
 
-        atack_directions = self.atack_directions
+        positions = []
+        if not only_atacks: 
+            limit = 1 if not self.first_move else 2
+            directions = [self.direction]
+            if self.position.pentagon: directions += [D.ADDITIONAL_STRAIGHT] 
+            
+            for direction in directions: 
+                next_tile = self.position.neighbors[direction]
+                positions += self.trace_direction(self.position, next_tile, limit=limit, can_eat=False)
+
+        atack_directions = self.atack_directions.copy()
+        if self.add_aditional_atack(): 
+            atack_directions += [D.ADDITIONAL_DIAGONAL]
         atack_positions = []
         for direction in atack_directions: 
             next_tile = self.position.neighbors[direction]
@@ -464,3 +532,14 @@ class Pawn(Piece):
                 self.atack_directions = Pawn.PAWNS[self.team.team]['atacks']
             
             self.quadrant = new_quadrant
+
+    def add_aditional_atack(self) -> bool: 
+        if self.position.pentagon: 
+            # We look at the opposite of the current pawn direction, then we look the opposite of that with the additional_relations
+            # If the current pawn direction is in there that means that the attack in the additional diagonal should be added. 
+            # For example in C3_T, going up, the inverse is down and the additional_relation tells us that the current direction UP is in [UP, ADDITIONA_STRAIGH]
+            # If we were going down, the opposite is UP and there is no additional direction so it means the additional attack should not be added. 
+            opposite_direction = Tile.relations[self.direction][0]
+            if opposite_direction in self.position.additional_relations and self.direction in self.position.additional_relations[opposite_direction]: 
+                return True 
+        return False

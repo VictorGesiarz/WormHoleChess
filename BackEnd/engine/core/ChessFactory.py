@@ -53,6 +53,15 @@ class ChessFactory:
         return players
     
     @staticmethod
+    def create_bot_data() -> List[Tuple[str]]: 
+        return {
+            ("white", "bot", "random"),
+            ("black", "bot", "random"),
+            ("blue", "bot", "random"),
+            ("red", "bot", "random"),
+        }
+
+    @staticmethod
     def create_board(mode: str, size: str) -> Board:
         if mode == "base":
             return Board()

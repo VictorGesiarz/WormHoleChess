@@ -1,21 +1,19 @@
 from typing import List, Dict, Tuple
-import json 
-import random
 import time
 
 from engine.core.base.Board import Board
 from engine.core.layer.LayerBoard import LayerBoard
 from engine.core.base.Tile import Tile
 from engine.core.layer.LayerTile import LayerTile
-from engine.core.base.Pieces import Piece
-from engine.core.layer.LayerPieces import LayerPiece
-from engine.core.Player import Player, Bot
+from engine.core.base.Pieces import Piece, Tower, Knight, Bishop, Queen, King, Pawn
+from engine.core.layer.LayerPieces import LayerPiece, LayerTower
+from engine.core.Player import Player
 from engine.core.constants import *
 from engine.ai import * 
 
 
 class Game:
-    def __init__(self, board: Board, players: List[Player], turn: int = COLOR_TO_NUMBER['white']) -> None:
+    def __init__(self, board: Board | LayerBoard, players: List[Player], turn: int = COLOR_TO_NUMBER['white']) -> None:
         self.turn = turn 
         self.players = players
         self.number_of_players = len(players)
@@ -31,7 +29,6 @@ class Game:
     def get_turn(self) -> int:
         """ Returns the current turn and -1 if the current player lost or is a bot """ 
         current_player = self.players[self.turn]
-
         if not current_player.alive:
             return -1
         if current_player.type == "bot":
@@ -51,23 +48,20 @@ class Game:
 
     def filter_legal_moves(self, player: Player, moves: List[Tile | LayerTile]) -> List[Tile | LayerTile]:         
         legal_moves = []
-
         for move in moves:
             captured_piece = self.make_move(move)
-            
             if not self.is_in_check(player):
                 legal_moves.append(move)
-            
             self.undo_move(move, captured_piece)
-
         return legal_moves
 
-    def is_in_check(self, player: Player, trace_from_king=False) -> bool: 
-        if trace_from_king:
-            ...
+    def is_in_check(self, player: Player) -> bool: 
+        if OPTIMIZATION_PARAMETERS['cast_from_king']:
+            king = player.pieces['King'][0]
+            return king.trace_from_king()
         else: 
             for enemy_player in self.players: 
-                if enemy_player.team != player.team:
+                if enemy_player != player and enemy_player.alive:
                     enemy_moves = enemy_player.get_all_possible_moves()
                     for move in enemy_moves: 
                         oringin_tile = move[0]

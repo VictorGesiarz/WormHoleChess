@@ -77,4 +77,27 @@ def eat():
     print(moves)
 
 
+def castle(): 
+    board = Board()
+    p1 = Player(0)
+    p2 = Player(3)
+    players = [p1, p2]
+    game = Game(board, players)
+
+    pieces = [
+        King(board['e1_T'], p1),
+        Tower(board['a1_T'], p1),
+        Tower(board['h1_T'], p1),
+        Bishop(board['c1_T'], p1), 
+        Bishop(board['f1_T'], p1)
+    ]
+
+    moves = game.get_movements()
+    print(moves)
+
+
+check_check()
+check_mate()
+stale_mate()
 eat()
+castle()

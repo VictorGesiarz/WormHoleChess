@@ -1,20 +1,26 @@
-# ButtHoleChess
-
-## Backend
+# WormHoleChess
 
 - [x] Do the TODO
+
+## Backend
 
 **Game:**
 - [ ] Implement Board por 2 players (Base and Layer):
   - Should it be in the same file as the other and just changing some configuration or in a new file with the same board logic but changing the manual 
-- [ ] Implement ChessFactory to easily decide what kind of game to start and set the initial positions of the pieces. 
+- [ ] Implement smaller version of game with less pieces and for 2 players for the first AI implementation. 
+- [x] Implement ChessFactory to easily decide what kind of game to start and set the initial positions of the pieces. 
 - [ ] Implement Monte Carlo Tree Search (or at least take a good look at how it works and what I should do, for now)
+
+**Tests:**
+
+- [ ] Implement a testing module to be able to test the different optimizations and store results in csv. 
+- [ ] Test each of the next optimizations. 
 
 **Base Board Optimization:** 
 
-- [ ] Change order of pieces to look for checks.
-- [ ] Stop searching other player movements if any of the moves makes a check.
-- [ ] Look for checks from the king rather than from all the other pieces looking for the king. 
+❌ ~~Change order of pieces to look for checks.~~ (Only works with the next optimization)
+❌ ~~Stop searching other player movements if any of the moves makes a check.~~ (Not worth it, won't optimize much and itroduces a lot of changes to the code)
+- [X] Look for checks from the king rather than from all the other pieces looking for the king. 
 - [ ] Implement Layer Board. 
   - [x] Layer board creation
   - [ ] Layer board logic
