@@ -1,6 +1,7 @@
 import json 
 from typing import Dict
 
+from engine.core.base.Board import Board
 from engine.core.layer.LayerTile import LayerTile
 
 

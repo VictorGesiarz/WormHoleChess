@@ -1,8 +1,4 @@
-import json
-
 from engine.core.base.Tile import Tile, D
-from engine.core.base.Pieces import Piece
-from engine.core.constants import NUMBER_TO_COLOR
 
 
 class Board:
