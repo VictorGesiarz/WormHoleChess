@@ -37,7 +37,7 @@ def create_layer_board():
 
         # Castling is handled in the game logic
         king = King(tile, player1)
-        king_movements = king.get_movements(flatten=False, include_castle=False)
+        king_movements = king.get_movements()
 
         pawn_white_movements = []
         if tile.name not in PAWN_INVALID_POSITIONS["whtie"]:

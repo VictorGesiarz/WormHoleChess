@@ -1,44 +1,62 @@
 import time
+import tracemalloc
+import pandas as pd
 
 from engine.core.ChessFactory import ChessFactory
+from engine.core.constants import PARAMETERS
 
+
+PARAMETERS['cast_from_king'] = True
 
 def simulate_game(): 
     game_creation_time = time.time()
     game = ChessFactory.create_game(
-        player_data = ChessFactory.create_bot_data(), 
-        mode = "base",
-        size = "big"
+        player_data=ChessFactory.create_bot_data(num_bots=4), 
+        mode="base",
+        size="big",
+        # initial_positions='./engine/core/assets/4 pieces.json'
     )
     game_creation_time = time.time() - game_creation_time
-    game.check_size()
-    print(f"Game created in {game_creation_time:.4f}s")
 
-    max_turns = 200 # 25 per player
-    total_calc_time = 0
+    total_calc_time = 0.0
+    calc_count = 0
+    max_memory = game.check_size()
+    move_count = 0
+
     game_time = time.time()
 
-    while not game.is_finished() and max_turns > 0: 
+    while not game.is_finished() and move_count < 120: 
+        move_time = time.time()
         turn = game.get_turn()
+        move_duration = time.time() - move_time
+
+        if turn:
+            total_calc_time += move_duration
+            calc_count += 1
+
         game.next_turn()
-        max_turns -= 1
+        move_count += 1
 
     game_time = time.time() - game_time
 
-    print(f"Total move calc time: {total_calc_time:.4f}s")
-    print(f"Total game time: {game_time:.4f}s")
+    # print(game.history)
+
+    average_calc_time = total_calc_time / calc_count if calc_count > 0 else 0
+
+    return move_count, game_time, total_calc_time, average_calc_time, max_memory
+
 
 def test(): 
-    times = []
+    results = []
     for i in range(100): 
-        start_time = time.time()
-        simulate_game()
-        end_time = time.time()
-        times.append(end_time - start_time)
-        print(f"Game {i+1}: {end_time - start_time:.2f}s")
-    print(f"Average time: {sum(times)/len(times):.2f}s")
+        move_count, game_duration, total_calc_time, avg_calc_time, peak_memory = simulate_game()
+        results.append([i+1, move_count, game_duration, total_calc_time, avg_calc_time, peak_memory])
+        print(f"Game {i+1}: {move_count} moves, Game duration: {game_duration:.4f}s, Total calc time: {total_calc_time:.4f}s, Avg calc time: {avg_calc_time:.4f}s, Memory: {peak_memory} bytes")
+
+    df = pd.DataFrame(results, columns=["Game", "Move Count", "Total Duration (s)", "Total Calc Time (s)", "Avg Calc Time (s)", "Peak Memory (bytes)"])
+    df.to_csv("./engine/tests/results/base_board_test.csv", index=False)
 
 
 if __name__ == "__main__":
-    simulate_game()
-    # test()
+    test()
+    # simulate_game()

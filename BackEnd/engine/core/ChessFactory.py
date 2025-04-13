@@ -53,11 +53,16 @@ class ChessFactory:
         return players
     
     @staticmethod
-    def create_bot_data() -> List[Tuple[str]]: 
+    def create_bot_data(num_bots: int = 4) -> List[Tuple[str]]: 
+        if num_bots == 4:
+            return {
+                ("white", "bot", "random"),
+                ("black", "bot", "random"),
+                ("blue", "bot", "random"),
+                ("red", "bot", "random"),
+            }
         return {
             ("white", "bot", "random"),
-            ("black", "bot", "random"),
-            ("blue", "bot", "random"),
             ("red", "bot", "random"),
         }
 

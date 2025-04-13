@@ -88,8 +88,10 @@ def castle():
         King(board['e1_T'], p1),
         Tower(board['a1_T'], p1),
         Tower(board['h1_T'], p1),
-        Bishop(board['c1_T'], p1), 
-        Bishop(board['f1_T'], p1)
+        # Bishop(board['c1_T'], p1), # This should block the middle tile and not allow the castle. 
+        # Bishop(board['f1_T'], p1), # This also blocks the middle tile. 
+        Tower(board['d3_T'], p2), # This should not allow the castle because it checks one of the middle tiles. 
+        # Tower(board['e3_T'], p2), # This should not allow castle because king is in check
     ]
 
     moves = game.get_movements()

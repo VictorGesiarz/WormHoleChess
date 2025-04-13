@@ -18,6 +18,7 @@ LOBBY_EXPIRATION_TIME = 60 * 10
 
 DEFAULT_GAME_TIME = 60 * 10
 
-OPTIMIZATION_PARAMETERS = {
+PARAMETERS = {
     'cast_from_king': True, 
+    'can_eat_dead': True, 
 }

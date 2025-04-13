@@ -1,8 +1,26 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
+from dataclasses import dataclass
 
 from engine.core.base.Tile import Tile, D
 from engine.core.Player import Player
-from engine.core.constants import NUMBER_TO_COLOR
+from engine.core.constants import NUMBER_TO_COLOR, PARAMETERS
+
+
+@dataclass
+class PieceMovement:
+    piece: "Piece"
+    tile_from: Tile
+    tile_to: Tile
+    first_move: bool
+    captured_piece: "Piece" = None
+    castle_movement: "PieceMovement" = None
+    killed_player: Player = None
+
+    def __str__(self):
+        return f"({self.tile_from}, {self.tile_to})"
+    
+    def __repr__(self):
+        return f"({self.tile_from}, {self.tile_to})"
 
 
 class Piece: 
@@ -50,7 +68,9 @@ class Piece:
         elif collisions and current.piece is not None: 
             if self.team == current.piece.team or not can_eat: 
                 return []
-            return [current]
+            if PARAMETERS['can_eat_dead']: 
+                return [current]
+            return []
         
         positions = [current]
         from_ = current.neighbors_inv[last.name]
@@ -229,7 +249,7 @@ class King(Piece):
                     'tower': ('h1_T', 'f1_T')
                 },
                 'queen_side': {
-                    'middle_tiles': ('b1_T', 'c1_T', 'd1_T'), 
+                    'middle_tiles': ('d1_T', 'c1_T', 'b1_T'), 
                     'king': ('e1_T', 'c1_T'),
                     'tower': ('a1_T', 'd1_T')
                 }
@@ -244,7 +264,7 @@ class King(Piece):
                     'tower': ('h8_T', 'f8_T')
                 },
                 'queen_side': {
-                    'middle_tiles': ('b8_T', 'c8_T', 'd8_T'),
+                    'middle_tiles': ('d8_T', 'c8_T', 'b8_T'),
                     'king': ('e8_T', 'c8_T'),
                     'tower': ('a8_T', 'd8_T')
                 }
@@ -259,7 +279,7 @@ class King(Piece):
                     'tower': ('h1_B', 'f1_B')
                 },
                 'queen_side': {
-                    'middle_tiles': ('b1_B', 'c1_B', 'd1_B'), 
+                    'middle_tiles': ('d1_B', 'c1_B', 'b1_B'), 
                     'king': ('e1_B', 'c1_B'),
                     'tower': ('a1_B', 'd1_B')
                 }
@@ -274,7 +294,7 @@ class King(Piece):
                     'tower': ('h8_B', 'f8_B')
                 },
                 'queen_side': {
-                    'middle_tiles': ('b8_B', 'c8_B', 'd8_B'),
+                    'middle_tiles': ('d8_B', 'c8_B', 'b8_B'),
                     'king': ('e8_B', 'c8_B'),
                     'tower': ('a8_B', 'd8_B')
                 }
@@ -288,7 +308,7 @@ class King(Piece):
         if self.position.name != King.KINGS[self.team.team]['initial_position']:
             self.first_move = False
         
-    def get_movements(self, flatten: bool = True, include_castle: bool = True) -> list[Tile]:
+    def get_movements(self) -> list[Tile]:
         directions = [D.UP_LEFT, D.UP_RIGHT, D.DOWN_LEFT, D.DOWN_RIGHT,
                       D.UP, D.DOWN, D.LEFT, D.RIGHT]
         if self.position.pentagon: directions += [D.ADDITIONAL_DIAGONAL, D.ADDITIONAL_STRAIGHT] 
@@ -298,77 +318,61 @@ class King(Piece):
             next_tile = self.position.neighbors[direction]
             positions += self.trace_direction(self.position, next_tile, limit=1)
         
-        if flatten: 
-            return positions + self.get_castle_movements() if include_castle else positions
-        if include_castle:
-            return [positions, self.get_castle_movements()]
         return positions
     
-    def get_castle_movements(self) -> list[Tile]: 
+    def get_castle_movements(self) -> List[List[Tuple[Tile]]]: 
+        """ It returns the list of possible castle moves and the list of tiles it has to check,
+        first tuple for first castle and second for the second one. The first item of each list is the castle and all the others are the squares in the middle of the castle that also have to be checked. """
         positions = []
         if self.first_move:
             castling_data = King.KINGS[self.team.team]['castling']
             for side, data in castling_data.items():
                 king_from, king_to = data['king']
                 rook_from, rook_to = data['tower']
-                
-                king_tile = self.board[king_from]
-                if king_tile != self.position: 
+                king_from_tile = self.board[king_from]
+                king_to_tile = self.board[king_to]
+                rook_from_tile = self.board[rook_from]
+                rook_to_tile = self.board[rook_to]
+
+                if king_from_tile != self.position: 
                     continue
                 
                 rook = self.board[rook_from].piece
                 if rook is None or rook.type != 'Tower' or rook.team != self.team or not rook.first_move:
                     continue
 
-                middle_tiles = data['middle_tiles']
-                if any(self.board[tile_name].piece is not None for tile_name in middle_tiles):
+                middle_tile = [self.board[tile_name] for tile_name in data['middle_tiles']]
+                if any(tile.piece is not None for tile in middle_tile):
                     continue
 
-                # Also check if the king is not currently in check or in any of the tiles it will move to
-
-                positions.append(self.board[king_to])
+                positions.append(
+                    [(king_from_tile, king_to_tile, rook_from_tile, rook_to_tile), (king_from_tile, middle_tile[0])]
+                )
             return positions
         return []
     
-    def trace_from_king(self) -> bool: 
+    def trace_from_king(self) -> bool:
         original_position = self.position
 
-        tower = Tower(original_position, self.team, add_to_player=False)
-        moves = tower.get_movements()
-        for move in moves: 
-            piece = move.piece
-            if piece and piece.type in ['Tower', 'Queen']: 
-                original_position.piece = self
-                return True
-            
-        bishop = Bishop(original_position, self.team, add_to_player=False)
-        moves = bishop.get_movements()
-        for move in moves: 
-            piece = move.piece
-            if piece and piece.type in ['Bishop', 'Queen']: 
-                original_position.piece = self
-                return True
-            
-        knight = Knight(original_position, self.team, add_to_player=False)
-        moves = knight.get_movements()
-        for move in moves: 
-            piece = move.piece
-            if piece and piece.type == 'Knight': 
-                original_position.piece = self
-                return True
-            
-        king = King(original_position, self.team, add_to_player=False)
-        moves = king.get_movements(include_castle=False)
-        for move in moves: 
-            piece = move.piece
-            if piece and piece.type in 'King': 
-                original_position.piece = self
-                return True
+        attack_patterns = [
+            (Tower, ['Tower', 'Queen']),
+            (Bishop, ['Bishop', 'Queen']),
+            (Knight, ['Knight']),
+            (King, ['King']),
+        ]
+
+        for piece_class, threatening_types in attack_patterns:
+            temp_piece = piece_class(original_position, self.team, add_to_player=False)
+            for move in temp_piece.get_movements():
+                piece = move.piece
+                if piece and piece.team.alive and piece.type in threatening_types:
+                    original_position.piece = self
+                    return True
 
         if self.pawn_atacking(original_position):
             original_position.piece = self
             return True
-        
+
         original_position.piece = self
         return False
     
@@ -388,30 +392,6 @@ class King(Piece):
                         if move == position: 
                             return True 
         return False
-
-    def move(self, to: Tile, validate: bool = True) -> bool: 
-        moved = False
-        castle_movements = self.get_castle_movements()
-        
-        if to in castle_movements:
-            moved = super().move(to, validate=False)
-            castling_data = King.KINGS[self.team.team]['castling']
-            for side, data in castling_data.items():
-                king_from, king_to = data['king']
-                rook_from, rook_to = data['tower']
-                
-                if to == self.board[king_to]:
-                    rook = self.board[rook_from].piece
-                    if rook:
-                        rook.move(self.board[rook_to], validate=False)
-                    break
-            
-        elif validate and to not in castle_movements:
-            moved = super().move(to, validate=validate)
-        else:
-            moved = super().move(to, validate=False)
-
-        return moved
         
         
 class Pawn(Piece): 

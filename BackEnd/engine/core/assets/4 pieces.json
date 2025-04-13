@@ -1,0 +1,18 @@
+{
+	"white": {
+		"pawn": ["a2_T"],
+		"rook": [],
+		"knight": [],
+		"bishop": [], 
+		"queen": [], 
+		"king": ["a1_T"]
+	},
+	"red": {
+		"pawn": ["h7_T"],
+		"rook": [],
+		"knight": [],
+		"bishop": [], 
+		"queen": [], 
+		"king": ["h8_T"]
+	}
+}

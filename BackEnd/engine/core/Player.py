@@ -49,9 +49,8 @@ class Player:
         if piece in self.pieces[piece.type]: 
             piece.revive()
 
-    def get_all_possible_moves(self) -> List[Tile | LayerTile]:
+    def get_possible_moves(self) -> List[Tile | LayerTile]:
         """ Returns a list of possible moves [(from_tile, to_tile), ...] 
-        stop_at_king is for stopping the search if we reach the king
         """
         moves = []
         for piece_type in self.pieces.values():

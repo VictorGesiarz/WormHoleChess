@@ -5,16 +5,25 @@
 ## Backend
 
 **Game:**
-- [ ] Implement Board por 2 players (Base and Layer):
-  - Should it be in the same file as the other and just changing some configuration or in a new file with the same board logic but changing the manual 
+- [x] Implement Board por 2 players (Base and Layer):
+  - It is as simple as putting only 2 players in the game data when initializing and passing a file of initial positions with pieces for 2 players in the correct tiles.  
 - [ ] Implement smaller version of game with less pieces and for 2 players for the first AI implementation. 
+  - For the base board it should be just changing the number of columns and rows and the mannual connections (maybe look for some way of making it more automatic). The layer board then should be the same and work correctly. 
 - [x] Implement ChessFactory to easily decide what kind of game to start and set the initial positions of the pieces. 
+- [ ] Implement chess rules: 
+  - [ ] How do we handle promotions? (For not we could automatically convert it to a queen always)
+  - [x] King Castling
+  - [ ] On passant? 
+  - [x] Checks, checkmates, stalemates
+  - [x] Player loses and wins 
+  - [ ] Draws by agreement (add api to ask for a draw), by repetition, others? 
+  - [x] Add do and undo move 
 - [ ] Implement Monte Carlo Tree Search (or at least take a good look at how it works and what I should do, for now)
 
 **Tests:**
 
-- [ ] Implement a testing module to be able to test the different optimizations and store results in csv. 
-- [ ] Test each of the next optimizations. 
+- [x] Implement a testing module to be able to test the different optimizations and store results in csv. (For now its a little bit mannual)
+- [x] Test each of the next optimizations. 
 
 **Base Board Optimization:** 
 
