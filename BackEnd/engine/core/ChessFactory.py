@@ -10,19 +10,23 @@ from engine.core.Game import Game
 from engine.core.constants import COLOR_TO_NUMBER, NUMBER_TO_COLOR
 
 
-default_initial_positions_file = './engine/core/assets/initial_position.json'
+initial_positions_4_players = './engine/core/assets/initial_positions/4_players.json'
+initial_positions_2_players = './engine/core/assets/initial_positions/2_players.json'
+
 
 class ChessFactory:
     @staticmethod
     def create_game(player_data: List[str],
                     mode: str = Literal['base', 'layer'],
                     size: str = Literal['big', 'small'],
-                    initial_positions: str | Dict[str, str] = default_initial_positions_file) -> Game:
+                    initial_positions: str | Dict[str, str] = None) -> Game:
         
         board = ChessFactory.create_board(mode, size)
         players = ChessFactory.create_players(player_data)
         
-        if isinstance(initial_positions, str):
+        if initial_positions is None: 
+            initial_positions = ChessFactory.load_initial_positions(initial_positions_2_players if len(players) == 2 else initial_positions_4_players)
+        elif isinstance(initial_positions, str):
             initial_positions = ChessFactory.load_initial_positions(initial_positions)
         ChessFactory.initialize_pieces(board, players, initial_positions, mode)
         

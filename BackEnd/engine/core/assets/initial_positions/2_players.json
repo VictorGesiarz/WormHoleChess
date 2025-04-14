@@ -1,0 +1,19 @@
+{
+	"white": {
+		"pawn": ["h2_T", "g2_T", "f2_T", "e2_T", "d2_T", "c2_T", "b2_T", "a2_T"],
+		"rook": ["h1_T", "a1_T"],
+		"knight": ["g1_T", "b1_T"],
+		"bishop": ["f1_T", "c1_T"], 
+		"queen": ["d1_T"], 
+		"king": ["e1_T"]
+	},
+
+	"red": {
+		"pawn": ["h7_B", "g7_B", "f7_B", "e7_B", "d7_B", "c7_B", "b7_B", "a7_B"],
+		"rook": ["h8_B", "a8_B"],
+		"knight": ["g8_B", "b8_B"],
+		"bishop": ["f8_B", "c8_B"], 
+		"queen": ["d8_B"], 
+		"king": ["e8_B"]
+	}
+}
