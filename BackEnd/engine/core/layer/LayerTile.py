@@ -1,41 +1,27 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from typing import List, Dict 
+from typing import List, Dict, Tuple
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from engine.core.layer.LayerPieces import LayerPiece
     from engine.core.layer.LayerBoard import LayerBoard
 
 
-class LayerTile: 
-    def __init__(self, name: str, board: LayerBoard) -> None: 
+class LayerTile:
+    def __init__(self, name: str, board: LayerBoard, piece: LayerPiece = None):
         self.name = name
         self.board = board
-        self.piece = None
-        # The tower, bishop are lists of lists of tiles because we need to trace each direction to check if there are pieces blocking
-        # The pawn is a list of lists because we need the move positions and the atack positions. 
-        # We have to store the pawn of each team
-        # The queen is the result of combining the tower and bishop movements
-        self.layers: Dict[str, List[List[LayerTile]] | List[LayerTile] | Dict[str, List[List[LayerTile]]]] = {
-            "Tower": [], 
-            "Bishop": [],
-            "Knight": [],
-            "King": [], 
-            "Pawn": {
-                "white": [], 
-                "black": [], 
-                "blue": [], 
-                "red": []
-            }
-        }
+        self.piece = piece
 
-    def __getitem__(self, key: str) -> LayerPiece: 
-        return self.layers[key]
+        self.tower_layer = TowerLayer()
+        self.bishop_layer = BishopLayer()
+        self.knight_layer = KnightLayer()
+        self.queen_layer = QueenLayer()
+        self.king_layer = KingLayer()
+        self.pawn_layer = PawnLayer()
 
-    def __hash__(self): 
-        return hash(self.name)
-    
     def __eq__(self, other): 
         if other is None: 
             return False
@@ -43,6 +29,57 @@ class LayerTile:
             return self.name == other
         return self.name == other.name
     
-    def set_layer(self, layer: str, neighbors: List["LayerTile"]) -> None: 
-        self.layers[layer] = neighbors
-        
+    def __str__(self):
+        return f"{self.name}"
+    
+    def __repr__(self):  
+        return f"{self.name}"
+    
+    def __hash__(self): 
+        return hash(self.name)
+    
+    def set_layer(self, layer: Layer):
+        match layer:
+            case TowerLayer():
+                self.tower_layer = layer
+            case BishopLayer():
+                self.bishop_layer = layer
+            case KnightLayer():
+                self.knight_layer = layer
+            case QueenLayer():
+                self.queen_layer = layer
+            case KingLayer():
+                self.king_layer = layer
+            case PawnLayer():
+                self.pawn_layer = layer
+
+
+@dataclass
+class Layer:
+    pass
+
+@dataclass
+class TowerLayer(Layer):
+    directions: List[List[LayerTile]] = field(default_factory=list)
+
+@dataclass
+class KnightLayer:
+    movements: List[LayerTile] = field(default_factory=list)
+
+@dataclass
+class BishopLayer: 
+    directions: List[List[LayerTile]] = field(default_factory=list)
+
+@dataclass
+class QueenLayer:
+    directions: List[List[LayerTile]] = field(default_factory=list)
+
+@dataclass
+class KingLayer: 
+    movements: List[LayerTile] = field(default_factory=list)
+    pawn_possible_atacks: List[LayerTile] = field(default_factory=list)
+
+@dataclass
+class PawnLayer: 
+    moves: Dict[str, List[LayerTile]] = field(default_factory=dict)
+    attacks: Dict[str, List[LayerTile]] = field(default_factory=dict)

@@ -12,7 +12,7 @@ def simulate_game():
     game_creation_time = time.time()
     game = ChessFactory.create_game(
         player_data=ChessFactory.create_bot_data(num_bots=4), 
-        mode="base",
+        mode="layer",
         size="big",
         # initial_positions='./engine/core/assets/4 pieces.json'
     )
@@ -30,7 +30,7 @@ def simulate_game():
         turn = game.get_turn()
         move_duration = time.time() - move_time
 
-        if turn:
+        if turn >= 0:
             total_calc_time += move_duration
             calc_count += 1
 
@@ -54,6 +54,9 @@ def test():
         print(f"Game {i+1}: {move_count} moves, Game duration: {game_duration:.4f}s, Total calc time: {total_calc_time:.4f}s, Avg calc time: {avg_calc_time:.4f}s, Memory: {peak_memory} bytes")
 
     df = pd.DataFrame(results, columns=["Game", "Move Count", "Total Duration (s)", "Total Calc Time (s)", "Avg Calc Time (s)", "Peak Memory (bytes)"])
+
+    print(f"Mean game duration: {df['Total Duration (s)'].mean():.4f}s")
+
     df.to_csv("./engine/tests/results/base_board_test.csv", index=False)
 
 

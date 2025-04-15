@@ -1,28 +1,31 @@
-import json 
-from typing import Dict
+from typing import Dict, List
 
 from engine.core.Player import Player
 from engine.core.base.Board import Board
+from engine.core.base.Tile import Tile
 from engine.core.base.Pieces import Tower, Bishop, Knight, Queen, King, Pawn
-from engine.core.layer.LayerTile import LayerTile
+from engine.core.layer.LayerTile import LayerTile, TowerLayer, KnightLayer, BishopLayer, QueenLayer, KingLayer, PawnLayer
 
 
 class LayerBoard: 
     def __init__(self) -> None:
-        self.tiles = self
+        self.tiles: Dict[str, LayerTile] = self.create_tiles()
+        self.connect_tiles()
 
     def __getitem__(self, key: str | LayerTile) -> LayerTile: 
         if isinstance(key, LayerTile): 
             return self.tiles[key.name]
-        self.tiles[key]
+        return self.tiles[key]
         
-    def create_layer_board(): 
-        PAWN_INVALID_POSITIONS = {
-            "whtie": ["a1_T", "b1_T", "c1_T", "d1_T", "e1_T", "f1_T", "g1_T", "h1_T"],
-            "black": ["a8_T", "b8_T", "c8_T", "d8_T", "e8_T", "f8_T", "g8_T", "h8_T"],
-            "blue": ["a1_B", "b1_B", "c1_B", "d1_B", "e1_B", "f1_B", "g1_B", "h1_B"],
-            "red": ["a8_B", "b8_B", "c8_B", "d8_B", "e8_B", "f8_B", "g8_B", "h8_B"],
-        }
+    def create_tiles(self) -> Dict[str, LayerTile]: 
+        b = Board()
+        tiles = {}
+        for tile in b.tiles.values(): 
+            tiles[tile.name] = LayerTile(tile.name, self)
+        return tiles
+
+    def connect_tiles(self) -> None: 
+        PAWN_INVALID_ROWS = ['1_T', '8_T', '1_B', '8_B']
         
         player1 = Player(0, "player")
         player2 = Player(1, "player")
@@ -30,57 +33,109 @@ class LayerBoard:
         player4 = Player(3, "player")
         
         b = Board()
-        layer_board = {}
         for tile in b.tiles.values(): 
-            layer_board[tile.name] = LayerTile(tile.name)
-        
-        for tile in b.tiles.values(): 
+            layer_tile = self.tiles[tile.name]
+
             tower = Tower(tile, player1)
             tower_movements = tower.get_movements(flatten=False)
-            tower_movements = [movements for movements in tower_movements if len(movements) > 0]
+            filtered_tower_movements = self._filter_movements(tower_movements, separate=True)
+            tower_layer = TowerLayer(filtered_tower_movements)
 
             knight = Knight(tile, player1)
             knight_movements = knight.get_movements()
+            knight_converted_moves = self._convert_to_layer_tile(knight_movements)
+            knight_layer = KnightLayer(knight_converted_moves)
 
             bishop = Bishop(tile, player1)
             bishop_movements = bishop.get_movements(flatten=False)
-            tower_movements = [movements for movements in bishop_movements if len(movements) > 0]
+            filtered_bishop_movements = self._filter_movements(bishop_movements, separate=True)
+            bishop_layer = BishopLayer(filtered_bishop_movements)
+
+            queen_layer = QueenLayer(filtered_tower_movements + filtered_bishop_movements)
 
             # Castling is handled in the game logic
             king = King(tile, player1)
             king_movements = king.get_movements()
+            king_pawn_possible_atacks = king.get_pawn_possible_atacks()
+            king_converted_moves = self._convert_to_layer_tile(king_movements)
+            king_pawn_attacks_converted_moves = self._convert_to_layer_tile(king_pawn_possible_atacks)
+            king_layer = KingLayer(king_converted_moves, king_pawn_attacks_converted_moves)
 
-            pawn_white_movements = []
-            if tile.name not in PAWN_INVALID_POSITIONS["whtie"]:
+            pawn_moves = {0: [], 1: [], 2: [], 3: []}
+            pawn_atacks = {0: [], 1: [], 2: [], 3: []}
+
+            if not tile.name[1:] in PAWN_INVALID_ROWS: 
                 pawn_white = Pawn(tile, player1)
                 pawn_white_movements = pawn_white.get_movements(flatten=False, remove_non_valid_atacks=False)
+                pawn_moves[0] = self._convert_to_layer_tile(pawn_white_movements[0])
+                pawn_atacks[0] = self._convert_to_layer_tile(pawn_white_movements[1])
 
-            pawn_black_movements = []
-            if tile.name not in PAWN_INVALID_POSITIONS["black"]:
                 pawn_black = Pawn(tile, player2)
-                pawn_black_movements = pawn_black.get_movements(flatten=False, remove_non_valid_atacks=False)
+                pawn_black_movements = pawn_black.get_movements(flatten=False, 
+                remove_non_valid_atacks=False)
+                pawn_moves[1] = self._convert_to_layer_tile(pawn_black_movements[0])
+                pawn_atacks[1] = self._convert_to_layer_tile(pawn_black_movements[1])
 
-            pawn_blue_movements = []
-            if tile.name not in PAWN_INVALID_POSITIONS["blue"]: 
                 pawn_blue = Pawn(tile, player3)
                 pawn_blue_movements = pawn_blue.get_movements(flatten=False, remove_non_valid_atacks=False)
+                pawn_moves[2] = self._convert_to_layer_tile(pawn_blue_movements[0])
+                pawn_atacks[2] = self._convert_to_layer_tile(pawn_blue_movements[1])
 
-            pawn_red_movements = []
-            if tile.name not in PAWN_INVALID_POSITIONS["red"]: 
                 pawn_red = Pawn(tile, player4)
                 pawn_red_movements = pawn_red.get_movements(flatten=False, remove_non_valid_atacks=False)
+                pawn_moves[3] = self._convert_to_layer_tile(pawn_red_movements[0])
+                pawn_atacks[3] = self._convert_to_layer_tile(pawn_red_movements[1])
 
-            layer_board[tile.name] = {
-                "tower": tower_movements,
-                "knight": knight_movements, 
-                "bishop": bishop_movements, 
-                "king": king_movements, 
-                "pawn_white": pawn_white_movements,
-                "pawn_black": pawn_black_movements,
-                "pawn_blue": pawn_blue_movements, 
-                "pawn_red": pawn_red_movements, 
-            }
+            pawn_layer = PawnLayer(pawn_moves, pawn_atacks)
+
+            layer_tile.set_layer(tower_layer)
+            layer_tile.set_layer(knight_layer)
+            layer_tile.set_layer(bishop_layer)
+            layer_tile.set_layer(queen_layer)
+            layer_tile.set_layer(king_layer)
+            layer_tile.set_layer(pawn_layer)
 
             tile.remove_piece()
+    
+    def _filter_movements(self, movements: List[List[Tile]], separate: bool = False) -> List[List[Tile]]: 
+        filtered_movements = []
+        for movement in movements: 
+            if movement: 
+                if separate: 
+                    filtered_movements += self._separate_pentagon_movements(movement)
+                else: 
+                    filtered_movements.append(movement)
+        converted_movements = []
+        for movement in filtered_movements: 
+            converted_movements.append(self._convert_to_layer_tile(movement))
+        return converted_movements
+    
+    def _convert_to_layer_tile(self, movement: List[Tile]) -> List[LayerTile]: 
+        return [self.tiles[tile] for tile in movement]
 
-        return layer_board
+    def _separate_pentagon_movements(self, movement: List[Tile]) -> List[List[Tile]]:
+        for i, tile in enumerate(movement): 
+            if tile.pentagon:
+                branches = []
+
+                # No split of paths 
+                if len(movement[i+1:]) < 4: break 
+
+                # When tower splits at pentagon (coming from the loop) there are 2 paths, each of 2 tiles
+                elif len(movement[i+1:]) == 4: 
+                    branches = [movement[i+1:i+3], movement[i+3: i+5]]
+                
+                # When bishop splits at pentagon there are 2 paths, each of 5 tiles
+                elif len(movement[i+1:]) == 10: 
+                    branches = [movement[i+1:i+6], movement[i+6:i+11]]
+                
+                # When tower splits at pentagon there are 2 paths, one of 5 and the other of 7, which also splits at the next pentagon into 2 and 2 (first case) 
+                elif len(movement[i+1:]) == 12: 
+                    branches = [movement[i+1:i+6]] + self._separate_pentagon_movements(movement[i+6:])
+
+                if branches:
+                    paths = [movement[:i+1] + branch for branch in branches]
+                    return paths
+                break
+
+        return [movement]

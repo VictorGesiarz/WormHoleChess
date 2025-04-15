@@ -11,14 +11,14 @@ def simulate_game():
     game_creation_time = time.time() - game_creation_time
     
     calc_times = []
-    memory_usage = []
+    memory_usage = [0]
     move_count = 0
     
-    tracemalloc.start()
-    start_mem, _ = tracemalloc.get_traced_memory()
+    # tracemalloc.start()
+    # start_mem, _ = tracemalloc.get_traced_memory()
     game_start_time = time.time()
     
-    while not board.is_game_over() and move_count < 100:
+    while not board.is_game_over() and move_count < 120:
         calc_start = time.time()
         legal_moves = list(board.legal_moves)
         calc_end = time.time()
@@ -28,8 +28,8 @@ def simulate_game():
         board.push(move)
         move_end = time.time()
         
-        current_mem, _ = tracemalloc.get_traced_memory()
-        memory_usage.append(current_mem - start_mem)
+        # current_mem, _ = tracemalloc.get_traced_memory()
+        # memory_usage.append(current_mem - start_mem)
         
         calc_times.append(calc_end - calc_start)
         move_count += 1

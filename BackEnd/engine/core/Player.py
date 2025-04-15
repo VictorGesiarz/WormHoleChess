@@ -18,7 +18,7 @@ class Player:
         
         self.alive = True
         
-        self.pieces: Dict[str, List[Piece]] = {
+        self.pieces: Dict[str, List[Piece | LayerPiece]] = {
             "Tower": [],
             "Knight": [],
             "Bishop": [],

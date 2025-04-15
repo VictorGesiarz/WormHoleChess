@@ -1,6 +1,8 @@
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
 
+from engine.core.layer.LayerTile import LayerTile
+from engine.core.layer.LayerPieces import LayerPiece
 from engine.core.base.Tile import Tile, D
 from engine.core.Player import Player
 from engine.core.constants import NUMBER_TO_COLOR, PARAMETERS
@@ -9,10 +11,10 @@ from engine.core.constants import NUMBER_TO_COLOR, PARAMETERS
 @dataclass
 class PieceMovement:
     piece: "Piece"
-    tile_from: Tile
-    tile_to: Tile
+    tile_from: Tile | LayerTile
+    tile_to: Tile | LayerTile
     first_move: bool
-    captured_piece: "Piece" = None
+    captured_piece: "Piece | LayerPiece" = None
     castle_movement: "PieceMovement" = None
     killed_player: Player = None
 
@@ -49,7 +51,7 @@ class Piece:
     def get_movements(self) -> List[Tile]:
         ...
     
-    def trace_direction(self, last: Tile, current: Tile, limit: int, collisions: bool = True, can_eat: bool = True) -> list[Tile]:
+    def trace_direction(self, last: Tile, current: Tile, limit: int, collisions: bool = True, can_eat: bool = True) -> List[Tile]:
         """ Trace the direction of the piece and return the positions it can move to. R
         The method is recursive and will stop when it reaches the limit or when it finds a collision.
 
@@ -392,7 +394,18 @@ class King(Piece):
                         if move == position: 
                             return True 
         return False
-        
+    
+    def get_pawn_possible_atacks(self) -> List[Tile]: 
+        directions = [D.UP_LEFT, D.UP_RIGHT, D.DOWN_LEFT, D.DOWN_RIGHT]
+        if self.position.pentagon: 
+            directions += [D.ADDITIONAL_DIAGONAL]
+        tiles = []
+        for direction in directions: 
+            neighbor = self.position.neighbors[direction]
+            if neighbor is not None: 
+                tiles.append(neighbor)
+        return tiles
+    
         
 class Pawn(Piece): 
     PAWNS = {
@@ -452,7 +465,7 @@ class Pawn(Piece):
         self.quadrant = team # The quadrant is represented by the team number.
         self.change_quadrant() # Change the quadrant of the pawn when it is created to make sure it matches the initial position. 
 
-    def get_movements(self, flatten=True, remove_non_valid_atacks=True, only_atacks=False) -> list[Tile]:
+    def get_movements(self, flatten=True, remove_non_valid_atacks=True, only_atacks=False) -> List[List[Tile]]:
         if self.is_promoting(): 
             return []
 

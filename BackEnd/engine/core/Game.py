@@ -84,7 +84,7 @@ class Game:
     def make_move(self, move: Tuple[Tile | LayerTile], store: bool = True) -> PieceMovement: 
         origin_tile = move[0]
         destination_tile = move[1]
-        
+
         moving_piece = origin_tile.piece
         captured_piece = destination_tile.piece
 

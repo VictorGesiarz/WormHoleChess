@@ -39,7 +39,7 @@ class ChessFactory:
             for piece_name, piece_positions in player_pieces_positions.items(): 
                 for position in piece_positions: 
                     tile = board[position]
-                    piece = ChessFactory.create_piece(piece_name, mode, tile, player)
+                    ChessFactory.create_piece(piece_name, mode, tile, player)
     
     @staticmethod
     def create_players(player_data: List[Tuple[str]]) -> List[Player]:
@@ -59,16 +59,30 @@ class ChessFactory:
     @staticmethod
     def create_bot_data(num_bots: int = 4) -> List[Tuple[str]]: 
         if num_bots == 4:
-            return {
+            return [
                 ("white", "bot", "random"),
                 ("black", "bot", "random"),
                 ("blue", "bot", "random"),
                 ("red", "bot", "random"),
-            }
-        return {
+            ]
+        return [
             ("white", "bot", "random"),
             ("red", "bot", "random"),
-        }
+        ]
+    
+    @staticmethod
+    def create_player_data(num_players: int = 4) -> List[Tuple[str]]: 
+        if num_players == 4: 
+            return [
+                ("white", "player"),
+                ("black", "player"),
+                ("blue", "player"),
+                ("red", "player"),
+            ]
+        return [
+            ("white", "player"), 
+            ("red", "player")
+        ]
 
     @staticmethod
     def create_board(mode: str, size: str) -> Board:
@@ -76,8 +90,6 @@ class ChessFactory:
             return Board()
         elif mode == "layer":
             return LayerBoard()
-        else:
-            raise ValueError("Invalid mode: choose 'speed' or 'memory'")
 
     @staticmethod
     def create_piece(piece_name, mode, tile, player):
