@@ -5,7 +5,8 @@ from engine.core.base.Board import Board
 from engine.core.layer.LayerBoard import LayerBoard
 from engine.core.base.Pieces import Piece
 from engine.core.layer.LayerPieces import LayerPiece
-from engine.core.Player import Player, Bot
+from engine.core.Player import Player
+from engine.ai.BOT import Bot
 from engine.core.Game import Game
 from engine.core.constants import COLOR_TO_NUMBER, NUMBER_TO_COLOR
 

@@ -59,18 +59,3 @@ class Player:
                     from_ = piece.position
                     moves.extend((from_, move) for move in piece.get_movements())
         return moves
-
-
-class Bot(Player): 
-    def __init__(self, team: int, difficulty: str = "random"):
-        super().__init__(team, type="bot")
-        self.difficulty = difficulty
-
-    def choose_move(self, moves: List[Tuple[Tile | LayerTile]]) -> Tuple[Tile | LayerTile]:
-        if self.difficulty == "random":
-            if len(moves) > 0: 
-                random_move = random.choice(moves)
-                return random_move
-            return None
-        else: 
-            raise NotImplemented(f"Difficulty level {self.difficulty} not implemented")
