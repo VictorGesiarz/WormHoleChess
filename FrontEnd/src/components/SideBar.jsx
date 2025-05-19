@@ -42,10 +42,8 @@ const SideBar = () => {
             <div className="sidebar-title">WormHoleChess</div>
             <ul className="sidebar-links">
                 <li><button onClick={() => navigate("/")}>Home</button></li>
-                <li><button onClick={() => navigate("/lobby")}>Play</button></li>
-                <li><button onClick={() => navigate("/about")}>About</button></li>
-                <li><button onClick={() => navigate("/rules")}>Rules</button></li>
-                <li><button onClick={() => navigate("/pruebas")}>Pruebas</button></li>
+                <li><button onClick={() => navigate("/play")}>Play</button></li>
+                <li><button onClick={() => navigate("/learn")}>Learn</button></li>
             </ul>
 
             <div className="sidebar-auth">

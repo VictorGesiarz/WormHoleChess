@@ -29,12 +29,13 @@ class Tile:
     }
 
     def __init__(self, 
-                 name: str, row: int, col: int, board: Board, 
+                 name: str, row: int, col: int, board: Board, id: int, 
                  top_side: bool = True, pentagon: bool = False, loop: bool = False, piece: Piece = None) -> None:
         self.name = name
         self.row = row
         self.col = col
         self.board = board
+        self.id = id
         self.top_side = top_side
         self.loop = loop 
         self.pentagon = pentagon

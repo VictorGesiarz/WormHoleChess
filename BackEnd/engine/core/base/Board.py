@@ -1,7 +1,11 @@
+from typing import List, Dict, Tuple
+
+from engine.core.base.NormalBoard import NormalBoard
 from engine.core.base.Tile import Tile, D
+from engine.core.base.Pieces import Piece
 
 
-class Board:
+class Board(NormalBoard):
     rows = [str(i) for i in range(1, 9)]
     cols = [chr(i) for i in range(ord('a'), ord('h') + 1)]
     cols_dict = {col: i + 1 for i, col in enumerate(cols)}
@@ -10,43 +14,38 @@ class Board:
     loop_cols = ['d', 'e']
     loop_rows = ['4', '5']
 
-    def __init__(self) -> None:
-        self.tiles = {}
-        tiles = self.create_tiles()
-        self.set_tiles(tiles)
-        self.connect_tiles()
+    def __init__(self, size: Tuple[int] = (8, 8), innitialize: bool = True) -> None:
+        self.size = size # Not used yet 
+        
+        self.tiles: Dict[str, Tile] = {}
+        if innitialize:
+            self.tiles = self.create_tiles()
+            self.connect_tiles()
+        
+        self.pieces: List[Piece] = []
 
-    def __getitem__(self, key: str | Tile) -> Tile:
-        if isinstance(key, Tile):
-            return self.tiles[key.name]
-        return self.tiles[key]
+    def copy(self) -> 'Board': 
+        # If in the future we add parameters to the board for the size we will need to pass them 
+        board_copy = Board(size=self.size, innitialize=False)
+        
+        for tile_name, tile in self.tiles.items(): 
+            board_copy.tiles[tile_name] = Tile(tile_name, tile.row, tile.col, board_copy, tile.id, tile.top_side, tile.pentagon, tile.loop)
 
-    def __contains__(self, key: str) -> bool:
-        return key in self.tiles
+        for tile_name, tile in self.tiles.items(): 
+            neighbors_copy = {}
+            for from_direction, neighbor in tile.neighbors.items(): 
+                neighbors_copy[from_direction] = None if not neighbor else board_copy.tiles[neighbor.name]
+            tile_copy = board_copy.tiles[tile_name]
+            tile_copy.set_neighbors(neighbors_copy)
+            if tile.pentagon: 
+                tile_copy.additional_relations = tile.additional_relations
+        return board_copy
 
-    def __iter__(self):
-        return iter(self.tiles.items())
-
-    def keys(self):
-        return self.tiles.keys()
-
-    def values(self):
-        return self.tiles.values()
-
-    def add_tile(self, tile: Tile) -> None:
-        self.tiles[tile.name] = tile
-
-    def set_tiles(self, tiles: list[Tile]) -> None: 
-        for tile in tiles: 
-            self.add_tile(tile)
-
-    def check_size(self) -> None:
-        from pympler import asizeof
-        print(f"Total size of the instance: {asizeof.asizeof(self)} bytes")
-
-    def create_tiles(self) -> list[Tile]:
-        tiles = []
+    def create_tiles(self) -> Dict[str, Tile]:
+        tiles = {}
         top_side = True
+
+        tile_id = 0
         for _ in range(2): 
             for i, col in enumerate(Board.cols): 
                 for j, row in enumerate(Board.rows): 
@@ -54,14 +53,16 @@ class Board:
                     pentagon = True if name in Board.pentagons else False
                     name += ('_T' if top_side else '_B')
                     loop = True if col in Board.loop_cols and row in Board.loop_rows else False 
-                    tile = Tile(name, int(row), col, self, top_side, pentagon, loop)
-                    tiles.append(tile)
+                    tile = Tile(name, int(row), col, self, tile_id, top_side, pentagon, loop)
+                    tiles[name] = tile
+                    tile_id += 1
 
                     if loop: 
                         for additional in ['_1', '_2']:
                             additional_name = name[:2] + additional + name[2:]
-                            tile = Tile(additional_name, int(row), col, self, top_side, False, True)
-                            tiles.append(tile)
+                            tile = Tile(additional_name, int(row), col, self, tile_id, top_side, False, True)
+                            tiles[additional_name] = tile
+                            tile_id += 1
             top_side = not top_side
         return tiles 
     

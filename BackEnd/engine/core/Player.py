@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Literal
 import random 
 
 from engine.core.constants import COLOR_TO_NUMBER, NUMBER_TO_COLOR
@@ -15,7 +15,7 @@ class Player:
     def __init__(self, team: int,  type: str = "player"):
         self.team = team
         self.type = type
-        
+
         self.alive = True
         
         self.pieces: Dict[str, List[Piece | LayerPiece]] = {
@@ -36,6 +36,11 @@ class Player:
         if isinstance(other, int):
             return self.team == other
         return self.team == other.team
+
+    def copy(self) -> 'Player': 
+        player_copy = Player(self.team, self.type)
+        player_copy.alive = self.alive
+        return player_copy
 
     def add_piece(self, piece: Piece | LayerPiece) -> None: 
         self.pieces[piece.type].append(piece)
@@ -59,3 +64,14 @@ class Player:
                     from_ = piece.position
                     moves.extend((from_, move) for move in piece.get_movements())
         return moves
+
+
+class Bot(Player):
+    def __init__(self, team: int, difficulty: Literal['random', 'mcts'] = 'random') -> None:
+        super().__init__(team, type="bot")
+        self.difficulty = difficulty
+
+    def copy(self) -> 'Bot': 
+        bot_copy = Bot(self.team, self.difficulty)
+        bot_copy.alive = self.alive
+        return bot_copy

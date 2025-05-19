@@ -39,10 +39,10 @@
     border: none;
     border-radius: 5px;
     color: #EDEDED;
-    font-size: 1rem;
+    font-size: .9rem;
     cursor: pointer;
     transition: 0.2s;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem; 
 }
 
 .button:hover {

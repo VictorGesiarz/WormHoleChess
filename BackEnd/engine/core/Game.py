@@ -1,3 +1,4 @@
+import json
 from typing import List, Dict, Tuple
 
 from engine.utils.ZobristHasher import ZobristHasher
@@ -9,35 +10,79 @@ from engine.core.base.Pieces import PieceMovement
 from engine.core.Player import Player
 from engine.core.constants import *
 
+from engine.ai.RandomAI import RandomAI
+from engine.ai.MonteCarloMine import MonteCarlo
 
 
 class Game:
-    def __init__(self, board: Board | LayerBoard, players: List[Player], turn: int = COLOR_TO_NUMBER['white']) -> None:
+    def __init__(self, 
+                 board: Board | LayerBoard, 
+                 players: List[Player], 
+                 program_mode: str = 'base', 
+                 game_mode: str = 'wormhole', 
+                 turn: int = COLOR_TO_NUMBER['white'], 
+                 verbose: int = 1) -> None:
+        
         self.turn = turn 
         self.players = players
         self.number_of_players = len(players)
+        self.program_mode = program_mode
+        self.game_mode = game_mode
+        self.game_state = GameState.PLAYING
+        self.verbose = verbose
+        
         self.board = board
-        self.history = []
+        self.hasher = ZobristHasher(6, len(players), len(board))
+        self.hash = self.hasher.compute_hash(self.board)
 
+        self.bot_engines = {
+            "random": RandomAI(self),
+            "mcts": MonteCarlo(self)
+        }
+
+        self._cached_turn = None
+        self._cached_movements = None
+        self.history: List[PieceMovement] = []
+        self.initial_positions = self.get_pieces_state()
+        self.positions_counter = {self.hash: 1}
+        self.moves_without_capture = 0
+    
     def check_size(self) -> None:
         from pympler import asizeof
         return asizeof.asizeof(self)
 
+    def copy(self) -> 'Game': 
+        board_copy = self.board.copy()
+        players_copy = [player.copy() for player in self.players]
+
+        for piece in self.board.pieces: 
+            # We don't have to do anything with the piece copy, just create it 
+            piece_copy = piece.copy(board_copy, players_copy)
+
+        # For now we don't care about copying the history and the initial positions cause we won't be using that, we just have to be able to simulate games from the current state without modifying the original game. 
+        game_copy = Game(board_copy, players_copy, self.turn, verbose=0) # We dont want to print anything in the copy
+        return game_copy
+
     def next_turn(self) -> None:
         self.turn = (self.turn + 1) % self.number_of_players
 
-    def get_turn(self) -> int:
+    def get_turn(self, auto_play_bots=True) -> int:
         """ Returns the current turn and -1 if the current player lost or is a bot """ 
         current_player = self.players[self.turn]
         if not current_player.alive:
             return -1
-        if current_player.type == "bot":
-            self.make_move_bot()
+        if not self.check_player_state(current_player, self.get_movements()): 
             return -1
+        if current_player.type == "bot":
+            if auto_play_bots: 
+                self.make_move_bot()
         return self.turn
 
     def get_movements(self) -> List[Tuple[Tile | LayerTile]]: 
         """ Returns a list of possible movements for the current player. """
+        if self._cached_turn == self.turn and self._cached_movements is not None:
+            return self._cached_movements
+    
         player = self.players[self.turn]
         if player.alive: 
             movements = player.get_possible_moves()
@@ -51,18 +96,21 @@ class Game:
                     legal_castle = self.filter_legal_moves(player, castle_side)
                     if len(castle_side) == len(legal_castle):
                         castles.append(castle_side[0])
+            computed_result = legal_movements + castles
+        else: 
+            computed_result = []
 
-            self.check_player_state(player, legal_movements)
-            return legal_movements + castles
-        return []
+        self._cached_turn = self.turn
+        self._cached_movements = computed_result
+        return computed_result
 
     def filter_legal_moves(self, player: Player, moves: List[Tile | LayerTile]) -> List[Tile | LayerTile]:         
         legal_moves = []
         for move in moves:
-            piece_movement = self.make_move(move, store=False) # Do not add to histroy
+            piece_movement = self.make_move(move, store=False, update_hash=False) # Do not add to histroy
             if not self.is_in_check(player):
                 legal_moves.append(move)
-            self.undo_move(piece_movement, remove=False) # Do not remove from history
+            self.undo_move(piece_movement, remove=False, update_hash=False) # Do not remove from history
         return legal_moves
 
     def is_in_check(self, player: Player) -> bool: 
@@ -80,14 +128,14 @@ class Game:
                             return True
         return False
 
-    def make_move(self, move: Tuple[Tile | LayerTile], store: bool = True) -> PieceMovement: 
+    def make_move(self, move: Tuple[Tile | LayerTile], store: bool = True, update_hash: bool = True) -> PieceMovement: 
         origin_tile = move[0]
         destination_tile = move[1]
 
         moving_piece = origin_tile.piece
         captured_piece = destination_tile.piece
 
-        piece_movement = PieceMovement(moving_piece, origin_tile, destination_tile, moving_piece.first_move)
+        piece_movement = PieceMovement(moving_piece, origin_tile, destination_tile, moving_piece.first_move, self.moves_without_capture)
         if captured_piece is not None and captured_piece.team != moving_piece.team:
             captured_piece.team.lose_piece(captured_piece)
             piece_movement.captured_piece = captured_piece
@@ -106,34 +154,43 @@ class Game:
             piece_movement.castle_movement = PieceMovement(rook, rook_origin_tile, rook_destination_tile, rook.first_move)
             rook.move(rook_destination_tile, validate=False)
 
+        if update_hash: 
+            self.hash = self.hasher.update_hash(self.hash, piece_movement)
+
         if store: 
+            if captured_piece is not None: 
+                self.moves_without_capture = 0
+            else: 
+                self.moves_without_capture += 1
             self.history.append(piece_movement)
+            self.positions_counter[self.hash] = self.positions_counter.get(self.hash, 0) + 1
 
         return piece_movement
 
-    def undo_move(self, piece_movement: PieceMovement, remove: bool = True) -> None: 
+    def undo_move(self, piece_movement: PieceMovement, remove: bool = True, update_hash: bool = True) -> None: 
+        if remove: 
+            self.history.pop()
+            self.positions_counter[self.hash] -= 1
+            self.moves_without_capture = piece_movement.moves_without_capture
+        
+        if update_hash: 
+            print("UNDOING")
+            self.hash = self.hasher.update_hash(self.hash, piece_movement)
+
         piece_movement.piece.move(piece_movement.tile_from, validate=False)
         piece_movement.piece.first_move = piece_movement.first_move
         if piece_movement.captured_piece is not None:
             piece_movement.captured_piece.team.revive_piece(piece_movement.captured_piece)
-            # self.killed_pieces.remove(captured_piece)
         if piece_movement.castle_movement: 
-            self.undo_move(piece_movement.castle_movement, remove=False)    
+            self.undo_move(piece_movement.castle_movement, remove=False, update_hash=update_hash)    
         if piece_movement.killed_player: 
             self.revive_player(player=piece_movement.killed_player)
 
-        if remove: 
-            self.history.pop()
-
-        return 
-
     def make_move_bot(self) -> None: 
         bot = self.players[self.turn]
-        moves = self.get_movements()
-        
-        if len(moves) > 0: 
-            move = bot.choose_move(moves)
-            self.make_move(move)
+        engine = self.bot_engines[bot.difficulty]
+        move = engine.choose_move()
+        self.make_move(move)
 
     def check_player_state(self, player: Player, moves: List[Tile | LayerTile]) -> bool:
         if not player.alive: 
@@ -142,23 +199,78 @@ class Game:
             if self.is_in_check(player):
                 self.kill_player(player, print_text="by checkmate")
             else: 
-                self.kill_player(player, print_text="by stalemate")
+                alive_players = [player for player in self.players if player.alive]
+                if len(alive_players) > 2: # If there are more than 2 players, a stalemate is losing for that player. When there are only 2 players, it is a draw
+                    self.kill_player(player, print_text="by stalemate")
+                else: 
+                    self.game_state = GameState.DRAW
             return False
         return True
     
     def kill_player(self, player: Player, print_text: str = None) -> None: 
-        if print_text: print(f"{NUMBER_TO_COLOR[player.team]} loses {print_text}")
+        if print_text and self.verbose > 0: 
+            print(f"{NUMBER_TO_COLOR[player.team]} loses {print_text}")
         player.alive = False
 
     def revive_player(self, player: Player) -> None: 
         player.alive = True
     
     def is_finished(self) -> bool: 
+        if self.game_state in [GameState.PLAYER_WON, GameState.DRAW]:
+            return True
+    
+        # If only one player is alive, the game is finished
         alive_players = [player for player in self.players if player.alive]
         if len(alive_players) == 1: 
-            print(f"Player {alive_players[0].team} wins!")
+            if self.verbose > 0: print(f"Player {alive_players[0].team} wins!")
+            self.game_state = GameState.PLAYER_WON
             return True
+        
+        if self.is_dead_position() or self.is_draw_by_repetition() or self.is_draw_by_50_moves(): 
+            if self.verbose > 0: print("Game is a draw")
+            self.game_state = GameState.DRAW
+            return True
+
         return False
+
+    def is_draw_by_repetition(self) -> bool:
+        return self.positions_counter.get(self.hash, 0) >= 3
+
+    def is_draw_by_50_moves(self) -> bool: 
+        return self.moves_without_capture >= MAX_MOVES_WITHOUT_CAPTURE * self.number_of_players
+
+    def is_dead_position(self) -> bool:
+        pieces = list(self.board.pieces)
+
+        piece_counts = {
+            'Knight': 0,
+            'Queen': 0,
+            'Tower': 0,
+            'Bishop': 0,
+            'King': 0,
+            'Pawn': 0
+        }
+
+        for piece in pieces:
+            if not piece.captured:
+                piece_counts[piece.type] += 1
+
+        if piece_counts == {'Knight': 0, 'Queen': 0, 'Tower': 0, 'Bishop': 0, 'King': 2, 'Pawn': 0}:
+            return True
+
+        if piece_counts['Queen'] == piece_counts['Tower'] == piece_counts['Pawn'] == 0:
+            if piece_counts['Bishop'] + piece_counts['Knight'] == 1:
+                return True
+                
+        return False
+
+    def winner(self) -> int: 
+        if self.game_state != GameState.PLAYER_WON: 
+            return -1 
+        alive_players = [player for player in self.players if player.alive]
+        if len(alive_players) == 1: 
+            return alive_players[0].team
+        return -1
 
     def get_pieces_state(self) -> Dict[str, Dict[str, List[str]]]: 
         pieces_state = {}
@@ -168,9 +280,39 @@ class Game:
                 pieces_str = []
                 for piece in pieces: 
                     if piece.captured: 
-                        pieces_str.append(f"{piece.captured_position} (Captured)")
+                        pieces_str.append(None)
                     else: 
                         pieces_str.append(f"{piece.position}")
                 player_state[piece_type] = pieces_str
             pieces_state[NUMBER_TO_COLOR[player.team]] = player_state
         return pieces_state
+
+    def get_game_history(self) -> List[Dict[str, str]]: 
+        history = []
+        for move in self.history: 
+            move_dict = {
+                'from': move.tile_from.name,
+                'to': move.tile_to.name, 
+                'moving_piece': {
+                    'type': move.piece.type,
+                    'color': NUMBER_TO_COLOR[move.piece.team.team]
+                }, 
+                'captured_piece': None if move.captured_piece is None else {
+                    'type': move.captured_piece.type, 
+                    'color': NUMBER_TO_COLOR[move.captured_piece.team.team]
+                }, 
+                'killed_player': None if move.killed_player is None else {
+                    'color': NUMBER_TO_COLOR[move.killed_player.team]
+                }
+            }
+            history.append(move_dict)
+        return history
+    
+    def export(self, export_path: str) -> None: 
+        game_data = {
+            'pieces_state': self.initial_positions,
+            'game_history': self.get_game_history()
+        }
+
+        with open(export_path, 'w') as f:
+            json.dump(game_data, f, indent=4)

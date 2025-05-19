@@ -1,3 +1,5 @@
+from enum import Enum
+
 TEAMS = ['white', 'black', 'blue', 'red']
 
 COLOR_TO_NUMBER = {
@@ -22,3 +24,11 @@ PARAMETERS = {
     'cast_from_king': True, 
     'can_eat_dead': True, 
 }
+
+
+MAX_MOVES_WITHOUT_CAPTURE = 20
+
+class GameState(Enum): 
+    PLAYING = 0
+    PLAYER_WON = 1
+    DRAW = 2

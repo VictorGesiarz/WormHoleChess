@@ -36,7 +36,7 @@ function LoginPage() {
 
             const data = await response.json();
             login(data.access_token);
-            navigate("/lobby");
+            navigate("/play");
         } catch (error) {
             console.error("Login error:", error);
             alert("Invalid credentials");

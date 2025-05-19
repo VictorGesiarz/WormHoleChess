@@ -1,0 +1,15 @@
+white: 
+  Pawn:  h2T g2T f2T e2T d2T c2T b2T a2T
+  Tower:  h1T a1T
+  Knight: g1T b1T
+  Bishop: f1T c1T
+  Queen:  d1T
+  King:   e1T
+
+red: 
+  Pawn: h7B g7B f7B e7B d7B c7B b7B a7B
+  Tower: h8B a8B
+  Knight: g8B b8B
+  Bishop: f8B c8B
+  Queen: d8B
+  King: e8B

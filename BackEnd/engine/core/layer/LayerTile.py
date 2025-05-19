@@ -10,9 +10,10 @@ if TYPE_CHECKING:
 
 
 class LayerTile:
-    def __init__(self, name: str, board: LayerBoard, piece: LayerPiece = None):
+    def __init__(self, name: str, board: LayerBoard, id: int, piece: LayerPiece = None):
         self.name = name
         self.board = board
+        self.id = id
         self.piece = piece
 
         self.tower_layer = TowerLayer()
@@ -62,24 +63,49 @@ class Layer:
 class TowerLayer(Layer):
     directions: List[List[LayerTile]] = field(default_factory=list)
 
+    def copy(self, new_board: LayerBoard) -> TowerLayer: 
+        return TowerLayer([[new_board[tile.name] for tile in direction] for direction in self.directions])
+
 @dataclass
 class KnightLayer:
     movements: List[LayerTile] = field(default_factory=list)
+
+    def copy(self, new_board: LayerBoard) -> KnightLayer:
+        return KnightLayer([new_board[tile.name] for tile in self.movements])
 
 @dataclass
 class BishopLayer: 
     directions: List[List[LayerTile]] = field(default_factory=list)
 
+    def copy(self, new_board: LayerBoard) -> BishopLayer: 
+        return BishopLayer([[new_board[tile.name] for tile in direction] for direction in self.directions])
+
 @dataclass
 class QueenLayer:
     directions: List[List[LayerTile]] = field(default_factory=list)
+
+    def copy(self, new_board: LayerBoard) -> QueenLayer:
+        return QueenLayer([[new_board[tile.name] for tile in direction] for direction in self.directions])
 
 @dataclass
 class KingLayer: 
     movements: List[LayerTile] = field(default_factory=list)
     pawn_possible_atacks: List[LayerTile] = field(default_factory=list)
 
+    def copy(self, new_board: LayerBoard) -> KingLayer: 
+        return KingLayer(
+            [new_board[tile.name] for tile in self.movements], 
+            [new_board[tile.name] for tile in self.pawn_possible_atacks]
+        )
+
 @dataclass
 class PawnLayer: 
-    moves: Dict[str, List[LayerTile]] = field(default_factory=dict)
-    attacks: Dict[str, List[LayerTile]] = field(default_factory=dict)
+    moves: Dict[int, List[LayerTile]] = field(default_factory=dict)
+    attacks: Dict[int, List[LayerTile]] = field(default_factory=dict)
+
+    def copy(self, new_board: LayerBoard) -> PawnLayer: 
+        return PawnLayer(
+            {team: [new_board[tile.name] for tile in team_moves] for team, team_moves in self.moves.items()}, 
+            {team: [new_board[tile.name] for tile in team_attacks] for team, team_attacks in self.attacks.items()}, 
+        )
+    

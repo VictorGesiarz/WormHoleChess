@@ -8,9 +8,10 @@ import SideBar from "./components/SideBar";
 import LoginPage from "./components/Pages/Authentication/LoginPage";
 import RegisterPage from "./components/Pages/Authentication/RegisterPage";
 import MainPage from "./components/Pages/MainPage";
-import AboutPage from "./components/Pages/AboutPage";
-import RulesPage from "./components/Pages/RulesPage";
+import LearnPage from "./components/Pages/LearnPage";
+import PlayPage from "./components/Pages/PlayPage";
 import LobbyPage from "./components/Pages/LobbyPage";
+import BotHistoryPage from "./components/Pages/BotHistoryPage"; 
 import GamePage from "./components/Pages/GamePage";
 
 
@@ -47,11 +48,12 @@ function App() {
 
                         {/* Public Pages */}
                         <Route path="/" element={<MainLayout><MainPage /></MainLayout>} />
-                        <Route path="/about" element={<MainLayout><AboutPage /></MainLayout>} />
-                        <Route path="/rules" element={<MainLayout><RulesPage /></MainLayout>} />
+                        <Route path="/learn" element={<MainLayout><LearnPage /></MainLayout>} />
 
                         {/* Protected Routes */}
+                        <Route path="/play" element={<PrivateRoute><MainLayout><PlayPage /></MainLayout></PrivateRoute>} />
                         <Route path="/lobby" element={<PrivateRoute><MainLayout><LobbyPage /></MainLayout></PrivateRoute>} />
+                        <Route path="/bot-history" element={<PrivateRoute><MainLayout><BotHistoryPage /></MainLayout></PrivateRoute>} />
                         <Route path="/game/:gameCode" element={<PrivateRoute><MainLayout><GamePage /></MainLayout></PrivateRoute>} />
                     </Routes>
                 </Router>

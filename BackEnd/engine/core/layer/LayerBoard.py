@@ -1,27 +1,53 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from engine.core.Player import Player
+from engine.core.base.NormalBoard import NormalBoard
 from engine.core.base.Board import Board
 from engine.core.base.Tile import Tile
 from engine.core.base.Pieces import Tower, Bishop, Knight, Queen, King, Pawn
+from engine.core.layer.LayerPieces import LayerPiece
 from engine.core.layer.LayerTile import LayerTile, TowerLayer, KnightLayer, BishopLayer, QueenLayer, KingLayer, PawnLayer
 
 
-class LayerBoard: 
-    def __init__(self) -> None:
-        self.tiles: Dict[str, LayerTile] = self.create_tiles()
-        self.connect_tiles()
-
-    def __getitem__(self, key: str | LayerTile) -> LayerTile: 
-        if isinstance(key, LayerTile): 
-            return self.tiles[key.name]
-        return self.tiles[key]
+class LayerBoard(NormalBoard): 
+    def __init__(self, size: Tuple[int] = (8, 8), game_mode: str = 'wormhole', innitialize: bool = True) -> None:
+        self.size = size # Not used yet
+        self.game_mode = game_mode
         
+        self.tiles: Dict[str, LayerTile] = {}
+        if innitialize: 
+            self.tiles = self.create_tiles()
+            self.connect_tiles()
+        
+        self.pieces: List[LayerPiece] = []
+
+    def copy(self) -> 'LayerBoard': 
+        board_copy = LayerBoard(size=self.size, game_mode=self.game_mode, innitialize=False)
+    
+        for tile_name, tile in self.tiles.items(): 
+            board_copy.tiles[tile_name] = LayerTile(tile_name, board_copy, tile.id)
+        
+        for tile_name, tile in self.tiles.items(): 
+            tile_copy: LayerTile = board_copy.tiles[tile_name]
+            tile_copy.set_layer(tile.tower_layer.copy(board_copy))
+            tile_copy.set_layer(tile.bishop_layer.copy(board_copy))
+            tile_copy.set_layer(tile.knight_layer.copy(board_copy))
+            tile_copy.set_layer(tile.queen_layer.copy(board_copy))
+            tile_copy.set_layer(tile.king_layer.copy(board_copy))
+            tile_copy.set_layer(tile.pawn_layer.copy(board_copy))
+            
+        return board_copy
+
     def create_tiles(self) -> Dict[str, LayerTile]: 
-        b = Board()
+        if self.game_mode == 'wormhole': 
+            b = Board(size=self.size)
+        elif self.game_mode == 'normal':
+            b = NormalBoard(size=self.size)
         tiles = {}
+        tile_id = 0
         for tile in b.tiles.values(): 
-            tiles[tile.name] = LayerTile(tile.name, self)
+            tiles[tile.name] = LayerTile(tile.name, self, tile_id)
+            tile_id += 1
         return tiles
 
     def connect_tiles(self) -> None: 
@@ -32,7 +58,11 @@ class LayerBoard:
         player3 = Player(2, "player")
         player4 = Player(3, "player")
         
-        b = Board()
+        if self.game_mode == 'wormhole': 
+            b = Board(size=self.size)
+        elif self.game_mode == 'normal':
+            b = NormalBoard(size=self.size)
+            
         for tile in b.tiles.values(): 
             layer_tile = self.tiles[tile.name]
 

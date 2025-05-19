@@ -5,7 +5,7 @@ File to run experiments. With arguments we decide which one to run.
 
 import argparse
 
-from engine.tests.base_board_test import test
+from engine.tests.my_test import test
 
 
 if __name__ == "__main__":

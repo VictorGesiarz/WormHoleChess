@@ -1,3 +1,7 @@
+import time 
+import random 
+
+from engine.core.base.NormalBoard import * 
 from engine.core.base.Board import *
 from engine.core.base.Pieces import * 
 from engine.core.Game import Game
@@ -115,11 +119,11 @@ def castle():
     print(moves)
 
 
-check_check()
-check_mate()
-stale_mate()
-eat()
-castle()
+# check_check()
+# check_mate()
+# stale_mate()
+# eat()
+# castle()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - Layer Board - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -128,7 +132,7 @@ print("\nLAYER BOARD TESTS - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def create_layer_board(): 
     game = ChessFactory.create_game(
         player_data=ChessFactory.create_bot_data(num_bots=4), 
-        mode="layer",
+        program_mode="layer",
         size="big",
         # initial_positions='./engine/core/assets/4 pieces.json'
     )
@@ -233,8 +237,241 @@ def castle_layer():
     print(moves)
 
 
-check_check_layer()
-check_mate_layer()
-stale_mate_layer()
-eat_layer()
-castle_layer()
+# check_check_layer()
+# check_mate_layer()
+# stale_mate_layer()
+# eat_layer()
+# castle_layer()
+
+
+# - - - - - - - - - - - - - - - - - - - - - - HASHING - - - - - - - - - - - - - - - - - - - - - - - - 
+print("\nHASHING TESTING - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n")
+
+def test_hash(): 
+    game = ChessFactory.create_game(
+        player_data=ChessFactory.create_bot_data(num_bots=4), 
+        program_mode="layer",
+        size="big"
+    )
+    game_copy = game.copy()
+    
+    print("Game hash:", hash(game))
+    game.get_turn()
+    game.next_turn()
+    print("Game hash:", hash(game))
+    game.get_turn()
+    game.next_turn()
+    print("Game hash:", hash(game))
+
+    print("Game Copy Hash:", hash(game_copy))
+    game_copy.get_turn()
+    game_copy.next_turn()
+    print("Game Copy Hash:", hash(game_copy))
+
+
+def time_hash(): 
+    game = ChessFactory.create_game(
+        player_data=ChessFactory.create_bot_data(num_bots=4), 
+        program_mode="layer",
+        size="big"
+    )
+    
+    timer = time.time()
+    hash_ = hash(game)
+    print("Hash calculated in:", time.time() - timer)
+    
+
+def copy_game(): 
+    game = ChessFactory.create_game(
+        player_data=ChessFactory.create_bot_data(num_bots=4), 
+        program_mode="layer",
+        size="big"
+    )
+    print('\nGame state:', game.get_pieces_state())
+
+    game_copy = game.copy()    
+    for _ in range(10): 
+        game_copy.get_turn()
+        game_copy.next_turn()
+    print('\nGame Copy state after 10 moves:', game_copy.get_pieces_state())
+
+    print('\nOriginal Game state should stay the same:', game.get_pieces_state())
+
+
+def time_copy(): 
+    game = ChessFactory.create_game(
+        player_data=ChessFactory.create_bot_data(num_bots=4), 
+        program_mode="layer",
+        size="big"
+    )
+
+    times = []
+    for _ in range(100): 
+        start = time.time()
+        game_copy = game.copy()
+        end = time.time()
+        times.append(end - start)
+
+    print('\nMean copy time:', sum(times) / len(times))
+
+
+def new_hash_test(): 
+    game = ChessFactory.create_game(
+        player_data=ChessFactory.create_bot_data(num_bots=4), 
+        program_mode="layer",
+        game_mode="wormhole",
+        size="big",
+    )
+
+    random.seed(42)
+
+    move_count = 0
+    while not game.is_finished() and move_count < 120:
+        print("MOVE:", move_count)
+        print("Current stored hash:", game.hash)
+        print("Current correct hash:", game.hasher.compute_hash(game.board))
+        
+        turn = game.get_turn()
+        game.next_turn()
+        move_count += 1 
+
+        print("Move made:", game.history[-1])
+
+        print("New stored hash:", game.hash)
+        print("New correct hash:", game.hasher.compute_hash(game.board))
+
+        if game.hasher.compute_hash(game.board) != game.hash:
+            print("Hash mismatch detected!")
+            break
+
+        print()
+
+# test_hash()
+# time_hash()
+# copy_game()
+# time_copy()
+new_hash_test()
+
+
+# - - - - - - - - - - - - - - - - - - - - - - DRAWS - - - - - - - - - - - - - - - - - - - - - - - - 
+def test_dead_positions(): 
+    b = NormalBoard()
+    p1 = Player(0)
+    piece = King(b['a1'], p1)
+    piece = Bishop(b['a2'], p1)
+
+    p2 = Player(1)
+    piece = King(b['h8'], p2)
+
+    players = [p1, p2]
+    game = Game(b, players)
+
+    print(game.is_dead_position())
+
+
+def test_repetition_draw(): 
+    b = NormalBoard()
+    p1 = Player(0)
+    piece = King(b['a1'], p1)
+    piece = Queen(b['a7'], p1)
+
+    p2 = Player(1)
+    piece = King(b['h8'], p2)
+
+    players = [p1, p2]
+    game = Game(b, players)
+
+    moves = [(b['a1'], b['a2']), (b['h8'], b['h7']), (b['a2'], b['a1']), (b['h7'], b['h8'])]
+
+    i = 0
+    move_count = 0
+    while not game.is_finished() and move_count < 15:
+        game.make_move(moves[i])
+        game.next_turn()
+        i = (i + 1) % 4
+        move_count += 1
+
+        if game.is_draw_by_repetition():
+            print(True)
+            break
+
+
+def test_50_move_rule(): 
+    game = ChessFactory.create_game(
+        player_data=ChessFactory.create_player_data(num_players=4), 
+        program_mode="layer",
+        size="big"
+    )
+
+    i = 0
+    move_count = 0
+    while not game.is_finished() and move_count < 120:
+        if game.get_turn() == -1:
+            game.next_turn()
+            continue
+
+        movements = game.get_movements()
+
+        move = random.choice(movements)
+        if len(movements) > 1:
+            if all(m[1].piece is not None for m in movements):
+                print("Test failed due to random moves leading to all movements capturing pieces")
+                break
+            while move[1].piece is not None:
+                move = random.choice(movements)
+        game.make_move(move)
+        game.next_turn()
+
+        move_count += 1
+
+        if game.is_draw_by_50_moves(): 
+            print(True)
+            break
+
+# test_dead_positions()
+# test_repetition_draw()
+# test_50_move_rule()
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - GAME CREATION - - - - - - - - - - - - - - - - - - - - - - - - 
+def create_board_with_factory(): 
+    game = ChessFactory.create_game(
+        player_data=ChessFactory.create_bot_data(num_bots=2), 
+        program_mode="layer",
+        game_mode="normal",
+        size="big",
+        # initial_positions='./engine/core/assets/4 pieces.json'
+    )
+    print(game.get_movements())
+    game.next_turn()
+    print(game.get_movements())
+
+# create_board_with_factory()
+
+
+
+def another_test(): 
+    b = NormalBoard(size=(4, 4))
+    p1 = Player(0)
+    k1 = King(b['a1'], p1)
+    q2 = Queen(b['b2'], p1)
+
+    p2 = Player(1)
+    k2 = King(b['c4'], p2)
+
+    players = [p1, p2]
+    game = Game(b, players, turn=0)
+
+    print(game.get_movements())
+    game.make_move((b['b2'], b['d2']))
+    game.next_turn()
+    print(game.get_movements())
+    game.make_move((b['c4'], b['b3']))
+    game.next_turn()
+    print(game.get_movements())
+    game.make_move((b['d2'], b['a2']))
+    game.next_turn()
+    print(game.get_movements())
+
+# another_test()

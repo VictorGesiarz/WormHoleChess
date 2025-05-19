@@ -1,11 +1,17 @@
-from typing import Dict, List, Tuple
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from typing import List, Tuple
 from dataclasses import dataclass
 
-from engine.core.layer.LayerTile import LayerTile
-from engine.core.layer.LayerPieces import LayerPiece
-from engine.core.base.Tile import Tile, D
-from engine.core.Player import Player
 from engine.core.constants import NUMBER_TO_COLOR, PARAMETERS
+from engine.core.base.Tile import Tile, D
+
+if TYPE_CHECKING:
+    from engine.core.layer.LayerTile import LayerTile
+    from engine.core.layer.LayerPieces import LayerPiece
+    from engine.core.Player import Player
+    from engine.core.base.Board import Board
 
 
 @dataclass
@@ -14,15 +20,18 @@ class PieceMovement:
     tile_from: Tile | LayerTile
     tile_to: Tile | LayerTile
     first_move: bool
+    moves_without_capture: int = 0
     captured_piece: "Piece | LayerPiece" = None
     castle_movement: "PieceMovement" = None
     killed_player: Player = None
 
     def __str__(self):
-        return f"({self.tile_from}, {self.tile_to})"
+        piece_str = " ".join(f"{self.piece}".split()[:2])
+        return f"({piece_str}, {self.tile_from}, {self.tile_to}, capture: {True if self.captured_piece else False}, castle: {True if self.castle_movement else False})"
     
     def __repr__(self):
-        return f"({self.tile_from}, {self.tile_to})"
+        piece_str = " ".join(f"{self.piece}".split()[:2])
+        return f"({piece_str}, {self.tile_from}, {self.tile_to}, capture: {True if self.captured_piece else False}, castle: {True if self.castle_movement else False})"
 
 
 class Piece: 
@@ -34,19 +43,31 @@ class Piece:
         self.captured = False
         self.first_move = True # True when the player hasn't moved the piece yet.
         self.type = self.__class__.__name__
+        self.type_id = None # Id to index hash table 
         
         self.captured_position = None
 
         if add_to_player: 
             self.team.add_piece(self)
+            self.board.pieces.append(self)
     
     def __eq__(self, other: "Piece") -> bool:
         if other is None: 
             return False
+        if other == "Prueba": 
+            return True
         return self.position == other.position and self.team == other.team and self.type == other.type
     
     def __str__(self):
         return f"{NUMBER_TO_COLOR[self.team.team]} {self.type} at: {self.position}"
+
+    def copy(self, new_board: Board, new_players: List[Player]) -> Piece: 
+        PieceObject = Piece.get_piece_type(self.type)
+        piece_copy: Piece = PieceObject(new_board[self.position.name], new_players[self.team.team])
+        piece_copy.captured = self.captured
+        piece_copy.first_move = self.first_move
+        piece_copy.captured_position = None if not self.captured_position else new_board[self.captured_position.name] 
+        return piece_copy
 
     def get_movements(self) -> List[Tile]:
         ...
@@ -112,17 +133,17 @@ class Piece:
     
     @staticmethod
     def get_piece_type(name: str) -> "Piece": 
-        if "rook" in name: 
+        if "Tower" in name: 
             return Tower
-        elif "knight" in name: 
+        elif "Knight" in name: 
             return Knight
-        elif "bishop" in name:
+        elif "Bishop" in name:
             return Bishop
-        elif "queen" in name: 
+        elif "Queen" in name: 
             return Queen
-        elif "king" in name:
+        elif "King" in name:
             return King
-        elif "pawn" in name: 
+        elif "Pawn" in name: 
             return Pawn
 
     
@@ -147,6 +168,7 @@ class Tower(Piece):
         self.first_move = True # True when the player hasn't moved the tower yet. 
         if self.position.name not in Tower.TOWERS[self.team.team]['initial_positions']:
             self.first_move = False
+        self.type_id = 0
 
     def get_movements(self, flatten: bool = True) -> list[Tile]:
         directions = [D.UP, D.DOWN, D.LEFT, D.RIGHT]
@@ -165,6 +187,7 @@ class Tower(Piece):
 class Knight(Piece): 
     def __init__(self, position: Tile, team: Player, add_to_player: bool = True) -> None:
         super().__init__(position, team, add_to_player)
+        self.type_id = 1
         
     def get_movements(self) -> list[Tile]:
         horizontal = [D.LEFT, D.RIGHT]
@@ -206,6 +229,7 @@ class Knight(Piece):
 class Bishop(Piece): 
     def __init__(self, position: Tile, team: Player, add_to_player: bool = True) -> None:
         super().__init__(position, team, add_to_player)
+        self.type_id = 2
         
     def get_movements(self, flatten: bool = True) -> list[Tile]:
         directions = [D.UP_LEFT, D.UP_RIGHT, D.DOWN_LEFT, D.DOWN_RIGHT]
@@ -224,6 +248,7 @@ class Bishop(Piece):
 class Queen(Piece): 
     def __init__(self, position: Tile, team: Player, add_to_player: bool = True) -> None:
         super().__init__(position, team, add_to_player)
+        self.type_id = 3
         
     def get_movements(self, flatten: bool = True) -> list[Tile]:
         directions = [D.UP_LEFT, D.UP_RIGHT, D.DOWN_LEFT, D.DOWN_RIGHT,
@@ -309,6 +334,7 @@ class King(Piece):
         self.first_move = True # True when the player hasn't moved the King yet. 
         if self.position.name != King.KINGS[self.team.team]['initial_position']:
             self.first_move = False
+        self.type_id = 4
         
     def get_movements(self) -> list[Tile]:
         directions = [D.UP_LEFT, D.UP_RIGHT, D.DOWN_LEFT, D.DOWN_RIGHT,
@@ -410,25 +436,29 @@ class King(Piece):
 class Pawn(Piece): 
     PAWNS = {
         0: {
-            'first_row': '2_T', 
+            'start_side': 'T',
+            'first_row': 2, 
             'promotion_rows': ['8_T', '1_B', '8_B'],
             'direction': D.UP,
             'atacks': [D.UP_LEFT, D.UP_RIGHT]
         },
         1: {
-            'first_row': '7_T',
+            'start_side': 'T',
+            'first_row': 7, 
             'promotion_rows': ['1_T', '8_B', '1_B'],
             'direction': D.DOWN,
             'atacks': [D.DOWN_LEFT, D.DOWN_RIGHT]
         },
         2: {
-            'first_row': '2_B',
+            'start_side': 'B',
+            'first_row': 2, 
             'promotion_rows': ['8_T', '1_T', '8_B'],
             'direction': D.UP,
             'atacks': [D.UP_LEFT, D.UP_RIGHT]
         },
         3: {
-            'first_row': '7_B',
+            'start_side': 'B', 
+            'first_row': 7,
             'promotion_rows': ['1_T', '8_T', '1_B'],
             'direction': D.DOWN,
             'atacks': [D.DOWN_LEFT, D.DOWN_RIGHT]
@@ -459,9 +489,13 @@ class Pawn(Piece):
         super().__init__(position, team, add_to_player)
         self.direction = Pawn.PAWNS[self.team.team]['direction']
         self.atack_directions = Pawn.PAWNS[self.team.team]['atacks']
+ 
         self.first_move = True # True when the player hasn't moved the pawn yet. 
-        if self.position.name[1:] != Pawn.PAWNS[self.team.team]['first_row']: 
+        side_name = 'T' if self.position.top_side else 'B'
+        if self.position.row != Pawn.PAWNS[self.team.team]['first_row'] or side_name != Pawn.PAWNS[self.team.team]['start_side']: 
             self.first_move = False # The pawn is not in the first row of the team, so it cannot move 2 tiles.
+        self.type_id = 5
+
         self.quadrant = team # The quadrant is represented by the team number.
         self.change_quadrant() # Change the quadrant of the pawn when it is created to make sure it matches the initial position. 
 
