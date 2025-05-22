@@ -21,6 +21,9 @@ class LayerBoard(NormalBoard):
         
         self.pieces: List[LayerPiece] = []
 
+    def __len__(self):
+        return len(self.tiles)
+
     def copy(self) -> 'LayerBoard': 
         board_copy = LayerBoard(size=self.size, game_mode=self.game_mode, innitialize=False)
     

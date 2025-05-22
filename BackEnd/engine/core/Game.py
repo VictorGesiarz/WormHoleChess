@@ -174,7 +174,6 @@ class Game:
             self.moves_without_capture = piece_movement.moves_without_capture
         
         if update_hash: 
-            print("UNDOING")
             self.hash = self.hasher.update_hash(self.hash, piece_movement)
 
         piece_movement.piece.move(piece_movement.tile_from, validate=False)

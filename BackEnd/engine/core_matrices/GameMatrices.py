@@ -2,12 +2,13 @@ import numpy as np
 from typing import List, Tuple
 
 
+from engine.core_matrices.MatrixBoard import LayerMatrixBoard
 from engine.utils.ZobristHasher import ZobristHasher
 
 
 class GameMatrices: 
     def __init__(self, 
-                 board: np.ndarray,
+                 board: LayerMatrixBoard,
                  players: list[int],
                  turn: int, 
                  verbose: int = 0): 

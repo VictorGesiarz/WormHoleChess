@@ -350,7 +350,7 @@ def new_hash_test():
 # time_hash()
 # copy_game()
 # time_copy()
-new_hash_test()
+# new_hash_test()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - DRAWS - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -475,3 +475,21 @@ def another_test():
     print(game.get_movements())
 
 # another_test()
+
+
+# - - - - - - - - - - - - - - - - - - - - - - LAYER MATRIX BOARD - - - - - - - - - - - - - - - - - - - - 
+print("\nLAYER MATRIX BOARD TESTING - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n")
+
+from engine.core_matrices.MatrixBoard import LayerMatrixBoard, Pieces, Teams
+
+def test_layer_matrix_board(): 
+    b = LayerMatrixBoard((8, 8), 'wormhole')
+    # print(b.nodes)
+    # print()
+    # print(b.edges)
+    # print()
+    # print(b.node_edges)
+    # print()
+    print(b.check_size())
+        
+test_layer_matrix_board()
