@@ -4,6 +4,8 @@ import numpy as np
 
 
 from engine.core.layer.LayerBoard import LayerBoard
+from engine.core.base.Board import Board
+from engine.core.base.NormalBoard import NormalBoard
 
 
 class Pieces(IntEnum):
@@ -48,15 +50,22 @@ class LayerMatrixBoard:
         self.size = size
         self.game_mode = game_mode
 
-        self.nodes: List = []
-        self.edges: List = []
-        self.node_names: List = []
-        self.node_edges: List = []
+        self.nodes: np.array = [] # [[piece_type, team], ...]
+        self.edges: np.array = [] # [[from, ...], [to, ...]]
+        self.node_edges: np.array = [] # [[piece_type, from_index, to_index], ...]
+        self.node_names: np.array = []
         
-        self.pieces: Dict = {}
+        self.pieces: np.array = [] # [[piece_type, position, team], ...]
 
         if innitialize: 
             self.create_board()
+            
+    def set_pieces(self, pieces: List[np.array]) -> None:
+        ...
+        
+    def get_pieces(self, player: int) -> Tuple[np.array, np.array]:
+        mask = self.pieces[:, 2] == player
+        return self.pieces[mask]
         
     def create_board(self) -> None:
         b = LayerBoard(self.size, self.game_mode)
@@ -115,9 +124,9 @@ class LayerMatrixBoard:
                         self.node_edges[tile.id][start + i + 1] = count
                         count += 1
 
-        self.nodes = np.array(self.nodes, dtype=int)
-        self.edges = np.array(self.node_edges, dtype=object)
-        self.node_edges = np.array(self.node_edges, dtype=int)
+        self.nodes = np.array(self.nodes, dtype=np.int8)
+        self.edges = np.array(self.node_edges, dtype=np.int8)
+        self.node_edges = np.array(self.node_edges, dtype=np.int16)
         self.node_names = np.array(self.node_names, dtype=str)
 
     def get_names(self, index_list: List[int]) -> List[str]: 
@@ -127,6 +136,38 @@ class LayerMatrixBoard:
         from pympler import asizeof
         return asizeof.asizeof(self)
 
-
+        
 class BaseMatrixBoard: 
-    ...
+    def __init__(self, size: Tuple[int, int], gamemode: str = 'wormhole') -> None:
+        self.size = size
+        self.gamemode = gamemode
+        
+        self.nodes: np.array
+        self.edges: np.array
+        self.create_board()
+        
+    def check_size(self) -> None:
+        from pympler import asizeof
+        return asizeof.asizeof(self)
+    
+    def create_board(self) -> None: 
+        if self.gamemode == 'wormhole': 
+            b = Board(self.size)
+        elif self.gamemode == 'normal': 
+            b = NormalBoard(self.size)
+                
+        empty_tile = [0] * len(Pieces) + [0] * len(Teams)
+        empty_tile[Pieces.EMPTY] = 1
+        
+        self.nodes = [empty_tile for _ in range(len(b))] 
+        self.edges = [[], []] 
+        
+        for tile in b.tiles.values(): 
+            for neighbor in tile.neighbors.values():
+                if neighbor is not None: 
+                    self.edges[0] += [tile.id, neighbor.id]
+                    self.edges[1] += [neighbor.id, tile.id]
+        
+        self.nodes = np.array(self.nodes, dtype=int)
+        self.edges = np.array(self.edges, dtype=int)
+        

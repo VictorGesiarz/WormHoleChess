@@ -2,14 +2,15 @@ import numpy as np
 from typing import List, Tuple
 
 
-from engine.core_matrices.MatrixBoard import LayerMatrixBoard
+from engine.core_matrices.MatrixBoard import LayerMatrixBoard, Pieces, Teams, PARTITIONS
+from engine.core_matrices.Player import Player
 from engine.utils.ZobristHasher import ZobristHasher
 
 
 class GameMatrices: 
     def __init__(self, 
                  board: LayerMatrixBoard,
-                 players: list[int],
+                 players: list[Player],
                  turn: int, 
                  verbose: int = 0): 
         """ Class that does the same as the other Game class, but using the graph represented as a matrix. 
@@ -49,17 +50,18 @@ class GameMatrices:
     def next_turn(self) -> None: 
         self.turn = (self.turn + 1) % self.players
         
-    def get_turn(self, auto_play_bots=True) -> int: 
-        current_player = self.turn
-        if not self.players[current_player]:
+    def next_turn(self, auto_play_bots=True) -> int: 
+        self.turn = (self.turn + 1) % self.players
+        
+        if not self.players[self.turn].alive:
             return -1 
-        elif not self.check_player_state(current_player, self.get_movements()):
+        elif not self.check_player_state(self.get_movements()):
             return -1 
-        elif self.players[current_player] == 2 and auto_play_bots: 
-            self.make_bot_move(current_player)
-        return current_player
+        elif self.players[self.turn].is_bot and auto_play_bots: 
+            self.make_bot_move()
+        return self.turn
     
-    def get_movements(self) -> List[Tuple[int, int]]:
+    def get_movements(self) -> List[Tuple[int]]:
         if self._cached_turn == self.turn and self._cached_movements is not None: 
             return self._cached_movements
         
@@ -71,7 +73,7 @@ class GameMatrices:
             # if not self.is_in_check(self.turn):
             #     castles = self.get_castles(self.turn)
             #     ...
-                
+            
             result = legal_movements + castles
         else:
             result = []
@@ -81,7 +83,12 @@ class GameMatrices:
         return result
                         
     def get_possible_moves(self, player: int) -> List[Tuple[int, int]]:
-        ...
+        player_pieces = self.board.get_pieces(player)
+        
+        for piece in player_pieces:
+            edge_connections = self.board.node_edges[piece[1]]
+            
+            
         
     def filter_legal_moves(self, player: int, moves: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
         ...
