@@ -1,8 +1,5 @@
+import numpy as np
 import random
-
-from engine.core.base.Board import Board
-from engine.core.layer.LayerBoard import LayerBoard
-from engine.core.base.Pieces import PieceMovement
 
 
 class ZobristHasher:
@@ -29,17 +26,19 @@ class ZobristHasher:
                 ]
                 for _ in range(num_piece_types)
             ]
+            ZobristHasher._shared_table = np.array(ZobristHasher._shared_table, dtype=np.uint64)
 
         self.table = ZobristHasher._shared_table
 
-    def compute_hash(self, state: Board | LayerBoard) -> int:
-        h = 0
-        for piece in state.pieces:
-            if not piece.captured: 
-                h ^= self.table[piece.type_id][piece.team.team][piece.position.id]
-        return h
+    def compute_hash(self, state: np.array) -> int:
+        # h = 0
+        # for piece in state.pieces:
+        #     if not piece.captured: 
+        #         h ^= self.table[piece.type_id][piece.team.team][piece.position.id]
+        # return h
+        return 0 
 
-    def update_hash(self, old_hash: int, movement: PieceMovement) -> int: 
+    def update_hash(self, old_hash: int, movement: np.array, castle_movement: np.array) -> int: 
         piece = movement.piece
         from_ = movement.tile_from
         to_ = movement.tile_to

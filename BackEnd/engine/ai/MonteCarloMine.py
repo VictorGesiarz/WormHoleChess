@@ -1,18 +1,13 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING
 
 import datetime
 import random 
 import time
 from math import log, sqrt
 
-from engine.core.constants import NUMBER_TO_COLOR
-
 if TYPE_CHECKING: 
-    from engine.core.base.Tile import Tile
-    from engine.core.layer.LayerTile import LayerTile
     from engine.core.Game import Game
-    from engine.core.Player import Bot
 
 
 class MonteCarlo(object):

@@ -480,16 +480,88 @@ def another_test():
 # - - - - - - - - - - - - - - - - - - - - - - LAYER MATRIX BOARD - - - - - - - - - - - - - - - - - - - - 
 print("\nLAYER MATRIX BOARD TESTING - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n")
 
-from engine.core_matrices.MatrixBoard import LayerMatrixBoard, Pieces, Teams
+from engine.core.matrices.MatrixBoard import LayerMatrixBoard, Pieces, Teams
 
 def test_layer_matrix_board(): 
-    b = LayerMatrixBoard((8, 8), 'wormhole')
-    # print(b.nodes)
-    # print()
-    # print(b.edges)
-    # print()
-    # print(b.node_edges)
-    # print()
+    b = LayerMatrixBoard((8, 8), 'wormhole', load_from_file=False)
+
+    print("Nodes:", b.nodes)
+    print("Adjacency list:", b.adjacency_list)
+    print("Patterns offsets:", b.patterns_offsets)
+    print("Pieces offsets:", b.pieces_offsets)
+    print("Tiles offsets:", b.tiles_offsets)
+    print("Pieces:", b.pieces)
+
     print(b.check_size())
+
+    b.save_matrices()
         
-test_layer_matrix_board()
+# test_layer_matrix_board()
+
+
+def copy_test(): 
+    # Test to look if copying the matrices is faster than loading them again
+
+    b = LayerMatrixBoard((8, 8), 'wormhole')
+    n_tests = 1000
+    
+    copy_time = 0
+    for _ in range(n_tests): 
+        start = time.time()
+        b_copy = b.copy()
+        copy_time += time.time() - start 
+    
+    recreation_time = 0
+    for _ in range(n_tests): 
+        start = time.time()
+        new_b = LayerMatrixBoard((8, 8), 'wormhole')
+        new_b.nodes = b.nodes.copy()
+        new_b.pieces = b.pieces.copy()
+        recreation_time += time.time() - start
+
+    print(f'Average copy time: {copy_time / n_tests}')
+    print(f'Average recreation time: {recreation_time / n_tests}')
+
+
+# copy_test()
+
+
+def create_matrix_game(): 
+    game = ChessFactory.create_game(
+        player_data=ChessFactory.create_bot_data(num_bots=2), 
+        program_mode="matrix",
+        game_mode="wormhole",
+        size=(8, 8),
+    )
+
+    print(game.check_size())
+    print(game.board.check_size())
+
+
+# create_matrix_game()
+
+
+def test_max_moves(): 
+    game = ChessFactory.create_game(
+        player_data=ChessFactory.create_bot_data(num_bots=2), 
+        program_mode="layer",
+        game_mode="wormhole",
+        size=(8, 8),
+    )
+
+    moves_count = []
+    for i in range(1000):
+        print(f'Current game: {i}')
+        game_copy = game.copy()
+
+        move_count = 0
+        while not game_copy.is_finished() and move_count < 120: 
+            turn = game_copy.get_turn()
+            moves_count.append(len(game_copy.get_movements()))
+            game_copy.next_turn()
+            move_count += 1
+    
+    print(max(moves_count), sum(moves_count) / len(moves_count))
+
+
+test_max_moves()

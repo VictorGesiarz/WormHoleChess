@@ -19,6 +19,8 @@ websockets = "*"
 watchdog = "*"
 python-chess = "*"
 pandas = "*"
+numba = "*"
+cython = "*"
 
 [dev-packages]
 

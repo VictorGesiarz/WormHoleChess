@@ -1,17 +1,22 @@
 from typing import Literal, List, Dict, Tuple, Union
-import json
+import numpy as np
 import yaml 
+import os
 
 from engine.core.base.NormalBoard import NormalBoard
 from engine.core.base.Board import Board
 from engine.core.layer.LayerBoard import LayerBoard
 from engine.core.base.Pieces import Piece
 from engine.core.layer.LayerPieces import LayerPiece
+from engine.core.matrices.MatrixBoard import LayerMatrixBoard, BaseMatrixBoard
+from engine.core.matrices.matrix_constants import PLAYER_DTYPE, Pieces
 from engine.core.Player import Player, Bot
 from engine.core.Game import Game
+from engine.core.GameMatrices import GameMatrices
 from engine.core.constants import COLOR_TO_NUMBER, NUMBER_TO_COLOR
 
 
+BOARD_FILES = './engine/core/configs/matrix_board/'
 POSITIONS_PATH = './engine/core/configs/'
 SIZES = {
     'big': (8, 8),
@@ -21,13 +26,17 @@ SIZES = {
 class ChessFactory:
     @staticmethod
     def create_game(player_data: List[str],
-                    program_mode: Literal['base', 'layer'] = 'layer',
+                    program_mode: Literal['base', 'layer', 'matrix'] = 'layer',
                     game_mode: Literal['normal', 'wormhole'] = 'wormhole',
                     size: Union[Literal['big', 'small'], Tuple[int]] = 'big',
-                    initial_positions: str | Dict[str, str] = None) -> Game:
+                    initial_positions: str | Dict[str, str] = None,
+                    **kwargs) -> Game:
         
         if game_mode == 'normal' and len(player_data) != 2: 
             raise ValueError('Normal game mode only supports 2 players')
+
+        if program_mode == 'matrix': 
+            return MatrixChessFactory.create_game(player_data, program_mode, game_mode, size, initial_positions, **kwargs)
 
         board = ChessFactory.create_board(program_mode, game_mode, SIZES[size] if isinstance(size, str) else size)
         players = ChessFactory.create_players(player_data)
@@ -156,3 +165,79 @@ class ChessFactory:
                 initial_positions[color][piece] = new_positions
 
         return initial_positions
+    
+
+class MatrixChessFactory: 
+    @staticmethod
+    def create_game(player_data: List[str],
+                    program_mode: Literal['layer'] = 'layer',
+                    game_mode: Literal['normal', 'wormhole'] = 'wormhole',
+                    size: Union[Literal['big', 'small'], Tuple[int]] = 'big',
+                    initial_positions: str | Dict[str, str] = None,
+                    **kwargs) -> None:
+        
+        if program_mode == 'base': 
+            raise ValueError('Cannot create a game with base program mode. ')
+
+        load_from_file = False
+        board_file = f'{BOARD_FILES}{str(size)}_{game_mode}.npz'
+        if os.path.exists(board_file): 
+            load_from_file = board_file
+
+        # Create board and players
+        board = LayerMatrixBoard(size, game_mode, load_from_file=load_from_file, **kwargs)
+        players = np.array([
+            (i, data[1], True) for i, data in enumerate(player_data)
+        ], dtype=PLAYER_DTYPE)
+
+        # Populate board with initial positions 
+        if initial_positions is None: 
+            if game_mode == 'wormhole': 
+                file = POSITIONS_PATH + 'wormhole/' + ('4_players.yaml' if len(players) == 4 else '2_players.yaml')
+            else: 
+                file = POSITIONS_PATH + 'normal/normal_board.yaml'
+            initial_positions = ChessFactory.load_initial_positions(game_mode, file)
+
+        elif isinstance(initial_positions, str):
+            initial_positions = ChessFactory.load_initial_positions(game_mode, initial_positions)
+
+        MatrixChessFactory.initialize_pieces(board, players, initial_positions)
+
+        # Get other arguments
+        turn = kwargs.get('turn', 0)
+        verbose = kwargs.get('verbose', 0)
+        
+        return GameMatrices(board, players, turn, verbose)
+    
+    @staticmethod
+    def initialize_pieces(board: LayerMatrixBoard, players: np.array, initial_positions: str) -> None: 
+        for i, player in enumerate(players): 
+            j = 0
+            chunk = board.pieces_per_player * i
+
+            player_pieces_positions = initial_positions[NUMBER_TO_COLOR[player['team']]]
+            for piece_name, piece_positions in player_pieces_positions.items(): 
+                for position in piece_positions: 
+                    if not position in board.node_names: 
+                        raise ValueError(f'Invalid piece position: {position}, for the current board')
+                    
+                    piece_type = MatrixChessFactory.get_piece_type(piece_name)
+                    tile = np.where(board.node_names == position)[0][0]
+
+                    board.set_piece(chunk + j, piece_type, i, tile)
+                    j += 1
+
+    @staticmethod
+    def get_piece_type(piece_name: str) -> int: 
+        if "Tower" == piece_name: 
+            return Pieces.TOWER
+        elif "Knight" == piece_name: 
+            return Pieces.KNIGHT
+        elif "Bishop" == piece_name:
+            return Pieces.BISHOP
+        elif "Queen" == piece_name: 
+            return Pieces.QUEEN
+        elif "King" == piece_name:
+            return Pieces.KING
+        elif "Pawn" == piece_name: 
+            return Pieces.PAWN
