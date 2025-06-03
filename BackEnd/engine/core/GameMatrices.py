@@ -1,4 +1,5 @@
 import numpy as np
+import time
 from typing import List, Tuple
 
 from engine.core.matrices.MatrixBoard import LayerMatrixBoard
@@ -46,7 +47,7 @@ class GameMatrices:
         self._cached_movements = np.empty((MAX_POSSIBLE_MOVES, 2), dtype=np.uint8)
         self._cached_count = np.zeros(1, dtype=np.uint8)
 
-        self.history = np.empty((max_turns, 6), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type (for promotions)]]
+        self.history = np.zeros((max_turns, 6), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type (for promotions)]]
         self.initial_positions = self.board.pieces.copy()
         self.positions_counter = {self.hash: 1}
         self.moves_count = 0
@@ -81,9 +82,10 @@ class GameMatrices:
         if self._cached_turn == self.turn and not self._recalculate: 
             return self._cached_movements[:self._cached_count[0]]
         
-        if self.players[self.turn]: 
-            self.get_possible_moves(self.turn)
-            self.filter_legal_moves(self.turn)
+        if self.players[self.turn]['is_alive']: 
+            team = self.players[self.turn]['team']
+            self.get_possible_moves(team)
+            self.filter_legal_moves(team)
             
             # If possible, implement Castles in the future 
             result = self._cached_movements[:self._cached_count[0]]
@@ -127,9 +129,16 @@ class GameMatrices:
     
     def is_in_check(self, player: int) -> bool: 
         b = self.board
+        king_tile = None
         for i in range(b.pieces.shape[0]):
-            if b.pieces[i, 0] == 3 and b.pieces[i, 1] == player and b.pieces[i, 4] == 0:
+            if b.pieces[i, 0] == 3 and b.pieces[i, 1] == player:
+                if not b.pieces[i, 4] == 0: 
+                    raise RuntimeError("King is dead¿?")
                 king_tile = b.pieces[i, 2]
+    
+        if not king_tile: 
+            raise RuntimeError("King not found for player:", player)
+
         return is_in_check(
             player, 
             king_tile, 
@@ -236,7 +245,7 @@ class GameMatrices:
     def is_dead_position(self) -> bool:
         pieces = list(self.board.pieces)
 
-        piece_counts = {}
+        piece_counts = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 
         for piece in pieces:
             if not piece[4]:
@@ -258,3 +267,14 @@ class GameMatrices:
         if len(alive_players) == 1: 
             return alive_players[0]['team']
         return -1
+    
+    def print_last_move(self) -> None: 
+        print("Move made:", self.board.get_names(self.history[self.moves_count-1][1:3]))
+
+    def print_moves(self) -> None: 
+        moves = self.get_movements()
+        for move in moves: 
+            print(self.board.get_names(move))
+
+    def export(self, file: str) -> None: 
+        return self.history[:self.moves_count-1]

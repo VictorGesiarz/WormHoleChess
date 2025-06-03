@@ -111,7 +111,7 @@ def filter_pawn_moves(player: np.uint8, tile: np.int16, move_start: np.int16, mo
     is_piece = nodes[t]
     if is_piece != -1: 
         return count
-        
+    
     out_moves[count, 0] = tile
     out_moves[count, 1] = t
     count += 1
@@ -168,6 +168,7 @@ def get_knight_movements(player: np.uint8, tile: np.int16, nodes: np.array, piec
     move_end = patterns_offsets[piece_end]
     count = basic_filter_simple(player, tile, move_start, move_end, adjacency_list, nodes, pieces, 
                             False, out_moves, count)
+    
     return count
 
 @njit(cache=True)
@@ -206,13 +207,15 @@ def get_pawn_movements(player: np.uint8, tile: np.int16, nodes: np.array, pieces
                         adjacency_list: np.array, patterns_offsets: np.array, pieces_offsets: np.array, tiles_offsets: np.array, 
                         out_moves: np.array, count: np.uint8, only_atacks: bool = False): 
     piece_start, piece_end = retrieve_move_bounds(tile, 4, tiles_offsets, pieces_offsets)
+
     pawn_chunk = 2 * player
     piece_start += pawn_chunk
-    
+
     if not only_atacks:
         pawn_moves_start = patterns_offsets[piece_start]
         pawn_moves_end = patterns_offsets[piece_start + 1]
-        if pawn_moves_start - pawn_moves_end == 3: 
+
+        if pawn_moves_end - pawn_moves_start == 3: 
             count = filter_pawn_moves(player, tile, pawn_moves_start, pawn_moves_end, 
                                     adjacency_list, nodes, pieces, out_moves, count)
         else: 
@@ -232,7 +235,7 @@ def get_possible_moves(player: np.uint8, nodes: np.array, pieces: np.array, adja
                        out_moves: np.array, out_count: np.array, pieces_per_player: int = 16) -> None: 
     chunk = pieces_per_player * player
     player_pieces = pieces[chunk : chunk + pieces_per_player]
-    
+
     count = 0
     for piece in player_pieces:
         piece_type = piece[0]
@@ -266,7 +269,7 @@ def get_possible_moves(player: np.uint8, nodes: np.array, pieces: np.array, adja
                                         pieces_offsets, tiles_offsets, out_moves, count)
             count = get_bishop_movements(player, tile, nodes, pieces, adjacency_list, patterns_offsets, 
                                         pieces_offsets, tiles_offsets, out_moves, count)
-            
+                  
     out_count[0] = count
 
 
@@ -290,10 +293,8 @@ def filter_legal_moves(player: np.uint8, nodes: np.array, pieces: np.array, adja
 
     for i in range(out_count[0]): 
         move = out_moves[i]
-        # print("\n - - - - - - - MOVE MADE:", NAMES[move[0]], NAMES[move[1]], " - - - - - - -")
         make_move(move, nodes, pieces, history, history_index, promotion_zones)
         king_tile = player_king[2]
-        # print("King at", NAMES[king_tile])
         if not is_in_check(player, king_tile, nodes, pieces, adjacency_list, patterns_offsets, 
                            pieces_offsets, tiles_offsets, king_trace): 
             out_moves[count] = move
@@ -305,14 +306,12 @@ def filter_legal_moves(player: np.uint8, nodes: np.array, pieces: np.array, adja
 
 @njit(cache=True)
 def move_makes_check(king_trace, count, nodes, pieces, valid_types) -> bool: 
-    # print_tiles(king_trace[:count])
     for i in range(count):
         tile = king_trace[i][1]
         piece_index = nodes[tile]
-        if tile == -1:
+        if piece_index == -1:
             continue
         piece = pieces[piece_index]
-        # print(piece[0])
         if not piece[4]:  # not captured
             ptype = piece[0]
             for j in range(len(valid_types)):
@@ -353,6 +352,7 @@ def is_in_check(player: np.uint8, king_tile: np.int16, nodes, pieces,
             nodes,
             pieces, 
             np.array([0, 5], dtype=np.int16)):
+        # print("Tower or Queen makes check")
         return True
 
     # print("Bishop - queen check")
@@ -363,6 +363,7 @@ def is_in_check(player: np.uint8, king_tile: np.int16, nodes, pieces,
             nodes,
             pieces, 
             np.array([2, 5], dtype=np.int16)):
+        # print("Bishop or Queen makes check")
         return True
 
     # print("Knight check")
@@ -373,6 +374,7 @@ def is_in_check(player: np.uint8, king_tile: np.int16, nodes, pieces,
             nodes,
             pieces, 
             np.array([1], dtype=np.int16)):
+        # print("Knight makes check")
         return True
 
     # print("King check")
@@ -383,6 +385,7 @@ def is_in_check(player: np.uint8, king_tile: np.int16, nodes, pieces,
             nodes,
             pieces, 
             np.array([3], dtype=np.int16)): 
+        # print("King makes check")
         return True
 
     # print("Pawn check")
@@ -393,6 +396,7 @@ def is_in_check(player: np.uint8, king_tile: np.int16, nodes, pieces,
                 patterns_offsets, pieces_offsets, tiles_offsets, king_trace, 0),
             nodes, pieces, adjacency_list, patterns_offsets, pieces_offsets, tiles_offsets 
             ):
+        # print("Pawn makes check")
         return True
 
     return False 
@@ -422,8 +426,8 @@ def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.arr
         pieces[captured_piece_index, 4] = 1 # Mark as captured
 
     # Promotion logic
-    team = pieces[moving_piece_index, 0]
-    piece_type = pieces[moving_piece_index, 1]
+    piece_type = pieces[moving_piece_index, 0]
+    team = pieces[moving_piece_index, 1]
     if piece_type == 0: 
         for promotion_tile in promotions[team]:
             if destination_tile == promotion_tile:

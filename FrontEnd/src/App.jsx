@@ -10,6 +10,7 @@ import RegisterPage from "./components/Pages/Authentication/RegisterPage";
 import MainPage from "./components/Pages/MainPage";
 import LearnPage from "./components/Pages/LearnPage";
 import PlayPage from "./components/Pages/PlayPage";
+import PlayLocalPage from "./components/Pages/PlayLocalPage";
 import LobbyPage from "./components/Pages/LobbyPage";
 import BotHistoryPage from "./components/Pages/BotHistoryPage"; 
 import GamePage from "./components/Pages/GamePage";
@@ -52,6 +53,7 @@ function App() {
 
                         {/* Protected Routes */}
                         <Route path="/play" element={<PrivateRoute><MainLayout><PlayPage /></MainLayout></PrivateRoute>} />
+                        <Route path="/play" element={<MainLayout><PlayLocalPage /></MainLayout>} />
                         <Route path="/lobby" element={<PrivateRoute><MainLayout><LobbyPage /></MainLayout></PrivateRoute>} />
                         <Route path="/bot-history" element={<PrivateRoute><MainLayout><BotHistoryPage /></MainLayout></PrivateRoute>} />
                         <Route path="/game/:gameCode" element={<PrivateRoute><MainLayout><GamePage /></MainLayout></PrivateRoute>} />

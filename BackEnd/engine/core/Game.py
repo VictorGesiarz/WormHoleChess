@@ -1,4 +1,5 @@
 import json
+import time
 from typing import List, Dict, Tuple
 
 from engine.utils.ZobristHasher import ZobristHasher
@@ -30,9 +31,9 @@ class Game:
         self.game_mode = game_mode
         self.game_state = GameState.PLAYING
         self.verbose = verbose
-        
+
         self.board = board
-        self.hasher = ZobristHasher(6, len(players), len(board))
+        self.hasher = ZobristHasher()
         self.hash = self.hasher.compute_hash(self.board)
 
         self.bot_engines = {

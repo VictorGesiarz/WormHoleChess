@@ -1,0 +1,1293 @@
+{
+    "pieces_state": {
+        "white": {
+            "Tower": [
+                "h1_T",
+                "a1_T"
+            ],
+            "Knight": [
+                "g1_T",
+                "b1_T"
+            ],
+            "Bishop": [
+                "f1_T",
+                "c1_T"
+            ],
+            "Queen": [
+                "d1_T"
+            ],
+            "King": [
+                "e1_T"
+            ],
+            "Pawn": [
+                "h2_T",
+                "g2_T",
+                "f2_T",
+                "e2_T",
+                "d2_T",
+                "c2_T",
+                "b2_T",
+                "a2_T"
+            ]
+        },
+        "black": {
+            "Tower": [
+                "h8_B",
+                "a8_B"
+            ],
+            "Knight": [
+                "g8_B",
+                "b8_B"
+            ],
+            "Bishop": [
+                "f8_B",
+                "c8_B"
+            ],
+            "Queen": [
+                "d8_B"
+            ],
+            "King": [
+                "e8_B"
+            ],
+            "Pawn": [
+                "h7_B",
+                "g7_B",
+                "f7_B",
+                "e7_B",
+                "d7_B",
+                "c7_B",
+                "b7_B",
+                "a7_B"
+            ]
+        }
+    },
+    "game_history": [
+        {
+            "from": "b2_T",
+            "to": "b4_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "g8_B",
+            "to": "h6_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b4_T",
+            "to": "b5_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "h6_B",
+            "to": "g4_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "g1_T",
+            "to": "f3_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "g4_B",
+            "to": "e4_1_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f3_T",
+            "to": "e4_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e4_1_B",
+            "to": "e5_1_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "h1_T",
+            "to": "g1_T",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e5_1_B",
+            "to": "e5_2_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e4_B",
+            "to": "e5_2_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "captured_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "killed_player": null
+        },
+        {
+            "from": "b8_B",
+            "to": "a6_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c2_T",
+            "to": "d4_1_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a6_B",
+            "to": "b4_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e2_T",
+            "to": "e3_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b4_B",
+            "to": "a6_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c1_T",
+            "to": "a3_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a6_B",
+            "to": "b4_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e5_2_B",
+            "to": "f6_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a8_B",
+            "to": "b8_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f6_T",
+            "to": "e5_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a7_B",
+            "to": "a8_B",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "h2_T",
+            "to": "h4_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b4_B",
+            "to": "d3_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a3_T",
+            "to": "d5_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d3_B",
+            "to": "b2_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b1_T",
+            "to": "a3_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b2_B",
+            "to": "c4_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a3_T",
+            "to": "c4_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c4_B",
+            "to": "d5_1_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d5_B",
+            "to": "b7_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": {
+                "type": "Pawn",
+                "color": "black"
+            },
+            "killed_player": null
+        },
+        {
+            "from": "d5_1_B",
+            "to": "d4_1_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "g1_T",
+            "to": "h1_T",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d4_1_B",
+            "to": "b3_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b7_B",
+            "to": "e5_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b8_B",
+            "to": "b7_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d1_T",
+            "to": "e2_T",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b7_B",
+            "to": "b8_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e5_T",
+            "to": "a8_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": {
+                "type": "Pawn",
+                "color": "black"
+            },
+            "killed_player": null
+        },
+        {
+            "from": "b8_B",
+            "to": "b3_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c4_T",
+            "to": "a3_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b3_B",
+            "to": "h3_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d4_1_T",
+            "to": "d4_1_B",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "h3_B",
+            "to": "b3_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a8_B",
+            "to": "c6_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b3_B",
+            "to": "b2_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a1_T",
+            "to": "c1_T",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b2_B",
+            "to": "d2_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "g2_T",
+            "to": "g4_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d2_B",
+            "to": "f2_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c6_B",
+            "to": "h8_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f2_B",
+            "to": "f6_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "h8_T",
+            "to": "b7_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "g7_B",
+            "to": "g8_B",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c1_T",
+            "to": "c4_T",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f6_B",
+            "to": "b6_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e2_T",
+            "to": "c5_B",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b6_B",
+            "to": "c6_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b7_B",
+            "to": "c6_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": {
+                "type": "Tower",
+                "color": "black"
+            },
+            "killed_player": null
+        },
+        {
+            "from": "f8_B",
+            "to": "g7_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c6_B",
+            "to": "d4_2_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "g7_B",
+            "to": "e5_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "killed_player": null
+        },
+        {
+            "from": "d2_T",
+            "to": "d4_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f7_B",
+            "to": "f8_B",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c4_T",
+            "to": "c6_T",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e5_B",
+            "to": "c6_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": {
+                "type": "Tower",
+                "color": "white"
+            },
+            "killed_player": null
+        },
+        {
+            "from": "f2_T",
+            "to": "f4_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c6_T",
+            "to": "b7_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c5_B",
+            "to": "a3_B",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b7_T",
+            "to": "d5_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a3_B",
+            "to": "f3_B",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b3_T",
+            "to": "d4_2_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "killed_player": null
+        },
+        {
+            "from": "f1_T",
+            "to": "d4_1_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d4_2_T",
+            "to": "c5_B",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f3_B",
+            "to": "f4_B",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d5_T",
+            "to": "f6_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d4_1_T",
+            "to": "d3_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f6_B",
+            "to": "b7_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "h4_T",
+            "to": "h5_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b7_T",
+            "to": "a6_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "g4_T",
+            "to": "g5_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c5_B",
+            "to": "d4_2_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f4_B",
+            "to": "f7_B",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e8_B",
+            "to": "f7_B",
+            "moving_piece": {
+                "type": "King",
+                "color": "black"
+            },
+            "captured_piece": {
+                "type": "Queen",
+                "color": "white"
+            },
+            "killed_player": null
+        },
+        {
+            "from": "d3_T",
+            "to": "c2_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c8_B",
+            "to": "a6_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "h1_T",
+            "to": "g1_T",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d8_B",
+            "to": "e8_B",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a3_T",
+            "to": "b1_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a6_B",
+            "to": "b7_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b5_T",
+            "to": "b6_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e8_B",
+            "to": "c8_B",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c2_T",
+            "to": "e4_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f7_B",
+            "to": "e8_B",
+            "moving_piece": {
+                "type": "King",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e1_T",
+            "to": "f1_T",
+            "moving_piece": {
+                "type": "King",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a6_T",
+            "to": "d4_1_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f1_T",
+            "to": "g2_T",
+            "moving_piece": {
+                "type": "King",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c8_B",
+            "to": "b8_B",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "g2_T",
+            "to": "h1_T",
+            "moving_piece": {
+                "type": "King",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b7_B",
+            "to": "d5_2_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "g1_T",
+            "to": "f1_T",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d5_2_B",
+            "to": "f8_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e4_T",
+            "to": "a1_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b8_B",
+            "to": "b6_B",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a1_B",
+            "to": "c6_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d4_2_T",
+            "to": "d5_2_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b1_T",
+            "to": "a3_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f8_T",
+            "to": "g7_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a3_T",
+            "to": "b1_T",
+            "moving_piece": {
+                "type": "Knight",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d4_1_T",
+            "to": "e3_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "a2_T",
+            "to": "a3_T",
+            "moving_piece": {
+                "type": "Pawn",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e3_B",
+            "to": "d4_1_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f1_T",
+            "to": "h3_B",
+            "moving_piece": {
+                "type": "Tower",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b6_B",
+            "to": "e6_B",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "c6_T",
+            "to": "b7_T",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "d4_1_T",
+            "to": "f2_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "b7_T",
+            "to": "f6_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "e6_B",
+            "to": "a6_B",
+            "moving_piece": {
+                "type": "Queen",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        },
+        {
+            "from": "f6_B",
+            "to": "e7_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "white"
+            },
+            "captured_piece": {
+                "type": "Pawn",
+                "color": "black"
+            },
+            "killed_player": null
+        },
+        {
+            "from": "f2_B",
+            "to": "g3_B",
+            "moving_piece": {
+                "type": "Bishop",
+                "color": "black"
+            },
+            "captured_piece": null,
+            "killed_player": null
+        }
+    ]
+}

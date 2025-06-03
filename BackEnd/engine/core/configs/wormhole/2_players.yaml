@@ -6,7 +6,7 @@ white:
   Queen:  d1T
   King:   e1T
 
-black: 
+red: 
   Pawn: h7B g7B f7B e7B d7B c7B b7B a7B
   Tower: h8B a8B
   Knight: g8B b8B

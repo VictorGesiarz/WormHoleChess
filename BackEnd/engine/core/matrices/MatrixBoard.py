@@ -110,9 +110,9 @@ class LayerMatrixBoard:
                 Pieces.TOWER:  tile.tower_layer,
                 Pieces.KNIGHT: tile.knight_layer,
                 Pieces.BISHOP: tile.bishop_layer,
-                Pieces.QUEEN:  tile.queen_layer,  # Currently unused
                 Pieces.KING:   tile.king_layer,
-                Pieces.PAWN:   tile.pawn_layer
+                Pieces.PAWN:   tile.pawn_layer,
+                Pieces.QUEEN:  tile.queen_layer,  # Currently unused
             }
 
             for piece, layer in piece_layers.items():
