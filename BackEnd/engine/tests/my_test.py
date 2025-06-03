@@ -1,7 +1,7 @@
 import time
 import pandas as pd
 
-from engine.core.ChessFactory import ChessFactory
+from engine.core.ChessFactory import ChessFactory, MatrixChessFactory
 from engine.core.constants import PARAMETERS
 
 
@@ -10,10 +10,10 @@ PARAMETERS['cast_from_king'] = True
 def simulate_game(id=0): 
     game_creation_time = time.time()
     num_players = 4
-    num_montecarlo = 1
+    num_montecarlo = 0
     game = ChessFactory.create_game(
-        player_data=ChessFactory.create_bot_data(num_bots=num_players, difficulties=["mcts"] * num_montecarlo + ["random"] * (num_players-num_montecarlo)), 
-        program_mode="layer",
+        player_data=MatrixChessFactory.create_bot_data(num_bots=num_players, difficulties=["mcts"] * num_montecarlo + ["random"] * (num_players-num_montecarlo)), 
+        program_mode="matrix",
         game_mode="wormhole",
         size=(8, 8),
         # initial_positions='./engine/core/configs/normal/queen_mate.yaml'
@@ -27,14 +27,14 @@ def simulate_game(id=0):
 
     game_time = time.time()
 
-    while not game.is_finished() and move_count < 120: 
-        move_time = time.time()
-        turn = game.get_turn()
-        move_duration = time.time() - move_time
+    # moves = game.get_movements()
+    # print(moves)
+    # for move in moves: 
+    #     print(game.board.get_names(move))
 
-        if turn >= 0 and game.players[turn].type != 'bot':
-            total_calc_time += move_duration
-            calc_count += 1
+    while not game.is_finished() and move_count < 120: 
+        turn = game.get_turn()
+        # print(game.history)
 
         game.next_turn()
         move_count += 1

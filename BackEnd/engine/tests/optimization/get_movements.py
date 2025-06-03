@@ -34,8 +34,8 @@ def test():
                     out_moves, 
                     out_count)
     
-    # for move in out_moves[:out_count[0]]: 
-    #     print(board.get_names(move))
+    for move in out_moves[:out_count[0]]: 
+        print(board.get_names(move))
 
     start = time.time()
     for i in range(num_tests):

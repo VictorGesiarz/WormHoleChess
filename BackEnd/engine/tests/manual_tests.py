@@ -496,7 +496,7 @@ def test_layer_matrix_board():
 
     b.save_matrices()
         
-# test_layer_matrix_board()
+test_layer_matrix_board()
 
 
 def copy_test(): 
@@ -519,7 +519,7 @@ def copy_test():
         new_b.pieces = b.pieces.copy()
         recreation_time += time.time() - start
 
-    print(f'Average copy time: {copy_time / n_tests}')
+    print(f'Average copy time: {copy_time / n_tests:.8f}')
     print(f'Average recreation time: {recreation_time / n_tests}')
 
 
@@ -564,4 +564,4 @@ def test_max_moves():
     print(max(moves_count), sum(moves_count) / len(moves_count))
 
 
-test_max_moves()
+# test_max_moves()

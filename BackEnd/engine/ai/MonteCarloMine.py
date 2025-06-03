@@ -35,8 +35,7 @@ class MonteCarlo(object):
         self.max_depth = 0
         moves = self.game.get_movements()
         player = self.game.get_turn(auto_play_bots=False)
-
-        if not moves: 
+        if len(moves) == 0: 
             return 
         if len(moves) == 1: 
             return moves[0]

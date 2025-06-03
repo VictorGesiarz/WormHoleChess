@@ -5,7 +5,7 @@ from engine.core.layer.LayerBoard import LayerBoard
 from engine.core.layer.LayerTile import LayerTile
 from engine.core.base.Board import Board
 from engine.core.base.NormalBoard import NormalBoard
-from engine.core.matrices.matrix_constants import Pieces, Teams, PieceInfo
+from engine.core.matrices.matrix_constants import Pieces, Teams
 
 
 BIG_BOARD_FILE = './engine/core/configs/matrix_board/(8, 8)_wormhole.npz'
@@ -38,7 +38,9 @@ class LayerMatrixBoard:
         self.num_players = kwargs.get('num_players', 4) 
         self.pieces_per_player = kwargs.get('pieces_per_player', 16)
         self.num_pieces = self.num_players * self.pieces_per_player  # e.g., 4 players × 16 pieces = 64
-        self.pieces: np.array = np.zeros((self.num_pieces, 6), dtype=np.int16)  # [[piece_type, player, position, has_moved?, captured?, custom_flags (bitmasking)], ...]
+        self.pieces: np.array = np.full((self.num_pieces, 6), -1, dtype=np.int16)  # [[piece_type, player, position, has_moved?, captured?, custom_flags (bitmasking)], ...]
+
+        self.promotion_zones = np.empty((self.num_players, self.size[1] * 3), dtype=np.uint8)
 
         if innitialize: 
             if load_from_file: 
@@ -49,21 +51,27 @@ class LayerMatrixBoard:
     def copy(self) -> 'LayerMatrixBoard': 
         board_copy = LayerMatrixBoard(self.size, self.game_mode, innitialize=False)
         board_copy.set_matrices(self.nodes.copy(), self.node_names, self.adjacency_list, 
-                                self.patterns_offsets, self.pieces_offsets, self.tiles_offsets)
+                                self.patterns_offsets, self.pieces_offsets, self.tiles_offsets,
+                                self.promotion_zones)
         board_copy.num_players = self.num_players
         board_copy.pieces_per_player = self.pieces_per_player
         board_copy.num_pieces = self.num_pieces
         board_copy.pieces = self.pieces.copy()
         return board_copy
+    
+    def reset(self) -> None: 
+        ...
 
     def set_matrices(self, nodes: np.array, node_names: np.array, adjacency: np.array, 
-                     patterns: np.array, pieces_offets: np.array, tiles: np.array) -> None: 
+                     patterns: np.array, pieces_offets: np.array, tiles: np.array,
+                     promotion_zones: np.array) -> None: 
         self.nodes = nodes
         self.node_names = node_names
         self.adjacency_list = adjacency
         self.patterns_offsets = patterns 
         self.pieces_offsets = pieces_offets
         self.tiles_offsets = tiles
+        self.promotion_zones = promotion_zones
     
     def save_matrices(self) -> None: 
         file = f'{BOARD_FILES}{str(self.size)}_{self.game_mode}.npz'
@@ -73,7 +81,8 @@ class LayerMatrixBoard:
                  adjacency_list=self.adjacency_list,
                  patterns_offsets=self.patterns_offsets,
                  pieces_offsets=self.pieces_offsets,
-                 tiles_offsets=self.tiles_offsets)
+                 tiles_offsets=self.tiles_offsets,
+                 promotion_zones=self.promotion_zones)
         
     def load_matrices(self, file) -> None: 
         matrices = np.load(file)
@@ -83,12 +92,14 @@ class LayerMatrixBoard:
         self.patterns_offsets = matrices['patterns_offsets']
         self.pieces_offsets = matrices['pieces_offsets']
         self.tiles_offsets = matrices['tiles_offsets']
+        self.promotion_zones = matrices['promotion_zones']
 
     def create_board(self) -> None:
         b = LayerBoard(self.size, self.game_mode)
 
         self.nodes = np.full(len(b), -1, dtype=np.int16)
         self.node_names = np.array(list(b.tiles.keys()), dtype=str)
+        self.promotion_zones = np.array([b.get_promotion_zones(p) for p in range(self.num_players)], dtype=np.uint8)
 
         adjacency_count = 0
         pattern_count = 0
@@ -163,7 +174,7 @@ class LayerMatrixBoard:
         return self.pieces[chunk:chunk + self.pieces_per_player]
     
     def get_names(self, index_list: List[int]) -> List[str]: 
-        return [self.node_names[i] for i in index_list]
+        return [str(self.node_names[i]) for i in index_list]
     
     def get_ids(self, tile_list: List[LayerTile]):
         return [tile.id for tile in tile_list]

@@ -1,8 +1,20 @@
 import numpy as np
 from typing import List, Tuple
 
-from engine.core.matrices.MatrixBoard import LayerMatrixBoard, Pieces, Teams, PieceInfo
+from engine.core.matrices.MatrixBoard import LayerMatrixBoard
 from engine.utils.ZobristHasherMatrices import ZobristHasher
+from engine.core.matrices.chess_logic_bounds import (
+    get_possible_moves, 
+    filter_legal_moves, 
+    is_in_check, 
+    make_move,
+    undo_move
+)
+from engine.core.matrices.matrix_constants import * 
+from engine.core.constants import * 
+
+from engine.ai.RandomAI import RandomAI
+from engine.ai.MonteCarloMine import MonteCarlo
 
 
 class GameMatrices: 
@@ -11,34 +23,34 @@ class GameMatrices:
                  players: np.ndarray,
                  turn: int, 
                  verbose: int = 0,
-                 hasher: ZobristHasher = None): 
-        """ Class that does the same as the other Game class, but using the graph represented as a matrix. 
-
-        Args:
-            board (LayerMatrixBoard): _description_
-            players (np.ndarray): _description_
-            turn (int): _description_
-            verbose (int, optional): _description_. Defaults to 0.
-        """
+                 hasher: ZobristHasher = None, 
+                 max_turns: int = 120): 
     
         self.players = players
         self.number_of_players = len(players)
         self.turn = turn 
         self.verbose = verbose
+        self.game_state = GameState.PLAYING
         
         self.board = board
-        self.hasher = ZobristHasher(6, self.number_of_players, board.nodes.shape[0]) if hasher is None else hasher
+        self.hasher = ZobristHasher() if hasher is None else hasher
         self.hash = self.hasher.compute_hash(self.board.pieces)
 
+        self.bot_engines = {
+            1: RandomAI(self),
+            2: MonteCarlo(self)
+        }
+
         self._cached_turn = None
-        self._cached_movements = None
-        self.history: List = []
+        self._recalculate = True
+        self._cached_movements = np.empty((MAX_POSSIBLE_MOVES, 2), dtype=np.uint8)
+        self._cached_count = np.zeros(1, dtype=np.uint8)
+
+        self.history = np.empty((max_turns, 6), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type (for promotions)]]
         self.initial_positions = self.board.pieces.copy()
-        self.positions_counter = {hash(self): 1}
+        self.positions_counter = {self.hash: 1}
+        self.moves_count = 0
         self.moves_without_capture = 0
-        
-    def __hash__(self):
-        return self.hash
 
     def check_size(self) -> None:
         from pympler import asizeof
@@ -52,68 +64,197 @@ class GameMatrices:
         return game_copy
         
     def next_turn(self) -> None: 
-        self.turn = (self.turn + 1) % self.players
+        self.turn = (self.turn + 1) % self.number_of_players
+        self._recalculate = True
 
     def get_turn(self, auto_play_bots=True) -> int: 
         if not self.players[self.turn]['is_alive']:
             return -1 
-        elif not self.check_player_state(self.get_movements()):
+        elif not self.check_player_state(self.players[self.turn], self.get_movements()):
             return -1 
-        elif self.players[self.turn]['is_bot'] and auto_play_bots: 
-            self.make_bot_move()
+        elif self.players[self.turn]['opponent_type'] != 0 and auto_play_bots: 
+            self.make_move_bot()
         
         return self.turn
     
-    def get_movements(self) -> List[Tuple[int]]:
-        if self._cached_turn == self.turn and self._cached_movements is not None: 
-            return self._cached_movements
+    def get_movements(self) -> np.array:
+        if self._cached_turn == self.turn and not self._recalculate: 
+            return self._cached_movements[:self._cached_count[0]]
         
         if self.players[self.turn]: 
-            movements = self.get_possible_moves(self.turn)
-            legal_movements = self.filter_legal_moves(self.turn, movements)
+            self.get_possible_moves(self.turn)
+            self.filter_legal_moves(self.turn)
             
-            castles = []
-            # if not self.is_in_check(self.turn):
-            #     castles = self.get_castles(self.turn)
-            #     ...
-            
-            result = legal_movements + castles
+            # If possible, implement Castles in the future 
+            result = self._cached_movements[:self._cached_count[0]]
         else:
             result = []
         
         self._cached_turn = self.turn 
-        self._cached_movements = result
+        self._recalculate = False
         return result
                         
-    def get_possible_moves(self, player: int) -> List[Tuple[int, int]]:
-        player_pieces = self.board.get_pieces(player)
-        
-        movements = []
-        for piece in player_pieces:
-            piece_type = piece[0]
-            tile = piece[2]
-            has_moved = piece[3]
-            captured = piece[4]
-            
-            tiles_offsets = self.board.tiles_offsets
-            pieces_offsets = self.board.pieces_offsets[tiles_offsets[tile] : tiles_offsets[tile+1] + 1]
-            patterns_offsets = self.board.patterns_offsets[pieces_offsets[piece_type] : pieces_offsets[piece_type + 1] + 1]
-            
-            for i in range(len(patterns_offsets) - 1): 
-                to_tiles = self.board.adjacency_list[patterns_offsets[i] : patterns_offsets[i + 1]]
+    def get_possible_moves(self, player: int) -> None:
+        b = self.board
+        get_possible_moves(
+            player, 
+            b.nodes, 
+            b.pieces,
+            b.adjacency_list,
+            b.patterns_offsets, 
+            b.pieces_offsets,
+            b.tiles_offsets,
+            self._cached_movements, 
+            self._cached_count
+        )
     
+    def filter_legal_moves(self, player: int) -> None:
+        b = self.board
+        filter_legal_moves(
+            player, 
+            b.nodes, 
+            b.pieces,
+            b.adjacency_list,
+            b.patterns_offsets, 
+            b.pieces_offsets,
+            b.tiles_offsets,
+            self._cached_movements, 
+            self._cached_count,
+            self.history, 
+            self.moves_count,
+            self.board.promotion_zones
+        )
+    
+    def is_in_check(self, player: int) -> bool: 
+        b = self.board
+        for i in range(b.pieces.shape[0]):
+            if b.pieces[i, 0] == 3 and b.pieces[i, 1] == player and b.pieces[i, 4] == 0:
+                king_tile = b.pieces[i, 2]
+        return is_in_check(
+            player, 
+            king_tile, 
+            b.nodes,
+            b.pieces, 
+            b.adjacency_list, 
+            b.patterns_offsets, 
+            b.pieces_offsets, 
+            b.tiles_offsets, 
+            np.empty((MAX_POSSIBLE_MOVES, 2), dtype=np.uint8)
+        )
 
-    def discard_moves(self, player: int, piece_type: int, to_tiles: np.array) -> List[int]: 
-        ... 
-        
-    def filter_legal_moves(self, player: int, moves: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
-        ...
-        
-    def is_in_chech(self, player: int) -> bool: 
-        ... 
-        
-    def make_move(self, move: List[int]) -> np.array: 
-        ...
+    def make_move(self, move: np.array, store: bool = True) -> None: 
+        make_move(
+            move, 
+            self.board.nodes, 
+            self.board.pieces, 
+            self.history, 
+            self.moves_count, 
+            self.board.promotion_zones
+        )
 
-    def undo_move(self, move: np.array) -> None: 
-        ...
+        self.hash = self.hasher.update_hash(self.hash, self.history[self.moves_count], self.board.pieces)
+
+        if store: 
+            _, _, _, captured_piece_index, _, _ = self.history[self.moves_count]
+            self.moves_without_capture += 1
+            if captured_piece_index != -1: 
+                self.moves_without_capture = 0
+                captured_piece = self.board.pieces[captured_piece_index]
+                if captured_piece[0] == 3: # If a king is a captured
+                    player = captured_piece[1]
+                    self.players[player]['is_alive'] = False # Kill the player 
+            self.positions_counter[self.hash] = self.positions_counter.get(self.hash, 0) + 1
+            self.moves_count += 1
+
+    def undo_move(self, remove: bool = True) -> None: 
+        if remove:
+            # This should also remove one from position counter, restore moves without capture, etc. 
+            self.moves_count -= 1
+        undo_move(
+            self.board.nodes,
+            self.board.pieces, 
+            self.history, 
+            self.moves_count
+        )
+        
+        self.hash = self.hasher.update_hash(self.hash, self.history[self.moves_count], self.board.pieces)
+
+    def make_move_bot(self) -> None: 
+        bot = self.players[self.turn]
+        engine = self.bot_engines[bot['opponent_type']]
+        move = engine.choose_move()
+        if move is not None: 
+            self.make_move(move)
+
+    def check_player_state(self, player: np.array, moves: np.array) -> bool:
+        if not player['is_alive']: 
+            return False
+        if len(moves) == 0: 
+            if self.is_in_check(player['team']):
+                self.kill_player(player, print_text="by checkmate")
+            else: 
+                alive_players = [player for player in self.players if player['is_alive']]
+                if len(alive_players) > 2: # If there are more than 2 players, a stalemate is losing for that player. When there are only 2 players, it is a draw
+                    self.kill_player(player, print_text="by stalemate")
+                else: 
+                    self.game_state = GameState.DRAW
+            return False
+        return True
+    
+    def kill_player(self, player: int, print_text: str = None) -> None: 
+        if print_text and self.verbose > 0: 
+            print(f"{NUMBER_TO_COLOR[player.team]} loses {print_text}")
+        player['is_alive'] = False
+
+    def revive_player(self, player: int) -> None: 
+        player['is_alive'] = True
+    
+    def is_finished(self) -> bool: 
+        if self.game_state in [GameState.PLAYER_WON, GameState.DRAW]:
+            return True
+    
+        # If only one player is alive, the game is finished
+        alive_players = [player for player in self.players if player['is_alive']]
+        if len(alive_players) == 1: 
+            if self.verbose > 0: print(f"Player {alive_players[0].team} wins!")
+            self.game_state = GameState.PLAYER_WON
+            return True
+        
+        if self.is_dead_position() or self.is_draw_by_repetition() or self.is_draw_by_50_moves(): 
+            if self.verbose > 0: print("Game is a draw")
+            self.game_state = GameState.DRAW
+            return True
+
+        return False
+
+    def is_draw_by_repetition(self) -> bool:
+        return self.positions_counter.get(self.hash, 0) >= 3
+
+    def is_draw_by_50_moves(self) -> bool: 
+        return self.moves_without_capture >= MAX_MOVES_WITHOUT_CAPTURE * self.number_of_players
+
+    def is_dead_position(self) -> bool:
+        pieces = list(self.board.pieces)
+
+        piece_counts = {}
+
+        for piece in pieces:
+            if not piece[4]:
+                piece_counts[piece[0]] = piece_counts.get(piece[0], 0) + 1
+
+        if piece_counts == {0: 0, 1: 0, 2: 0, 3: 2, 4: 0, 5: 0}:
+            return True
+
+        if piece_counts[5] == piece_counts[0] == piece_counts[4] == 0:
+            if piece_counts[2] + piece_counts[1] == 1:
+                return True
+                
+        return False
+
+    def winner(self) -> int: 
+        if self.game_state != GameState.PLAYER_WON: 
+            return -1 
+        alive_players = [player for player in self.players if player['is_alive']]
+        if len(alive_players) == 1: 
+            return alive_players[0]['team']
+        return -1

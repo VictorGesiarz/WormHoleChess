@@ -14,7 +14,7 @@ class RandomAI:
 
     def choose_move(self) -> Tuple[Tile | LayerTile]:
         moves = self.game.get_movements()
-        if moves: 
+        if len(moves) > 0:
             random_move = random.choice(moves)
             return random_move
         return None

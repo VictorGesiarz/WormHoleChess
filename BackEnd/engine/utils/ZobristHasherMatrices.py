@@ -8,7 +8,7 @@ class ZobristHasher:
     def __init__(self, 
                  num_piece_types: int = 6, 
                  num_players: int = 4, 
-                 num_positions: int = 64, 
+                 num_positions: int = 144, 
                  hash_size: int = 64, 
                  seed: int = 42) -> None:
 
@@ -30,27 +30,23 @@ class ZobristHasher:
 
         self.table = ZobristHasher._shared_table
 
-    def compute_hash(self, state: np.array) -> int:
-        # h = 0
-        # for piece in state.pieces:
-        #     if not piece.captured: 
-        #         h ^= self.table[piece.type_id][piece.team.team][piece.position.id]
-        # return h
-        return 0 
+    def compute_hash(self, pieces: np.array) -> int:
+        h = 0
+        for piece in pieces: 
+            if piece[0] != -1 and not piece[4]: 
+                h ^= self.table[piece[0]][piece[1]][piece[2]]
+        return h
 
-    def update_hash(self, old_hash: int, movement: np.array, castle_movement: np.array) -> int: 
-        piece = movement.piece
-        from_ = movement.tile_from
-        to_ = movement.tile_to
+    def update_hash(self, old_hash: int, movement: np.array, pieces: np.array) -> int: 
+        moving_piece_index, origin_tile, destination_tile, captured_piece_index, _, _ = movement
 
-        old_hash ^= self.table[piece.type_id][piece.team.team][from_.id]
-        old_hash ^= self.table[piece.type_id][piece.team.team][to_.id]
+        piece = pieces[moving_piece_index]
 
-        if movement.captured_piece: 
-            captured = movement.captured_piece
-            old_hash ^= self.table[captured.type_id][captured.team.team][to_.id]
+        old_hash ^= self.table[piece[0]][piece[1]][origin_tile]
+        old_hash ^= self.table[piece[0]][piece[1]][destination_tile]
 
-        if movement.castle_movement: 
-            old_hash = self.update_hash(old_hash, movement.castle_movement)
+        if captured_piece_index != -1: 
+            captured_piece = pieces[captured_piece_index]
+            old_hash ^= self.table[captured_piece[0]][captured_piece[1]][destination_tile]
 
         return old_hash

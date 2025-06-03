@@ -172,3 +172,11 @@ class LayerBoard(NormalBoard):
                 break
 
         return [movement]
+    
+    def get_promotion_zones(self, player: int) -> List[int]: 
+        promotion_rows = Pawn.PAWNS[player]['promotion_rows']
+        tiles = []
+        for tile in self.tiles.values(): 
+            if tile.name[1] + '_' + tile.name[-1] in promotion_rows or tile.name[1] in promotion_rows: 
+                tiles.append(tile.id)
+        return tiles 

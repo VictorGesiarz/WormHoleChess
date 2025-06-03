@@ -117,11 +117,12 @@ class LayerTower(LayerPiece):
             for move in path:
                 if move in seen:
                     continue
-                seen.add(move)
                 if move.piece:
                     if move.piece.team != self.team:
                         possible_moves.append(move)
                     break
+                else:
+                    seen.add(move)
                 possible_moves.append(move)
         return possible_moves
 
@@ -154,11 +155,12 @@ class LayerBishop(LayerPiece):
             for move in path:
                 if move in seen:
                     continue
-                seen.add(move)
                 if move.piece:
                     if move.piece.team != self.team:
                         possible_moves.append(move)
                     break
+                else: 
+                    seen.add(move)
                 possible_moves.append(move)
         return possible_moves
     
@@ -175,11 +177,12 @@ class LayerQueen(LayerPiece):
             for move in path:
                 if move in seen:
                     continue
-                seen.add(move)
                 if move.piece:
                     if move.piece.team != self.team:
                         possible_moves.append(move)
                     break
+                else: 
+                    seen.add(move)
                 possible_moves.append(move)
         return possible_moves
     
@@ -327,11 +330,11 @@ class LayerPawn(LayerPiece):
     PAWNS = {
         0: {
             'first_row': '2_T', 
-            'promotion_rows': ['8_T', '1_B', '8_B'],
+            'promotion_rows': ['8_T', '1_B', '8_B', '8'],
         },
         1: {
             'first_row': '7_T',
-            'promotion_rows': ['1_T', '8_B', '1_B'],
+            'promotion_rows': ['1_T', '8_B', '1_B', '1'],
         },
         2: {
             'first_row': '2_B',
@@ -358,8 +361,8 @@ class LayerPawn(LayerPiece):
             else: 
                 break
         for attack in self.position.pawn_layer.attacks[self.team.team]: 
-            if move.piece and move.piece.team != self.team: 
-                possible_moves.append(move)
+            if attack.piece and attack.piece.team != self.team: 
+                possible_moves.append(attack)
         return possible_moves
     
     def is_promoting(self) -> bool: 

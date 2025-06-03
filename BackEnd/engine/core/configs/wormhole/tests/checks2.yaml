@@ -1,0 +1,7 @@
+white: 
+  Queen: c1T
+  King: d1T
+
+black: 
+  King: e8T
+  Pawn: b3T

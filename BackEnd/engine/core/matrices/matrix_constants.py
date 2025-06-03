@@ -1,21 +1,20 @@
 from enum import IntEnum
 import numpy as np 
 
+# An average of 37 moves and a max of 104 moves can be made at each turn of the game. 
+# We set a higher threshold to make sure we have enough room for calculating moves. 
+# This way we do not have to use dinamyc lists to get movements for each player and 
+# also it works as a way of storing the calculated moves. 
+MAX_POSSIBLE_MOVES = 160
+
+# When looking the movements a piece can make, the max number is 22 (rook placed in e4)
+# Used to create the king trace array
+MAX_POSSIBLE_TRACE = 22
 
 PLAYER_DTYPE = np.dtype([
     ('team', np.uint8),
-    ('is_bot', np.bool_),
-    ('is_alive', np.bool_)
-])
-
-MOVE_DTYPE = np.dtype([
-    ('piece_type', np.uint8), 
-    ('from', np.uint8), 
-    ('to', np.uint8),
-    ('first_move', np.bool_), 
-    ('moves_without_capture', np.uint8), 
-    ('captured_piece', np.uint8), 
-    ('killed_player', np.uint8) 
+    ('is_alive', np.bool_),
+    ('opponent_type', np.uint8),
 ])
 
 class Pieces(IntEnum):

@@ -11,7 +11,7 @@ class ZobristHasher:
     def __init__(self, 
                  num_piece_types: int = 6, 
                  num_players: int = 4, 
-                 num_positions: int = 64, 
+                 num_positions: int = 144, 
                  hash_size: int = 64, 
                  seed: int = 42) -> None:
 

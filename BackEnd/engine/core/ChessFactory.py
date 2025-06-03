@@ -30,7 +30,7 @@ class ChessFactory:
                     game_mode: Literal['normal', 'wormhole'] = 'wormhole',
                     size: Union[Literal['big', 'small'], Tuple[int]] = 'big',
                     initial_positions: str | Dict[str, str] = None,
-                    **kwargs) -> Game:
+                    **kwargs) -> Game | GameMatrices:
         
         if game_mode == 'normal' and len(player_data) != 2: 
             raise ValueError('Normal game mode only supports 2 players')
@@ -53,7 +53,7 @@ class ChessFactory:
 
         types = ChessFactory.initialize_pieces(board, players, initial_positions, program_mode, game_mode)
         
-        return Game(board, players, program_mode='base', turn=0)
+        return Game(board, players, program_mode='base', turn=0) 
     
     @staticmethod
     def initialize_pieces(board: Board, players: List[Player], initial_positions: str, program_mode: str, game_mode: str) -> int: 
@@ -174,7 +174,7 @@ class MatrixChessFactory:
                     game_mode: Literal['normal', 'wormhole'] = 'wormhole',
                     size: Union[Literal['big', 'small'], Tuple[int]] = 'big',
                     initial_positions: str | Dict[str, str] = None,
-                    **kwargs) -> None:
+                    **kwargs) -> GameMatrices:
         
         if program_mode == 'base': 
             raise ValueError('Cannot create a game with base program mode. ')
@@ -187,7 +187,7 @@ class MatrixChessFactory:
         # Create board and players
         board = LayerMatrixBoard(size, game_mode, load_from_file=load_from_file, **kwargs)
         players = np.array([
-            (i, data[1], True) for i, data in enumerate(player_data)
+            (i, True, data[1]) for i, data in enumerate(player_data)
         ], dtype=PLAYER_DTYPE)
 
         # Populate board with initial positions 
@@ -205,9 +205,10 @@ class MatrixChessFactory:
 
         # Get other arguments
         turn = kwargs.get('turn', 0)
+        max_turns = kwargs.get('max_turns', 120)
         verbose = kwargs.get('verbose', 0)
         
-        return GameMatrices(board, players, turn, verbose)
+        return GameMatrices(board, players, turn, verbose, max_turns=max_turns)
     
     @staticmethod
     def initialize_pieces(board: LayerMatrixBoard, players: np.array, initial_positions: str) -> None: 
@@ -226,6 +227,26 @@ class MatrixChessFactory:
 
                     board.set_piece(chunk + j, piece_type, i, tile)
                     j += 1
+
+    @staticmethod
+    def create_bot_data(num_bots: int = 4, difficulties: List[Literal['random', 'mcts', 'alphazero']] = ['random'] * 4) -> List[Tuple[str]]: 
+        engines_map = {
+            'random': 1,
+            'mcts': 2,
+            'alphazero': 3
+        }
+
+        if num_bots == 4:
+            return [
+                ('white', engines_map[difficulties[0]]),
+                ('black', engines_map[difficulties[1]]),
+                ('blue', engines_map[difficulties[2]]),
+                ('red', engines_map[difficulties[3]]),
+            ]
+        return [
+            ('white', engines_map[difficulties[0]]),
+            ('black', engines_map[difficulties[1]]),
+        ]
 
     @staticmethod
     def get_piece_type(piece_name: str) -> int: 
