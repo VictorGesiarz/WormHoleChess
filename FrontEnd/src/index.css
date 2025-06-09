@@ -16,6 +16,10 @@ body {
     font-weight: 400;
 }
 
+h1 {
+    margin-bottom: 25px;
+}
+
 .text-block {
     margin: 20px;
 }
@@ -57,6 +61,7 @@ body {
 
 .center-page {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     width: 100%;

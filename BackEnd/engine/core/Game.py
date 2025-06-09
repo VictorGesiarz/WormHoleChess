@@ -12,7 +12,7 @@ from engine.core.Player import Player
 from engine.core.constants import *
 
 from engine.ai.RandomAI import RandomAI
-from engine.ai.MonteCarloMine import MonteCarlo
+from engine.ai.MonteCarlo import MonteCarlo
 
 
 class Game:
@@ -20,7 +20,8 @@ class Game:
                  board: Board | LayerBoard, 
                  players: List[Player], 
                  program_mode: str = 'base', 
-                 game_mode: str = 'wormhole', 
+                 game_mode: str = 'wormhole',
+                 max_turns: int = 120, 
                  turn: int = COLOR_TO_NUMBER['white'], 
                  verbose: int = 1) -> None:
         
@@ -46,8 +47,11 @@ class Game:
         self.history: List[PieceMovement] = []
         self.initial_positions = self.get_pieces_state()
         self.positions_counter = {self.hash: 1}
+        self.max_turns = max_turns
+        self.moves_count = 0
         self.moves_without_capture = 0
-    
+        self.killed_player = None
+
     def check_size(self) -> None:
         from pympler import asizeof
         return asizeof.asizeof(self)
@@ -159,6 +163,7 @@ class Game:
             self.hash = self.hasher.update_hash(self.hash, piece_movement)
 
         if store: 
+            self.moves_count += 1
             if captured_piece is not None: 
                 self.moves_without_capture = 0
             else: 
@@ -170,6 +175,7 @@ class Game:
 
     def undo_move(self, piece_movement: PieceMovement, remove: bool = True, update_hash: bool = True) -> None: 
         if remove: 
+            self.moves_count -= 1
             self.history.pop()
             self.positions_counter[self.hash] -= 1
             self.moves_without_capture = piece_movement.moves_without_capture
@@ -195,6 +201,7 @@ class Game:
     def check_player_state(self, player: Player, moves: List[Tile | LayerTile]) -> bool:
         if not player.alive: 
             return False
+        self.killed_player = None
         if len(moves) == 0: 
             if self.is_in_check(player):
                 self.kill_player(player, print_text="by checkmate")
@@ -211,12 +218,17 @@ class Game:
         if print_text and self.verbose > 0: 
             print(f"{NUMBER_TO_COLOR[player.team]} loses {print_text}")
         player.alive = False
+        self.killed_player = player.color
 
     def revive_player(self, player: Player) -> None: 
         player.alive = True
     
     def is_finished(self) -> bool: 
         if self.game_state in [GameState.PLAYER_WON, GameState.DRAW]:
+            return True
+        
+        if self.moves_count >= self.max_turns:
+            self.game_state = GameState.DRAW
             return True
     
         # If only one player is alive, the game is finished
@@ -287,6 +299,17 @@ class Game:
             pieces_state[NUMBER_TO_COLOR[player.team]] = player_state
         return pieces_state
 
+    def get_state(self) -> List[List[str]]: 
+        """ USED FOR THE FRONTEND """
+        pieces = []
+        for player in self.players: 
+            for piece_type, pieces_list in player.pieces.items():
+                for piece in pieces_list:
+                    if not piece.captured:
+                        team = NUMBER_TO_COLOR[player.team] if player.alive else 'dead'
+                        pieces.append([piece_type.lower(), team, piece.position.name])
+        return pieces
+
     def get_game_history(self) -> List[Dict[str, str]]: 
         history = []
         for move in self.history: 
@@ -316,3 +339,19 @@ class Game:
 
         with open(export_path, 'w') as f:
             json.dump(game_data, f, indent=4)
+
+    def valid_move(self, from_tile: str, to_tile: str) -> bool:
+        """ Validates if a move is valid for the current player. """
+        movements = self.get_movements()
+        for move in movements:
+            if move[0].name == from_tile and move[1].name == to_tile:
+                return True
+        return False
+    
+    def translate_movement(self, from_tile: str, to_tile: str) -> Tuple[Tile | LayerTile, Tile | LayerTile]:
+        """ Translates a movement from tile names to Tile objects. """
+        movements = self.get_movements()
+        for move in movements:
+            if move[0].name == from_tile and move[1].name == to_tile:
+                return move
+        raise ValueError(f"Invalid movement from {from_tile} to {to_tile}")

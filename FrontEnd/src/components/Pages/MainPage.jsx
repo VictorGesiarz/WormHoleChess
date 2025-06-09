@@ -3,7 +3,7 @@ import React from "react";
 const MainPage = () => {
     return (
         <div className="widget page MainPage">
-            <h1>What is WormHoleChess</h1>
+            <h1>What is WormholeChess</h1>
 
             <p className="text-block">
                 Lorem ipsum dolor sit amet consectetur, adipisicing elit. Dolorem maxime excepturi animi officia laboriosam eligendi possimus magnam quidem tempora, praesentium odio. Distinctio expedita quod sapiente nulla nobis soluta vel ea dignissimos earum repellendus vero voluptate, ipsa architecto tenetur dolorum neque in amet. Eius ullam ab, doloremque maxime similique consectetur mollitia assumenda rerum recusandae molestias earum minus reprehenderit nihil at magni soluta voluptas autem ipsum nostrum, enim incidunt rem distinctio dolor aliquid. Animi eum quisquam dolorem aspernatur repellendus, nulla laborum perferendis eos rerum voluptate similique reprehenderit impedit numquam aperiam dignissimos deleniti magnam laudantium tempore quas at vero autem. Ipsam, blanditiis ut!

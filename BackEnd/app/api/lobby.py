@@ -5,11 +5,11 @@ import asyncio
 import uuid
 import time
 
-from core.constants import * 
-from schemas.game import StartGameRequest
-from api.game import start_game
-from services.user_service import user_dependency
-from api.websockets.events import notify_all_players, notify_player
+from app.config import * 
+from app.schemas.game import StartGameRequest
+from app.api.game import start_game
+from app.services.user_service import user_dependency
+from app.api.websockets.events import notify_all_players, notify_player
 
 
 router = APIRouter(prefix="/lobby", tags=["lobby"])

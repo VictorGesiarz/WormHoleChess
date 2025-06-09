@@ -88,6 +88,7 @@ const PlayPage = () => {
 
     return (
         <div className="widget page center-page">
+
             <div className="lobby-box">
                 <div className="lobby-option online">
 

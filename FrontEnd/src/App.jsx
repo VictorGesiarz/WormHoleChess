@@ -12,8 +12,10 @@ import LearnPage from "./components/Pages/LearnPage";
 import PlayPage from "./components/Pages/PlayPage";
 import PlayLocalPage from "./components/Pages/PlayLocalPage";
 import LobbyPage from "./components/Pages/LobbyPage";
-import BotHistoryPage from "./components/Pages/BotHistoryPage"; 
 import GamePage from "./components/Pages/GamePage";
+import LocalGamePage from "./components/Pages/LocalGamePage";
+import DatabasePage from "./components/Pages/DatabasePage"; 
+import EditBoardPage from "./components/Pages/EditBoardPage";
 
 
 const PrivateRoute = ({ children }) => {
@@ -53,9 +55,13 @@ function App() {
 
                         {/* Protected Routes */}
                         <Route path="/play" element={<PrivateRoute><MainLayout><PlayPage /></MainLayout></PrivateRoute>} />
-                        <Route path="/play" element={<MainLayout><PlayLocalPage /></MainLayout>} />
+                        <Route path="/play-local" element={<MainLayout><PlayLocalPage /></MainLayout>} />
+                        <Route path="/game-local" element={<MainLayout><LocalGamePage /></MainLayout>} />
+                        
+                        <Route path="/database" element={<MainLayout><DatabasePage /></MainLayout>} />
+                        <Route path="/edit-board" element={<MainLayout><EditBoardPage /></MainLayout>} />
+
                         <Route path="/lobby" element={<PrivateRoute><MainLayout><LobbyPage /></MainLayout></PrivateRoute>} />
-                        <Route path="/bot-history" element={<PrivateRoute><MainLayout><BotHistoryPage /></MainLayout></PrivateRoute>} />
                         <Route path="/game/:gameCode" element={<PrivateRoute><MainLayout><GamePage /></MainLayout></PrivateRoute>} />
                     </Routes>
                 </Router>

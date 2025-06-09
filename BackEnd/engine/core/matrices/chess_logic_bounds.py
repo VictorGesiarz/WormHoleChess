@@ -51,7 +51,7 @@ def basic_filter_duplicates(player: np.uint8, tile: np.int16, move_start: np.int
                  edges: np.array, nodes: np.array, pieces: np.array, 
                  obstacles: bool, out_moves: np.array, count: np.uint8,
                  visited_array: np.array, visited_len: np.uint8) -> np.uint8: 
-    
+
     for i in range(move_start, move_end):
         t = edges[i]
         

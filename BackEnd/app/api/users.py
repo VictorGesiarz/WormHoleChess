@@ -5,10 +5,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 
 
-from schemas.users import UserCreate, UserResponse, Token
-from models.users import User
-from services.user_service import create_user, authenticate_user_via_email, authenticate_user_via_username, create_access_token,  user_dependency
-from db.database import db_dependency
+from app.schemas.users import UserCreate, UserResponse, Token
+from app.models.users import User
+from app.services.user_service import create_user, authenticate_user_via_email, authenticate_user_via_username, create_access_token,  user_dependency
+from app.db.database import db_dependency
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])

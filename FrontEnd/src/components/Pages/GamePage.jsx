@@ -2,7 +2,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useWebSocket } from "../../utils/WebSocketProvider";
-import "./GamePage.css"; 
+// import "./GamePage.css"; 
 
 
 import ChessGame from "../Game/ChessGame";

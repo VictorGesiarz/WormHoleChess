@@ -1,7 +1,6 @@
-import React, { useRef, useEffect } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Vector3, Quaternion, Euler } from "three";
-import { OrbitControls } from "@react-three/drei";
+import { useRef, useEffect } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { Euler } from "three";
 
 
 const CameraControls = () => {
@@ -14,6 +13,7 @@ const CameraControls = () => {
 
     // Center the world in front of the camera on mount
     useEffect(() => {
+
         scene.position.set(0, 0, -distance.current);
         camera.position.set(0, 0, 0);
         camera.lookAt(0, 0, -distance.current);
@@ -33,8 +33,13 @@ const CameraControls = () => {
 
             const deltaX = (e.clientX - lastMousePos.current.x) * 0.005;
             const deltaY = (e.clientY - lastMousePos.current.y) * 0.005;
-            yaw.current += deltaX;
+
             pitch.current += deltaY;
+
+            // Invert yaw if camera is upside down
+            const isUpsideDown = Math.cos(pitch.current) < 0;
+            yaw.current += isUpsideDown ? -deltaX : deltaX;
+
             lastMousePos.current = { x: e.clientX, y: e.clientY };
         };
 
@@ -47,20 +52,29 @@ const CameraControls = () => {
         };
 
         const onTouchMove = (e) => {
+            console.log("HERE")
             if (!isDragging.current || e.touches.length !== 1) return;
 
-            const deltaX = (e.touches[0].clientX - lastMousePos.current.x) * 0.005;
-            const deltaY = (e.touches[0].clientY - lastMousePos.current.y) * 0.005;
+            document.title = `Upside down: ${Math.cos(pitch.current) < 0}`;
 
-            // Don't know if this works yet, to change the direction of the rotation if the camera is upside down. 
-            if (0 < pitch.current && pitch.current < 90) {
-                yaw.current += deltaX;
-            } else {
-                yaw.current -= deltaX;
-            }
+
+            const touch = e.touches[0];
+            const deltaX = (touch.clientX - lastMousePos.current.x) * 0.005;
+            const deltaY = (touch.clientY - lastMousePos.current.y) * 0.005;
+
             pitch.current += deltaY;
 
-            lastMousePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            // Clamp pitch to avoid flipping
+            const maxPitch = Math.PI / 2 - 0.001;
+            const minPitch = -Math.PI / 2 + 0.001;
+            pitch.current = Math.max(minPitch, Math.min(maxPitch, pitch.current));
+
+            // 👇 Invert yaw when pitch is upside down (looking up past the horizon)
+            const isUpsideDown = Math.cos(pitch.current) < 0;
+            console.log(isUpsideDown);
+            yaw.current += isUpsideDown ? -deltaX : deltaX;
+
+            lastMousePos.current = { x: touch.clientX, y: touch.clientY };
         };
 
         const onTouchEnd = () => {
@@ -72,8 +86,8 @@ const CameraControls = () => {
         gl.domElement.addEventListener("mousemove", onMouseMove);
         gl.domElement.addEventListener("mouseup", onMouseUp);
         gl.domElement.addEventListener("wheel", onWheel);
-        document.addEventListener("touchstart", onTouchStart, { passive: true });
-        document.addEventListener("touchmove", onTouchMove, { passive: true });
+        document.addEventListener("touchstart", onTouchStart);
+        document.addEventListener("touchmove", onTouchMove);
         document.addEventListener("touchend", onTouchEnd);
 
         return () => {

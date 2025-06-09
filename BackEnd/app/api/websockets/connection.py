@@ -1,8 +1,9 @@
 from fastapi import WebSocket, WebSocketDisconnect, APIRouter
 from jose import JWTError
-from db.database import db_dependency
-from services.user_service import get_current_user
-from api.lobby import lobbies, player_lobby_map, remove_player_from_lobby
+
+from app.db.database import db_dependency
+from app.services.user_service import get_current_user
+from app.api.lobby import lobbies, player_lobby_map, remove_player_from_lobby
 
 
 router = APIRouter(prefix="/ws", tags=["websockets"])

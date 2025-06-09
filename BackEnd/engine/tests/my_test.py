@@ -12,7 +12,7 @@ def simulate_game(id=0):
     num_players = 2
     num_montecarlo = 0
     game = ChessFactory.create_game(
-        player_data=ChessFactory.create_bot_data(num_bots=num_players, difficulties=["mcts"] * num_montecarlo + ["random"] * (num_players-num_montecarlo)), 
+        player_data=ChessFactory.create_player_data(num_players=num_players, types=["mcts"] * num_montecarlo + ["random"] * (num_players-num_montecarlo)), 
         program_mode="matrix",
         game_mode="wormhole",
         size=(8, 8),
@@ -27,23 +27,28 @@ def simulate_game(id=0):
 
     game_time = time.time()
 
-    # print(moves)
-    # for move in moves: 
-    #     print(game.board.get_names(move))
-
+    game_states = {}
     while not game.is_finished() and move_count < 120: 
-        # print(" - Turn: ", move_count)
-        # game.print_moves()
         turn = game.get_turn()
-        # game.print_last_move()
+        # if turn == 0: 
+            # If human player
+            # moves = game.get_valid_moves()
+            # Chose a move
+            # game.make_move(moves[0])
+        # else:
+            # It makes automatically the move when doing get_turn
         game.next_turn()
         move_count += 1
+        game_states[move_count] = game.get_state()
+
+
+    with open('./engine/tests/results/game_states.json', 'w') as f:
+        import json
+        json.dump(game_states, f, indent=4)
 
     # game.export('./db/random_games/prueba.json')
 
     game_time = time.time() - game_time
-
-    # print(game.history)
 
     average_calc_time = total_calc_time / calc_count if calc_count > 0 else 0
 
@@ -68,5 +73,5 @@ def test():
 
 
 if __name__ == "__main__":
-    test()
-    # simulate_game()
+    # test()
+    simulate_game()

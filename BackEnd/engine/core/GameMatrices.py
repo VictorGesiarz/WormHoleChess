@@ -15,7 +15,7 @@ from engine.core.matrices.matrix_constants import *
 from engine.core.constants import * 
 
 from engine.ai.RandomAI import RandomAI
-from engine.ai.MonteCarloMine import MonteCarlo
+from engine.ai.MonteCarlo import MonteCarlo
 
 
 class GameMatrices: 
@@ -23,6 +23,7 @@ class GameMatrices:
                  board: LayerMatrixBoard,
                  players: np.ndarray,
                  turn: int, 
+                 program_mode: str = 'matrix', 
                  verbose: int = 0,
                  hasher: ZobristHasher = None, 
                  max_turns: int = 120): 
@@ -30,6 +31,7 @@ class GameMatrices:
         self.players = players
         self.number_of_players = len(players)
         self.turn = turn 
+        self.program_mode = program_mode
         self.verbose = verbose
         self.game_state = GameState.PLAYING
         
@@ -50,8 +52,10 @@ class GameMatrices:
         self.history = np.zeros((max_turns, 6), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type (for promotions)]]
         self.initial_positions = self.board.pieces.copy()
         self.positions_counter = {self.hash: 1}
+        self.max_moves = max_turns
         self.moves_count = 0
         self.moves_without_capture = 0
+        self.killed_player = None
 
     def check_size(self) -> None:
         from pympler import asizeof
@@ -70,7 +74,7 @@ class GameMatrices:
 
     def get_turn(self, auto_play_bots=True) -> int: 
         if not self.players[self.turn]['is_alive']:
-            return -1 
+            return -1
         elif not self.check_player_state(self.players[self.turn], self.get_movements()):
             return -1 
         elif self.players[self.turn]['opponent_type'] != 0 and auto_play_bots: 
@@ -171,7 +175,7 @@ class GameMatrices:
                 captured_piece = self.board.pieces[captured_piece_index]
                 if captured_piece[0] == 3: # If a king is a captured
                     player = captured_piece[1]
-                    self.players[player]['is_alive'] = False # Kill the player 
+                    self.kill_player(self.players[player], print_text="by capture")
             self.positions_counter[self.hash] = self.positions_counter.get(self.hash, 0) + 1
             self.moves_count += 1
 
@@ -198,6 +202,7 @@ class GameMatrices:
     def check_player_state(self, player: np.array, moves: np.array) -> bool:
         if not player['is_alive']: 
             return False
+        self.killed_player = None
         if len(moves) == 0: 
             if self.is_in_check(player['team']):
                 self.kill_player(player, print_text="by checkmate")
@@ -212,14 +217,19 @@ class GameMatrices:
     
     def kill_player(self, player: int, print_text: str = None) -> None: 
         if print_text and self.verbose > 0: 
-            print(f"{NUMBER_TO_COLOR[player.team]} loses {print_text}")
+            print(f"{player['color']} loses {print_text}")
         player['is_alive'] = False
+        self.killed_player = player['color']
 
     def revive_player(self, player: int) -> None: 
         player['is_alive'] = True
     
     def is_finished(self) -> bool: 
         if self.game_state in [GameState.PLAYER_WON, GameState.DRAW]:
+            return True
+        
+        if self.moves_count >= self.max_turns:
+            self.game_state = GameState.DRAW
             return True
     
         # If only one player is alive, the game is finished
@@ -277,4 +287,43 @@ class GameMatrices:
             print(self.board.get_names(move))
 
     def export(self, file: str) -> None: 
-        return self.history[:self.moves_count-1]
+        ...
+    
+    def get_state(self): 
+        pieces = []
+        piece_types = {
+            0: "Tower", 
+            1: "Knight",
+            2: "Bishop",
+            3: "King",
+            4: "Pawn",
+            5: "Queen"
+        }
+        for piece in self.board.pieces: 
+            if piece[4]: 
+                continue
+                
+            type_ = piece_types[piece[0]].lower()
+
+            if self.players[piece[1]]['is_alive']:
+                player = NUMBER_TO_COLOR[piece[1]]
+            else: 
+                player = "dead"
+
+            tile = self.board.get_names([piece[2]])[0]
+            pieces.append([type_, player, tile])
+        return pieces
+    
+    def valid_move(self, from_tile: str, to_tile: str) -> bool:   
+        movements = self.get_movements()
+        for move in movements:
+            if self.board.get_names(move) == [from_tile, to_tile]:
+                return True
+        return False
+    
+    def translate_movement(self, from_tile: str, to_tile: str) -> np.array:
+        movements = self.get_movements()
+        for move in movements:
+            if self.board.get_names(move) == [from_tile, to_tile]:
+                return move
+        raise ValueError(f"Invalid move from {from_tile} to {to_tile}")

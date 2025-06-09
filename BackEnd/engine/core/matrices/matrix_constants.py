@@ -12,9 +12,11 @@ MAX_POSSIBLE_MOVES = 160
 MAX_POSSIBLE_TRACE = 22
 
 PLAYER_DTYPE = np.dtype([
+    ('id', np.uint8),
     ('team', np.uint8),
     ('is_alive', np.bool_),
     ('opponent_type', np.uint8),
+    ('color', 'U6'),
 ])
 
 class Pieces(IntEnum):

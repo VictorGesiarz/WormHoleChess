@@ -483,7 +483,7 @@ print("\nLAYER MATRIX BOARD TESTING - - - - - - - - - - - - - - - - - - - - - - 
 from engine.core.matrices.MatrixBoard import LayerMatrixBoard, Pieces, Teams
 
 def test_layer_matrix_board(): 
-    b = LayerMatrixBoard((8, 8), 'wormhole', load_from_file=False)
+    b = LayerMatrixBoard((8, 8), 'normal', load_from_file=False)
 
     print("Nodes:", b.nodes)
     print("Adjacency list:", b.adjacency_list)

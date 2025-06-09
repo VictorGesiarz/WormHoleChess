@@ -12,8 +12,9 @@ if TYPE_CHECKING:
     from engine.core.layer.LayerTile import LayerTile
 
 class Player:
-    def __init__(self, team: int,  type: str = "player"):
+    def __init__(self, team: int, color: str, type: str = "player"):
         self.team = team
+        self.color = color
         self.type = type
 
         self.alive = True
@@ -38,7 +39,7 @@ class Player:
         return self.team == other.team
 
     def copy(self) -> 'Player': 
-        player_copy = Player(self.team, self.type)
+        player_copy = Player(self.team, self.type, color=self.color)
         player_copy.alive = self.alive
         return player_copy
 
@@ -67,11 +68,11 @@ class Player:
 
 
 class Bot(Player):
-    def __init__(self, team: int, difficulty: Literal['random', 'mcts'] = 'random') -> None:
-        super().__init__(team, type="bot")
+    def __init__(self, team: int, color: str, difficulty: Literal['random', 'mcts'] = 'random') -> None:
+        super().__init__(team, type="bot", color=color)
         self.difficulty = difficulty
 
     def copy(self) -> 'Bot': 
-        bot_copy = Bot(self.team, self.difficulty)
+        bot_copy = Bot(self.team, self.color, self.difficulty)
         bot_copy.alive = self.alive
         return bot_copy

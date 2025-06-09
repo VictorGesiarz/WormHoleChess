@@ -6,10 +6,10 @@ from typing import Annotated
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
 
-from db.database import db_dependency
-from models.users import User
-from schemas.users import UserCreate, UserResponse
-import config
+from app.db.database import db_dependency
+from app.models.users import User
+from app.schemas.users import UserCreate, UserResponse
+import app.config as config
 
 
 # For hashing passwords

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text  # Import text() to wrap raw SQL
-from db.database import SessionLocal  # Adjust based on your structure
+
+from app.db.database import SessionLocal  # Adjust based on your structure
 
 def test_connection():
     try:

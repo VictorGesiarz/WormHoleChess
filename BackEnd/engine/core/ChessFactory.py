@@ -53,13 +53,13 @@ class ChessFactory:
 
         types = ChessFactory.initialize_pieces(board, players, initial_positions, program_mode, game_mode)
         
-        return Game(board, players, program_mode='base', turn=0) 
+        return Game(board, players, program_mode=program_mode, turn=0) 
     
     @staticmethod
     def initialize_pieces(board: Board, players: List[Player], initial_positions: str, program_mode: str, game_mode: str) -> int: 
         types = set()
         for player in players:
-            player_pieces_positions = initial_positions[NUMBER_TO_COLOR[player.team]]
+            player_pieces_positions = initial_positions[player.color]
             for piece_name, piece_positions in player_pieces_positions.items(): 
                 if len(piece_positions) > 0: 
                     types.add(piece_name)
@@ -78,41 +78,25 @@ class ChessFactory:
         
         players = []
         for data in player_data:
-            if data[1] == 'player': 
-                player = Player(COLOR_TO_NUMBER[data[0]])
-            elif data[1] == 'bot':
-                player = Bot(COLOR_TO_NUMBER[data[0]], data[2])
+            if data[2] == 'human': 
+                player = Player(data[0], color=data[3])
+            else: 
+                player = Bot(data[0], difficulty=data[2], color=data[3])
             players.append(player)
         return players
     
     @staticmethod
-    def create_bot_data(num_bots: int = 4, difficulties: List[Literal['random', 'mcts', 'alphazero']] = ['random'] * 4) -> List[Tuple[str]]: 
-        if num_bots == 4:
-            return [
-                ('white', 'bot', difficulties[0]),
-                ('black', 'bot', difficulties[1]),
-                ('blue', 'bot', difficulties[2]),
-                ('red', 'bot', difficulties[3]),
-            ]
-        return [
-            ('white', 'bot', difficulties[0]),
-            ('red', 'bot', difficulties[1]),
-        ]
-    
-    @staticmethod
-    def create_player_data(num_players: int = 4) -> List[Tuple[str]]: 
+    def create_player_data(num_players: int = 4, types: List[Literal['human', 'random', 'mcts', 'alphazero']] = ['random'] * 4) -> List[Tuple[str]]: 
+        if len(types) == 1: 
+            types *= num_players
         if num_players == 4: 
+            return [(i, i, types[i], NUMBER_TO_COLOR[i]) for i in range(num_players)]
+        else: 
             return [
-                ('white', 'player'),
-                ('black', 'player'),
-                ('blue', 'player'),
-                ('red', 'player'),
+                (0, 0, types[0], 'white'), 
+                (1, 3, types[1], 'black')
             ]
-        return [
-            ('white', 'player'), 
-            ('red', 'player')
-        ]
-
+    
     @staticmethod
     def create_board(program_mode: str, game_mode: str, size: Tuple[int]) -> Board:
         if game_mode == 'normal':
@@ -214,7 +198,9 @@ class MatrixChessFactory:
             j = 0
             chunk = board.pieces_per_player * player['team']
 
-            player_pieces_positions = initial_positions[NUMBER_TO_COLOR[player['team']]]
+            if player['color'] == 'none': 
+                continue
+            player_pieces_positions = initial_positions[player['color']]
             for piece_name, piece_positions in player_pieces_positions.items(): 
                 for position in piece_positions: 
                     if not position in board.node_names: 
@@ -229,17 +215,15 @@ class MatrixChessFactory:
     @staticmethod
     def create_players(player_data) -> np.ndarray:
         engines_map = {
+            "human":     0,
             "random":    1,
             "mcts":      2,
             "alphazero": 3,
         }
 
-        players_list = []
-        for color, player_type, engine_name in player_data:
-            team = COLOR_TO_NUMBER[color]
-
-            difficulty = 0 if player_type == 'human' else engines_map[engine_name]
-            players_list.append((team, True, difficulty))
+        players_list = [(0, 0, False, 0, 'none') for _ in range(4)]
+        for id_, team, player_type, color in player_data:
+            players_list[id_] = (id_, team, True, engines_map[player_type], color)
 
         players = np.array(players_list, dtype=PLAYER_DTYPE)
         return players

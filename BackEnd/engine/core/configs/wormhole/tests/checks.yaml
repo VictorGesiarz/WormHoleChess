@@ -2,7 +2,7 @@ white:
   Pawn:  c3T
   King:   b2T
 
-red: 
+black: 
   Tower: a8T 
   Queen: d41T
   Knight: e1T

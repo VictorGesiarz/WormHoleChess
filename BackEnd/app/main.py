@@ -3,8 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api import users, lobby, game
-from api.websockets import connection
+from app.api import users, lobby, game, local_game
+from app.api.websockets import connection
 
 
 @asynccontextmanager
@@ -31,4 +31,5 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(lobby.router)
 app.include_router(game.router)
+app.include_router(local_game.router)
 app.include_router(connection.router)

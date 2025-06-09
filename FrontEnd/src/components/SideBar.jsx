@@ -39,11 +39,13 @@ const SideBar = () => {
 
     return (
         <nav className="widget sidebar">
-            <div className="sidebar-title">WormHoleChess</div>
+            <div className="sidebar-title">WormholeChess</div>
             <ul className="sidebar-links">
                 <li><button onClick={() => navigate("/")}>Home</button></li>
-                <li><button onClick={() => navigate("/play")}>PlayOnline</button></li>
-                <li><button onClick={() => navigate("/play-local")}>PlayLocal</button></li>
+                <li><button onClick={() => navigate("/play")}>Play Online</button></li>
+                <li><button onClick={() => navigate("/play-local")}>Play Local</button></li>
+                <li><button onClick={() => navigate("/database")}>Database</button></li>
+                <li><button onClick={() => navigate("/edit-board")}>Edit Board</button></li>
                 <li><button onClick={() => navigate("/learn")}>Learn</button></li>
             </ul>
 

@@ -1,265 +1,374 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
+import { useNavigate } from "react-router-dom";
 import * as THREE from 'three';
 
-import tilePositions from "../../assets/models/tile_positions.json";
-import chessBoardModel from "../../assets/models/Board.glb";
+import { API_BASE_URL } from "../../utils/ApiUrls";
+
+import tilePositions from "../../assets/models/tile_positions_2.json";
+import chessBoardModel from "../../assets/models/(8x8)_wormhole.glb";
 import chessPiecesModel from "../../assets/models/Pieces.glb";
-import { useWebSocket } from "../../utils/WebSocketProvider";
 
 
 // Define tile colors 
 const boardColors = {
     originalWhite: 0xFFFFFF,
-    originalBlack: 0x3F3C3C, 
-    white: 0xFFFFFF, 
+    originalBlack: 0x3F3C3C,
+    white: 0xFFFFFF,
     black: 0x3F3C3C,
-    selectedWhite: 0xCE77FF, 
+    selectedWhite: 0xCE77FF,
     selectedBlack: 0xB737FF,
-    possibleMoveWhite: 0x77ffce, 
-    possibleMoveBlack: 0x5fcca5, 
+    possibleMoveWhite: 0x77ffce,
+    possibleMoveBlack: 0x5fcca5,
     checkWhite: 0xff778d,
     checkBlack: 0xcc5f71
-}; 
+};
 
-const LIGHT_INTENSITY = 30; 
+const LIGHT_INTENSITY = 30;
 
 // Define piece colors
 const pieceColors = {
     white: 0xFFFFFF,
     black: 0x050505,
     blue: 0x5C7090,
-    red: 0x8C4E56
+    red: 0x8C4E56,
+    dead: 0x808080 // Color for dead pieces
 };
+// const pieceColors = {
+//     white: 0xE7E7E7,
+//     black: 0x151515,
+//     blue: 0xFFC288,
+//     red: 0xB5B5B5,
+//     dead: 0x808080 // Color for dead pieces
+// };
 
-
-const ChessBoard = ({ initialState }) => {
+const ChessBoard = ({
+    gameId,
+    gameType,
+    boardSize,
+    state,
+    setStates,
+    turn,
+    setTurn,
+    players,
+    setHistory,
+}) => {
     const { scene: board } = useGLTF(chessBoardModel);
     const { scene: piecesScene } = useGLTF(chessPiecesModel);
-    const { socket } = useWebSocket(); 
-    
-    const [tiles, setTiles] = useState([]);
-    const [pieces, setPieces] = useState([]); 
-    const selectedTile = useRef(null); 
-    const selectedPiece = useRef(null); 
-    const clickInProgress = useRef(false);
-    const initialPointerPosition = useRef({ x: 0, y: 0 });
-    const isDragging = useRef(false);
-    const DRAG_THRESHOLD = 10;  
 
-    const [state, setState] = useState({}); 
-    const [possibleMoves, setPossibleMoves] = useState({}); 
+    const [otherObjects, setOtherObjects] = useState([]);
+    const positions = useRef({});
+    const [tiles, setTiles] = useState([]);
+    const [pieces, setPieces] = useState([]);
+
+    const selectedTile = useRef(null);
+    const selectedPiece = useRef(null);
+    const [highlightedTiles, setHighlightedTiles] = useState([]);
 
     useEffect(() => {
         if (!board) return;
-    
+
+        const extractedLights = [];
+        const nonTileObjects = [];
         // Adjust light intensity
         const light1 = board.getObjectByName("Light1");
         const light2 = board.getObjectByName("Light2");
-    
-        if (light1) light1.intensity = LIGHT_INTENSITY;
-        if (light2) light2.intensity = LIGHT_INTENSITY;
-    
+
+        if (light1) {
+            extractedLights.push(light1);
+            light1.intensity = LIGHT_INTENSITY;
+            light1.color.set(0xffffff);
+        }
+        if (light2) {
+            extractedLights.push(light2);
+            light2.intensity = LIGHT_INTENSITY;
+            light2.color.set(0xffffff);
+        }
+
+        setOtherObjects(extractedLights);
+
         // Collect and initialize tiles
         const allTiles = [];
+        const positionsDict = {};
         board.traverse((object) => {
-            if (object.name.includes("_T") || object.name.includes("_B")) {
+            if (object.name.startsWith("POSITION_")) {
+                const tileName = object.name.replace("POSITION_", "");
+                positionsDict[tileName] = {
+                    position: object.position.clone(),         // THREE.Vector3
+                    quaternion: object.quaternion.clone(),     // THREE.Quaternion
+                }
+                object.visible = false;
+            }
+            else if (object.name.includes("_T") || object.name.includes("_B")) {
+                let tileColor = null;
+
                 if (object.material.color.getHex() === boardColors.originalWhite) {
                     object.material.color.setHex(boardColors.white);
+                    tileColor = "white";
                 } else if (object.material.color.getHex() === boardColors.originalBlack) {
                     object.material.color.setHex(boardColors.black);
+                    tileColor = "black";
                 }
+
                 allTiles.push(object);
                 object.material = object.material.clone();
-                object.userData = { tileOnClick: () => handleTileRightClick(object) };
+
+                object.userData = {
+                    tileOnClick: () => handleTileRightClick(object),
+                    originalColor: object.material.color.getHex(),
+                    tileName: object.name,
+                    tileColor: tileColor,
+                };
+            }
+            else {
+                nonTileObjects.push(object);
             }
         });
         setTiles(allTiles);
+
+        positions.current = positionsDict;
+
+        setOtherObjects([...extractedLights, ...nonTileObjects]);
     }, [board]);
-    
+
 
     useEffect(() => {
-        if (!piecesScene || !initialState) return;
-    
+        if (!piecesScene || !state) return;
         const newPieces = [];
-        Object.entries(initialState).forEach(([team, teamPieces]) => {
-            Object.entries(teamPieces).forEach(([type, positions]) => {
-                positions.forEach(tile => {
-                    const tileInfo = tilePositions[tile];
-                    if (!tileInfo) {
-                        console.error(`No position found for tile: ${tile}`);
-                        return;
-                    }
-    
-                    const pieceTemplate = piecesScene.getObjectByName(type);
-                    if (!pieceTemplate) {
-                        console.error(`No model found for piece: ${type}`);
-                        return;
-                    }
-    
-                    // Clone and position the piece
-                    const pieceClone = pieceTemplate.clone();
-                    pieceClone.position.set(tileInfo.position.x, tileInfo.position.y, tileInfo.position.z);
-                    pieceClone.rotation.set(tileInfo.rotation.x, tileInfo.rotation.y, tileInfo.rotation.z);
-                    pieceClone.material = pieceClone.material.clone();
-                    pieceClone.material.color.setHex(pieceColors[team]);
-                    
-                    pieceClone.userData = { pieceOnClick: () => handlePieceClick(pieceClone) };
-                    
-                    newPieces.push(pieceClone);
-                });
-            });
+
+        state.forEach(([type, team, tile]) => {
+            const tileInfo = positions.current[tile];
+            if (!tileInfo) {
+                console.error(`No position found for tile: ${tile}`);
+                return;
+            }
+
+            const pieceTemplate = piecesScene.getObjectByName(type);
+            if (!pieceTemplate) {
+                console.error(`No model found for piece: ${type}`);
+                return;
+            }
+
+            // Clone and position the piece
+            const pieceClone = pieceTemplate.clone();
+            pieceClone.position.copy(tileInfo.position);
+            pieceClone.quaternion.copy(tileInfo.quaternion);
+
+            pieceClone.material = pieceClone.material.clone();
+            pieceClone.material.color.setHex(pieceColors[team]);
+            pieceClone.userData = {
+                pieceOnClick: () => handlePieceClick(pieceClone),
+                tileName: tile,
+            };
+
+            newPieces.push(pieceClone);
         });
-    
+
         setPieces(newPieces);
+
     }, [piecesScene, state]);
 
-    
-    useEffect(() => {
-        if (!socket) return;
-    
-        const handleGameMessage = (event) => {
-            const data = JSON.parse(event.data); 
 
-            if (data.type === "move_made" || data.type === "game_start") {
-                console.log(data.type); 
-                setState(data.state); 
-                setPossibleMoves(data.possibleMoves); 
-            }
-            else {
-                console.log("Message recieved but wrong type"); 
-            }
-        };
-    
-        socket.addEventListener("message", handleGameMessage);
-    
-        return () => {
-            socket.removeEventListener("message", handleGameMessage);
-        };
-    }, [socket]);
-    
-
-    // - - - - - - - - - - - - - - - - - - - - PIECE SELECTION - - - - - - - - - - - - - - - - - - - - 
+    // - - - - - - - - - - - - HANDLE POINTER EVENTS - - - - - - - - - - - - - 
     const handlePieceClick = (piece) => {
+        const tileName = piece.userData.tileName;
+        if (!tileName) return;
 
-    }
-    // - - - - - - - - - - - - - - - - - - - - RIGHT CLICK SELECTION - - - - - - - - - - - - - - - - - - - - 
+        const tile = tiles.find(t => t.name === tileName);
+        if (!tile) return;
 
+        const pieceData = state.find(
+            ([type, team, tName]) => tName === tileName && team !== "dead"
+        );
 
-    // - - - - - - - - - - - - - - - - - - - - RIGHT CLICK SELECTION - - - - - - - - - - - - - - - - - - - - 
-    const handleTileRightClick = (tile) => {
-        if (clickInProgress.current) return;
-        clickInProgress.current = true;
+        if (!pieceData) return;
+        const [pieceType, pieceTeam] = pieceData;
 
-        setTimeout(() => {
-            clickInProgress.current = false;
-        }, 100);
+        handleBoardClick(tile, pieceType, pieceTeam);
+    };
 
-        // Deselect the current tile if it's already selected
-        if (selectedTile.current && selectedTile.current.name === tile.name) {
-            deselectTile(tile);
-            return null;
-        } 
-        else {
-            // Deselect the previously selected tile
-            if (selectedTile.current) {
-                deselectTile(selectedTile.current);
+    const handleTileClick = (tile) => {
+        const pieceData = state.find(
+            ([type, team, tileName]) => tileName === tile.name && team !== "dead"
+        ) || [null, null];
+
+        const [pieceType, pieceTeam] = pieceData;
+        handleBoardClick(tile, pieceType, pieceTeam);
+    };
+
+    const pointerStart = useRef({ x: 0, y: 0, time: 0 });
+
+    const handlePointerDown = (e) => {
+        pointerStart.current = {
+            x: e.clientX,
+            y: e.clientY,
+            time: performance.now()
+        };
+    };
+
+    const handlePointerUp = (e, target, isPiece = false) => {
+        const dx = Math.abs(e.clientX - pointerStart.current.x);
+        const dy = Math.abs(e.clientY - pointerStart.current.y);
+        const dt = performance.now() - pointerStart.current.time;
+
+        if (dx < 5 && dy < 5 && dt < 500) {
+            if (target === null) {
+                resetTileColors();
+                selectedTile.current = null;
+                selectedPiece.current = null;
+                setHighlightedTiles([]);
             }
 
-            // Select the new tile
-            selectTile(tile);
-            return tile;
+            const [closest] = e.intersections;
+            if (!closest || closest.object !== target) return;
+
+            e.stopPropagation();  // prevent bubbling
+            if (isPiece) {
+                handlePieceClick(target);
+            } else {
+                handleTileClick(target);
+            }
         }
     };
 
-    const selectTile = (tile) => {
-        const currentColor = tile.material.color.getHex();
-        const selectedColor = currentColor === boardColors.white ? boardColors.selectedWhite : boardColors.selectedBlack;
-        tile.material.color.setHex(selectedColor);
+    const resetTileColors = () => {
+        highlightedTiles.forEach(tile => {
+            tile.material.color.setHex(tile.userData.originalColor);
+        });
     };
 
-    const deselectTile = (tile) => {
-        const currentColor = tile.material.color.getHex();
-        const originalColor = (currentColor === boardColors.selectedWhite || currentColor === boardColors.selectedBlack) ?
-            (currentColor === boardColors.selectedWhite ? boardColors.white : boardColors.black) : currentColor;
-        tile.material.color.setHex(originalColor);
-    };
-    // - - - - - - - - - - - - - - - - - - - - RIGHT CLICK SELECTION - - - - - - - - - - - - - - - - - - - - 
+    // - - - - - - - - - - - - HANDLE TILE SELECTION - - - - - - - - - - - - - 
+    const handleTileSelection = (tile, pieceType, pieceTeam) => {
+        resetTileColors();
+        selectedTile.current = null;
+        selectedPiece.current = null;
+        setHighlightedTiles([]);
+        if (!pieceType || pieceTeam !== players[turn.turn].color) return;
 
+        selectedTile.current = tile;
+        selectedPiece.current = pieceType;
+        const toTiles = turn.validMoves
+            .filter(([from, to]) => from === tile.name)
+            .map(([_, to]) => to);
 
-    // - - - - - - - - - - - - - - - - - - - - CLICK AND DRAG HANDLER - - - - - - - - - - - - - - - - - - - - 
-    // Handle pointer down (store initial position)
-    const handlePointerDown = (event) => {
-        if (clickInProgress.current) return;
-        clickInProgress.current = true;
-        
-        initialPointerPosition.current = {
-            x: event.clientX,
-            y: event.clientY
-        };
+        const toHighlight = tiles.filter(t => toTiles.includes(t.name));
+        toHighlight.forEach(t => {
+            if (t.userData.originalColor === boardColors.white) {
+                t.material.color.setHex(boardColors.possibleMoveWhite);
+            } else if (t.userData.originalColor === boardColors.black) {
+                t.material.color.setHex(boardColors.possibleMoveBlack);
+            }
+        });
 
-        const clickedObject = event.intersections[0]?.object;
-        if (clickedObject?.userData?.onRightClick) {
-            clickedObject.userData.onRightClick();
+        if (tile.userData.originalColor === boardColors.white) {
+            tile.material.color.setHex(boardColors.selectedWhite);
+        } else if (tile.userData.originalColor === boardColors.black) {
+            tile.material.color.setHex(boardColors.selectedBlack);
         }
+
+        setHighlightedTiles([tile, ...toHighlight]);
     };
 
-    // Handle pointer move (check if user is dragging)
-    const handlePointerMove = (event) => {
-        if (!initialPointerPosition.current) return;
 
-        const deltaX = event.clientX - initialPointerPosition.current.x;
-        const deltaY = event.clientY - initialPointerPosition.current.y;
-
-        // If the pointer has moved beyond the threshold, it's considered a drag
-        if (Math.sqrt(deltaX * deltaX + deltaY * deltaY) > DRAG_THRESHOLD) {
-            isDragging.current = true;
+    const handleBoardClick = (clickedTile, pieceType, pieceTeam) => {
+        if (!selectedTile.current) {
+            handleTileSelection(clickedTile, pieceType, pieceTeam);
+            return;
         }
-    };
 
-    // Handle pointer up (check if it was a click or drag)
-    const handlePointerUp = () => {
-        if (isDragging.current) {
-            // Prevent selecting tile if it was a drag
-            console.log("Drag detected, no selection.");
-            return false; 
+        const fromTileName = selectedTile.current.name;
+        const toTileName = clickedTile.name;
+
+        const isValidMove = turn.validMoves.some(
+            ([from, to]) => from === fromTileName && to === toTileName
+        );
+
+        if (isValidMove) {
+            makeMove(fromTileName, toTileName);
         } else {
-            console.log("Drag not detected."); 
-            return true; 
+            handleTileSelection(clickedTile, pieceType, pieceTeam);
         }
     };
-    // - - - - - - - - - - - - - - - - - - - - CLICK AND DRAG HANDLER - - - - - - - - - - - - - - - - - - - - 
 
 
+    // - - - - - - - - - - - - HANDLE MOVE - - - - - - - - - - - - - 
+    const makeMove = async (from, to) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/game-local/make-move`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    gameId,
+                    from_tile: from,
+                    to_tile: to,
+                }),
+            });
+
+            if (!response.ok) throw new Error('Move failed');
+
+            const data = await response.json();
+
+            setStates(prevStates => ({
+                ...prevStates,
+                ...data.state
+            }));
+            setTurn(data.turn);
+
+            const moveDescription = `${selectedPiece.current}\n${from}\n${to}`;
+            const historyEntry = {
+                move: moveDescription,
+                turn: data.turn,
+                killedPlayer: data.killed_player,
+                winner: data.winner,
+            };
+
+            setHistory(prevHistory => [...prevHistory, historyEntry]);
+
+
+            resetTileColors();
+            selectedTile.current = null;
+            selectedPiece.current = null;
+            setHighlightedTiles([]);
+
+        } catch (error) {
+            console.error("Move error:", error);
+        }
+    };
+
+
+    // - - - - - - - - - - - - PAGE CONTENT - - - - - - - - - - - - - 
     return (
         <group>
-            <primitive 
-                object={board} 
+            <mesh
+                scale={[100, 100, 100]}
                 onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={(event) => {
-                    if (event.button === 2 && handlePointerUp) {  // Right Click
-                        const clickedObject = event.intersections[0]?.object;
-                        if (clickedObject?.userData?.tileOnClick) {
-                            clickedObject.userData.tileOnClick();
-                        }
-                    }
-                }}
-            />
-            {pieces.map((piece, index) => (
-                <primitive 
-                    key={index} 
-                    object={piece} 
+                onPointerUp={(e) => handlePointerUp(e, null, false)} // null target = "air"
+            >
+                <boxGeometry args={[1, 1, 1]} />
+                <meshBasicMaterial
+                    color={0x000000}
+                    transparent={true}
+                    opacity={0}
+                    side={THREE.BackSide}
+                />
+            </mesh>
+            {otherObjects.map((light, i) => (
+                <primitive key={i} object={light} />
+            ))}
+            {tiles.map((tile, index) => (
+                <primitive
+                    key={index}
+                    object={tile}
                     onPointerDown={handlePointerDown}
-                    onPointerMove={handlePointerMove}
-                    onPointerUp={(event) => {
-                        if (event.button === 1 && handlePointerUp) {  // Left Click
-                            const clickedObject = event.intersections[0]?.object;
-                            if (clickedObject?.userData?.pieceOnClick) {
-                                clickedObject.userData.pieceOnClick();
-                            }
-                        }
-                    }}                
+                    onPointerUp={(e) => handlePointerUp(e, tile, false)}
+                />
+            ))}
+            {pieces.map((piece, index) => (
+                <primitive
+                    key={index}
+                    object={piece}
+                    onPointerDown={handlePointerDown}
+                    onPointerUp={(e) => handlePointerUp(e, piece, true)}
                 />
             ))}
         </group>

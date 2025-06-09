@@ -4,16 +4,14 @@ import random
 import time
 import asyncio
 
-from core.game import Game, Player, Bot
-from core.constants import * 
-from schemas.game import StartGameRequest
-from services.user_service import user_dependency
-from api.websockets.events import notify_all_players, notify_player
+from app.schemas.game import StartGameRequest
+from app.services.user_service import user_dependency
+from app.api.websockets.events import notify_all_players, notify_player
 
 router = APIRouter(prefix="/game", tags=["game"])
 
 
-games: Dict[str, Game] = {} # {'game_code': GameInstance}
+games: Dict = {} # {'game_code': GameInstance}
 
 
 def assign_colors(player_colors):

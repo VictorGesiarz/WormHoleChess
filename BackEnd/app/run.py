@@ -1,11 +1,16 @@
 import uvicorn
+import argparse
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=8000, help="Port to run the server on")
+    args = parser.parse_args()
+
     uvicorn.run(
-        "main:app",  # Adjust this to match your FastAPI file and app instance
+        "app.main:app",
         host="127.0.0.1",
-        port=8000,
-        reload=True,  # Auto-restart on code changes (optional, useful in development)
-        access_log=True,  # Explicitly enable access logs
-        log_level="info",  # Set log level (debug, info, warning, error, critical)
+        port=args.port,
+        reload=True,
+        access_log=True,
+        log_level="info",
     )
