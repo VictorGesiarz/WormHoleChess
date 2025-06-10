@@ -122,6 +122,9 @@ h3 {
     transition: 0.2s;
     min-width: 150px;
 }
+.toggle-option.small {
+    min-width: 0 !important;
+}
 
 .toggle-option:hover {
     background-color: #40444B;

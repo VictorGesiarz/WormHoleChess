@@ -52,7 +52,6 @@ const CameraControls = () => {
         };
 
         const onTouchMove = (e) => {
-            console.log("HERE")
             if (!isDragging.current || e.touches.length !== 1) return;
 
             document.title = `Upside down: ${Math.cos(pitch.current) < 0}`;
@@ -71,7 +70,6 @@ const CameraControls = () => {
 
             // 👇 Invert yaw when pitch is upside down (looking up past the horizon)
             const isUpsideDown = Math.cos(pitch.current) < 0;
-            console.log(isUpsideDown);
             yaw.current += isUpsideDown ? -deltaX : deltaX;
 
             lastMousePos.current = { x: touch.clientX, y: touch.clientY };

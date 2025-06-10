@@ -1,0 +1,15 @@
+white: 
+  Pawn: a2 b2 c2 d2 e2 
+  Knight: b1 
+  Bishop: c1 
+  Tower: a1 
+  Queen: d1
+  King: e1
+
+black:
+  Pawn: a4 b4 c4 d4 e4
+  Knight: b5
+  Bishop: c5
+  Tower: a5
+  Queen: d5
+  King: e5

@@ -5,7 +5,7 @@ from engine.core.base.NormalBoard import NormalBoard
 from engine.core.base.Board import Board
 from engine.core.base.Tile import Tile
 from engine.core.base.Pieces import Tower, Bishop, Knight, Queen, King, Pawn
-from engine.core.layer.LayerPieces import LayerPiece
+from engine.core.layer.LayerPieces import LayerPiece, LayerPawn
 from engine.core.layer.LayerTile import LayerTile, TowerLayer, KnightLayer, BishopLayer, QueenLayer, KingLayer, PawnLayer
 
 
@@ -18,6 +18,7 @@ class LayerBoard(NormalBoard):
         if innitialize: 
             self.tiles = self.create_tiles()
             self.connect_tiles()
+            self.remap_pawn_data()
         
         self.pieces: List[LayerPiece] = []
 
@@ -54,7 +55,9 @@ class LayerBoard(NormalBoard):
         return tiles
 
     def connect_tiles(self) -> None: 
-        PAWN_INVALID_ROWS = ['1_T', '8_T', '1_B', '8_B']
+        PAWN_INVALID_ROWS = ['1_T', '8_T', '1_B', '8_B', '1', '8']
+        for j, row in enumerate(PAWN_INVALID_ROWS): 
+            PAWN_INVALID_ROWS[j] = row.replace('8', str(self.size[0]))
         
         player1 = Player(0, "player")
         player2 = Player(1, "player")
@@ -173,10 +176,20 @@ class LayerBoard(NormalBoard):
 
         return [movement]
     
+    def remap_pawn_data(self) -> None: 
+        for i in range(4): 
+            if self.size[0] < 6: 
+                LayerPawn.PAWNS[i]['first_row'] = 'none'
+            else: 
+                LayerPawn.PAWNS[i]['first_row'] = LayerPawn.PAWNS[i]['first_row'].replace('7', str(self.size[0] - 1))
+            promotion_rows = LayerPawn.PAWNS[i]['promotion_rows']
+            for j, row in enumerate(promotion_rows): 
+                promotion_rows[j] = row.replace('8', str(self.size[0]))
+
     def get_promotion_zones(self, player: int) -> List[int]: 
         promotion_rows = Pawn.PAWNS[player]['promotion_rows']
         tiles = []
         for tile in self.tiles.values(): 
-            if tile.name[1] + '_' + tile.name[-1] in promotion_rows or tile.name[1] in promotion_rows: 
+            if tile.name[1:] in promotion_rows or (len(tile.name) == 2 and tile.name[1] in promotion_rows): 
                 tiles.append(tile.id)
         return tiles 

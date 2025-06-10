@@ -19,7 +19,7 @@ class StartLocalGameRequest(BaseModel):
     programMode: Literal["layer", "matrix"]
     gameType: Literal["normal", "wormhole"]
     boardSize: Literal["small", "big"] | int
-    positionId: str
+    initialPosition: Optional[str] = None
 
 class StartGameResponse(BaseModel):
     gameId: str

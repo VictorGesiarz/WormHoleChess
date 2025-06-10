@@ -1,7 +1,7 @@
 from typing import List, Dict, Tuple
 
 from engine.core.base.Tile import Tile, D
-from engine.core.base.Pieces import Piece
+from engine.core.base.Pieces import Piece, Pawn
 
 
 class NormalBoard:
@@ -12,6 +12,7 @@ class NormalBoard:
         if innitialize:
             self.tiles = self.create_tiles()
             self.connect_tiles()
+            self.remap_pawn_data()
         
         self.pieces: List[Piece] = []
 
@@ -113,3 +114,14 @@ class NormalBoard:
                     tile.neighbors[direction] = neighbor_tile
                     
             tile.make_neighbors_inv()
+
+    def remap_pawn_data(self) -> None: 
+        """ This part of the code is horrendous but I don't have time to do it better. """
+        for i in range(2): 
+            if self.size[0] < 6: 
+                Pawn.PAWNS[i]['first_row'] = -1
+            elif Pawn.PAWNS[i]['first_row'] != 2: 
+                Pawn.PAWNS[i]['first_row'] = self.size[0] - 1
+            promotion_rows = Pawn.PAWNS[i]['promotion_rows']
+            for j, row in enumerate(promotion_rows):
+                promotion_rows[j] = row.replace('8', str(self.size[0]))

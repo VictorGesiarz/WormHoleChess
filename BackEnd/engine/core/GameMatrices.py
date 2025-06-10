@@ -14,8 +14,8 @@ from engine.core.matrices.chess_logic_bounds import (
 from engine.core.matrices.matrix_constants import * 
 from engine.core.constants import * 
 
-from engine.ai.RandomAI import RandomAI
-from engine.ai.MonteCarlo import MonteCarlo
+from engine.agents.RandomAI import RandomAI
+from engine.agents.MonteCarlo import MonteCarlo
 
 
 class GameMatrices: 
@@ -29,7 +29,7 @@ class GameMatrices:
                  max_turns: int = 120): 
     
         self.players = players
-        self.number_of_players = len(players)
+        self.number_of_players = len([p for p in players if p['color'] != 'none'])
         self.turn = turn 
         self.program_mode = program_mode
         self.verbose = verbose
@@ -47,12 +47,13 @@ class GameMatrices:
         self._cached_turn = None
         self._recalculate = True
         self._cached_movements = np.empty((MAX_POSSIBLE_MOVES, 2), dtype=np.uint8)
+        self._cached_hashes = np.empty(MAX_POSSIBLE_MOVES, dtype=np.uint64)
         self._cached_count = np.zeros(1, dtype=np.uint8)
 
         self.history = np.zeros((max_turns, 6), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type (for promotions)]]
         self.initial_positions = self.board.pieces.copy()
         self.positions_counter = {self.hash: 1}
-        self.max_moves = max_turns
+        self.max_turns = max_turns
         self.moves_count = 0
         self.moves_without_capture = 0
         self.killed_player = None
@@ -60,14 +61,15 @@ class GameMatrices:
     def check_size(self) -> None:
         from pympler import asizeof
         return asizeof.asizeof(self)
-    
+
     def copy(self) -> 'GameMatrices':
-        game_copy = GameMatrices(self.board.copy(), self.players.copy(), self.turn, hasher=self.hasher)
+        game_copy = GameMatrices(self.board.copy(), self.players.copy(), self.turn, hasher=self.hasher, max_turns=self.max_turns)
         game_copy.history = self.history.copy()
         game_copy.positions_counter = self.positions_counter.copy()
+        game_copy.moves_count = self.moves_count
         game_copy.moves_without_capture = self.moves_without_capture
         return game_copy
-        
+
     def next_turn(self) -> None: 
         self.turn = (self.turn + 1) % self.number_of_players
         self._recalculate = True
@@ -82,9 +84,16 @@ class GameMatrices:
         
         return self.turn
     
-    def get_movements(self) -> np.array:
+    def get_movements(self, include_hashes: bool = False) -> np.array:
         if self._cached_turn == self.turn and not self._recalculate: 
-            return self._cached_movements[:self._cached_count[0]]
+            if include_hashes:
+                return (
+                    self._cached_movements[:self._cached_count[0]],
+                        self._cached_hashes[:self._cached_count[0]]
+                    )
+            else:   
+                return self._cached_movements[:self._cached_count[0]]
+
         
         if self.players[self.turn]['is_alive']: 
             team = self.players[self.turn]['team']
@@ -96,6 +105,12 @@ class GameMatrices:
         else:
             result = []
         
+        if include_hashes:
+            result = (
+                self._cached_movements[:self._cached_count[0]],
+                    self._cached_hashes[:self._cached_count[0]]
+                )
+
         self._cached_turn = self.turn 
         self._recalculate = False
         return result
@@ -128,7 +143,10 @@ class GameMatrices:
             self._cached_count,
             self.history, 
             self.moves_count,
-            self.board.promotion_zones
+            self.board.promotion_zones,
+            self.hash, 
+            self._cached_hashes, 
+            self.hasher.table
         )
     
     def is_in_check(self, player: int) -> bool: 
@@ -137,6 +155,7 @@ class GameMatrices:
         for i in range(b.pieces.shape[0]):
             if b.pieces[i, 0] == 3 and b.pieces[i, 1] == player:
                 if not b.pieces[i, 4] == 0: 
+                    print("Erorr at", player, b.pieces[i])
                     raise RuntimeError("King is dead¿?")
                 king_tile = b.pieces[i, 2]
     
@@ -155,7 +174,7 @@ class GameMatrices:
             np.empty((MAX_POSSIBLE_MOVES, 2), dtype=np.uint8)
         )
 
-    def make_move(self, move: np.array, store: bool = True) -> None: 
+    def make_move(self, move: np.array, store: bool = True, precomputed_hash: int = 0) -> None: 
         make_move(
             move, 
             self.board.nodes, 
@@ -165,7 +184,10 @@ class GameMatrices:
             self.board.promotion_zones
         )
 
-        self.hash = self.hasher.update_hash(self.hash, self.history[self.moves_count], self.board.pieces)
+        if precomputed_hash: 
+            self.hash = precomputed_hash
+        else: 
+            self.hash = self.hasher.update_hash(self.hash, self.history[self.moves_count], self.board.pieces)
 
         if store: 
             _, _, _, captured_piece_index, _, _ = self.history[self.moves_count]
@@ -189,7 +211,6 @@ class GameMatrices:
             self.history, 
             self.moves_count
         )
-        
         self.hash = self.hasher.update_hash(self.hash, self.history[self.moves_count], self.board.pieces)
 
     def make_move_bot(self) -> None: 
@@ -283,8 +304,8 @@ class GameMatrices:
 
     def print_moves(self) -> None: 
         moves = self.get_movements()
-        for move in moves: 
-            print(self.board.get_names(move))
+        for i, move in enumerate(moves): 
+            print(f'{i+1}: {self.board.get_names(move)}')
 
     def export(self, file: str) -> None: 
         ...
@@ -305,13 +326,14 @@ class GameMatrices:
                 
             type_ = piece_types[piece[0]].lower()
 
-            if self.players[piece[1]]['is_alive']:
-                player = NUMBER_TO_COLOR[piece[1]]
+            player = self.players[piece[1] % self.number_of_players]
+            if player['is_alive']:
+                player_color = player['color']
             else: 
-                player = "dead"
+                player_color = "dead"
 
             tile = self.board.get_names([piece[2]])[0]
-            pieces.append([type_, player, tile])
+            pieces.append([type_, player_color, tile])
         return pieces
     
     def valid_move(self, from_tile: str, to_tile: str) -> bool:   

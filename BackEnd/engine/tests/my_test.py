@@ -1,7 +1,7 @@
 import time
 import pandas as pd
 
-from engine.core.ChessFactory import ChessFactory, MatrixChessFactory
+from engine.ChessFactory import ChessFactory, MatrixChessFactory
 from engine.core.constants import PARAMETERS
 
 
@@ -28,7 +28,7 @@ def simulate_game(id=0):
     game_time = time.time()
 
     game_states = {}
-    while not game.is_finished() and move_count < 120: 
+    while not game.is_finished(): 
         turn = game.get_turn()
         # if turn == 0: 
             # If human player
@@ -37,9 +37,11 @@ def simulate_game(id=0):
             # game.make_move(moves[0])
         # else:
             # It makes automatically the move when doing get_turn
+        game.print_last_move()
+        # print(game.turn)
         game.next_turn()
         move_count += 1
-        game_states[move_count] = game.get_state()
+        # game_states[move_count] = game.get_state()
 
 
     with open('./engine/tests/results/game_states.json', 'w') as f:

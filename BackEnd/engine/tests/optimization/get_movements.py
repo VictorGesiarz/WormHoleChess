@@ -1,4 +1,4 @@
-from engine.core.ChessFactory import ChessFactory
+from engine.ChessFactory import ChessFactory
 from engine.core.matrices.MatrixBoard import LayerMatrixBoard
 
 from engine.core.matrices.chess_logic_bounds import get_possible_moves

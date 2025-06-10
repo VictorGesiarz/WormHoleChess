@@ -40,7 +40,7 @@ class LayerMatrixBoard:
         self.num_pieces = self.num_players * self.pieces_per_player  # e.g., 4 players × 16 pieces = 64
         self.pieces: np.array = np.full((self.num_pieces, 6), -1, dtype=np.int16)  # [[piece_type, player, position, has_moved?, captured?, custom_flags (bitmasking)], ...]
 
-        self.promotion_zones = np.empty((self.num_players, self.size[1] * 3), dtype=np.uint8)
+        self.promotion_zones = np.empty((self.num_players, self.size[1] * (self.num_players-1)), dtype=np.uint8)
 
         if innitialize: 
             if load_from_file: 
@@ -74,7 +74,7 @@ class LayerMatrixBoard:
         self.promotion_zones = promotion_zones
     
     def save_matrices(self) -> None: 
-        file = f'{BOARD_FILES}{str(self.size)}_{self.game_mode}.npz'
+        file = f'{BOARD_FILES}{self.size[0]}x{self.size[1]}_{self.game_mode}.npz'
         np.savez(file, 
                  nodes=self.nodes,
                  node_names=self.node_names, 

@@ -50,3 +50,4 @@ class ZobristHasher:
             old_hash ^= self.table[captured_piece[0]][captured_piece[1]][destination_tile]
 
         return old_hash
+    

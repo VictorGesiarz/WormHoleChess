@@ -5,10 +5,6 @@ import * as THREE from 'three';
 
 import { API_BASE_URL } from "../../utils/ApiUrls";
 
-import tilePositions from "../../assets/models/tile_positions_2.json";
-import chessBoardModel from "../../assets/models/(8x8)_wormhole.glb";
-import chessPiecesModel from "../../assets/models/Pieces.glb";
-
 
 // Define tile colors 
 const boardColors = {
@@ -16,12 +12,12 @@ const boardColors = {
     originalBlack: 0x3F3C3C,
     white: 0xFFFFFF,
     black: 0x3F3C3C,
-    selectedWhite: 0xCE77FF,
-    selectedBlack: 0xB737FF,
-    possibleMoveWhite: 0x77ffce,
-    possibleMoveBlack: 0x5fcca5,
-    checkWhite: 0xff778d,
-    checkBlack: 0xcc5f71
+    selectedWhite: 0xB39DDB,
+    selectedBlack: 0x6C5E84,
+    possibleMoveWhite: 0x96D3CE,
+    possibleMoveBlack: 0x4C7874,
+    // checkWhite: 0xff778d,
+    // checkBlack: 0xcc5f71
 };
 
 const LIGHT_INTENSITY = 30;
@@ -53,8 +49,9 @@ const ChessBoard = ({
     players,
     setHistory,
 }) => {
-    const { scene: board } = useGLTF(chessBoardModel);
-    const { scene: piecesScene } = useGLTF(chessPiecesModel);
+    const boardModelPath = `/assets/models/${boardSize}x${boardSize}_${gameType}.glb`;
+    const { scene: board } = useGLTF(boardModelPath);
+    const { scene: piecesScene } = useGLTF('/assets/models/Pieces.glb');
 
     const [otherObjects, setOtherObjects] = useState([]);
     const positions = useRef({});
@@ -99,7 +96,11 @@ const ChessBoard = ({
                 }
                 object.visible = false;
             }
-            else if (object.name.includes("_T") || object.name.includes("_B")) {
+            else if (
+                /_T$/.test(object.name) ||
+                /_B$/.test(object.name) ||
+                /^[a-h][1-8]$/i.test(object.name)
+            ) {
                 let tileColor = null;
 
                 if (object.material.color.getHex() === boardColors.originalWhite) {
@@ -239,6 +240,8 @@ const ChessBoard = ({
 
     // - - - - - - - - - - - - HANDLE TILE SELECTION - - - - - - - - - - - - - 
     const handleTileSelection = (tile, pieceType, pieceTeam) => {
+
+
         resetTileColors();
         selectedTile.current = null;
         selectedPiece.current = null;
@@ -314,7 +317,12 @@ const ChessBoard = ({
             }));
             setTurn(data.turn);
 
-            const moveDescription = `${selectedPiece.current}\n${from}\n${to}`;
+            let moveDescription = '';
+            if (players.length === 4) {
+                moveDescription = `${selectedPiece.current}\n${from}\n${to}`;
+            } else {
+                moveDescription = `${selectedPiece.current} ${from} - ${to}`;
+            }
             const historyEntry = {
                 move: moveDescription,
                 turn: data.turn,
@@ -322,8 +330,10 @@ const ChessBoard = ({
                 winner: data.winner,
             };
 
-            setHistory(prevHistory => [...prevHistory, historyEntry]);
+            console.log("GAME STATE:", data.game_finished); 
+            console.log("WINNER:", data.winner);
 
+            setHistory(prevHistory => [...prevHistory, historyEntry]);
 
             resetTileColors();
             selectedTile.current = null;

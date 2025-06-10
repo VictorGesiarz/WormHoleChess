@@ -1,0 +1,7 @@
+white: 
+  Pawn: a2 b2
+  King: a1
+
+black:
+  Pawn: c3 d3
+  King: d4

@@ -1,0 +1,14 @@
+white: 
+  Pawn: a2 b2 c2 d2 e2 f2 g7
+  Knight: b1 e1
+  Tower: a1 f1
+  Queen: c1
+  King: d1
+
+black:
+  Pawn: a6 b6 c6 d6 e6 f6 g7
+  Bishop: b6 e6
+  Knight: f6
+  Tower: a6 g6
+  Queen: c6
+  King: d6

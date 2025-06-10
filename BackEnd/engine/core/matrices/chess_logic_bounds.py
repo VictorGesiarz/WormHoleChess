@@ -285,7 +285,7 @@ def get_king_tile(pieces: np.ndarray, player: np.uint8) -> np.array:
 def filter_legal_moves(player: np.uint8, nodes: np.array, pieces: np.array, adjacency_list: np.array, 
                        patterns_offsets: np.array, pieces_offsets: np.array, tiles_offsets: np.array,
                        out_moves: np.array, out_count: np.array, history: np.array, history_index: int,
-                       promotion_zones: np.array) -> None:
+                       promotion_zones: np.array, current_hash: int, hashes: np.array, hasher: np.array) -> None:
     count = 0
 
     player_king = get_king_tile(pieces, player)
@@ -294,6 +294,7 @@ def filter_legal_moves(player: np.uint8, nodes: np.array, pieces: np.array, adja
     for i in range(out_count[0]): 
         move = out_moves[i]
         make_move(move, nodes, pieces, history, history_index, promotion_zones)
+        hashes[i] = update_hash(current_hash, history[history_index], pieces, hasher) 
         king_tile = player_king[2]
         if not is_in_check(player, king_tile, nodes, pieces, adjacency_list, patterns_offsets, 
                            pieces_offsets, tiles_offsets, king_trace): 
@@ -403,6 +404,22 @@ def is_in_check(player: np.uint8, king_tile: np.int16, nodes, pieces,
 
 
 @njit(cache=True)
+def update_hash(old_hash: int, movement: np.array, pieces: np.array, hasher: np.array) -> int: 
+    moving_piece_index, origin_tile, destination_tile, captured_piece_index, _, _ = movement
+
+    piece = pieces[moving_piece_index]
+
+    old_hash ^= hasher[piece[0]][piece[1]][origin_tile]
+    old_hash ^= hasher[piece[0]][piece[1]][destination_tile]
+
+    if captured_piece_index != -1: 
+        captured_piece = pieces[captured_piece_index]
+        old_hash ^= hasher[captured_piece[0]][captured_piece[1]][destination_tile]
+
+    return old_hash
+
+
+@njit(cache=True)
 def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.array, history_index: int, promotions: np.array) -> None: 
     origin_tile = move[0]
     destination_tile = move[1]
@@ -428,7 +445,7 @@ def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.arr
     # Promotion logic
     piece_type = pieces[moving_piece_index, 0]
     team = pieces[moving_piece_index, 1]
-    if piece_type == 0: 
+    if piece_type == 4: 
         for promotion_tile in promotions[team]:
             if destination_tile == promotion_tile:
                 pieces[moving_piece_index, 0] = 5

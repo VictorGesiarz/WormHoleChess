@@ -11,8 +11,8 @@ from engine.core.base.Pieces import PieceMovement
 from engine.core.Player import Player
 from engine.core.constants import *
 
-from engine.ai.RandomAI import RandomAI
-from engine.ai.MonteCarlo import MonteCarlo
+from engine.agents.RandomAI import RandomAI
+from engine.agents.MonteCarlo import MonteCarlo
 
 
 class Game:
@@ -174,6 +174,7 @@ class Game:
         return piece_movement
 
     def undo_move(self, piece_movement: PieceMovement, remove: bool = True, update_hash: bool = True) -> None: 
+        # piece_movement = self.history[-1]
         if remove: 
             self.moves_count -= 1
             self.history.pop()
@@ -196,6 +197,7 @@ class Game:
         bot = self.players[self.turn]
         engine = self.bot_engines[bot.difficulty]
         move = engine.choose_move()
+        move = (self.board[move[0]], self.board[move[1]])
         self.make_move(move)
 
     def check_player_state(self, player: Player, moves: List[Tile | LayerTile]) -> bool:
@@ -227,7 +229,7 @@ class Game:
         if self.game_state in [GameState.PLAYER_WON, GameState.DRAW]:
             return True
         
-        if self.moves_count >= self.max_turns:
+        if self.moves_count >= self.max_turns - 1:
             self.game_state = GameState.DRAW
             return True
     
@@ -283,6 +285,11 @@ class Game:
         if len(alive_players) == 1: 
             return alive_players[0].team
         return -1
+
+    def print_moves(self) -> None: 
+        moves = self.get_movements()
+        for i, move in enumerate(moves): 
+            print(f'{i+1}: {move}')
 
     def get_pieces_state(self) -> Dict[str, Dict[str, List[str]]]: 
         pieces_state = {}

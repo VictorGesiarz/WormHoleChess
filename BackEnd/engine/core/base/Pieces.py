@@ -438,14 +438,14 @@ class Pawn(Piece):
         0: {
             'start_side': 'T',
             'first_row': 2, 
-            'promotion_rows': ['8_T', '1_B', '8_B'],
+            'promotion_rows': ['8_T', '1_B', '8_B', '8'],
             'direction': D.UP,
             'atacks': [D.UP_LEFT, D.UP_RIGHT]
         },
         1: {
             'start_side': 'T',
             'first_row': 7, 
-            'promotion_rows': ['1_T', '8_B', '1_B'],
+            'promotion_rows': ['1_T', '8_B', '1_B', '1'],
             'direction': D.DOWN,
             'atacks': [D.DOWN_LEFT, D.DOWN_RIGHT]
         },

@@ -12,7 +12,7 @@ const ChessGame = ({
     setStates,
     turn,
     setTurn,
-    players, 
+    players,
     setHistory
 }) => {
     return (

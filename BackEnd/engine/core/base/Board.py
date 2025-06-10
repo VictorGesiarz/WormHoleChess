@@ -2,25 +2,37 @@ from typing import List, Dict, Tuple
 
 from engine.core.base.NormalBoard import NormalBoard
 from engine.core.base.Tile import Tile, D
-from engine.core.base.Pieces import Piece
+from engine.core.base.Pieces import Piece, Pawn
 
 
 class Board(NormalBoard):
-    rows = [str(i) for i in range(1, 9)]
-    cols = [chr(i) for i in range(ord('a'), ord('h') + 1)]
-    cols_dict = {col: i + 1 for i, col in enumerate(cols)}
-    cols_inv_dict = {i + 1: col for i, col in enumerate(cols)}
-    pentagons = ['c3', 'c6', 'f3', 'f6']
-    loop_cols = ['d', 'e']
-    loop_rows = ['4', '5']
-
-    def __init__(self, size: Tuple[int] = (8, 8), innitialize: bool = True) -> None:
-        self.size = size # Not used yet 
+    def __init__(self, size: Tuple[int, int] = (8, 8), innitialize: bool = True) -> None:
+        self.size = size
+        rows, cols = size
+        self.rows = [str(i) for i in range(1, rows + 1)]
+        self.cols = [chr(i) for i in range(ord('a'), ord('a') + cols)]
+        self.cols_dict = {col: i + 1 for i, col in enumerate(self.cols)}
+        self.cols_inv_dict = {i + 1: col for i, col in enumerate(self.cols)}
         
+        # Adjust these based on size
+        if size == (8, 8):
+            self.pentagons = ['c3', 'c6', 'f3', 'f6']
+            self.loop_cols = ['d', 'e']
+            self.loop_rows = ['4', '5']
+        elif size == (6, 6):
+            self.pentagons = ['b2', 'e2', 'b5', 'e5']
+            self.loop_cols = ['c', 'd']
+            self.loop_rows = ['3', '4']
+        else:
+            self.pentagons = []
+            self.loop_cols = []
+            self.loop_rows = []
+
         self.tiles: Dict[str, Tile] = {}
         if innitialize:
             self.tiles = self.create_tiles()
             self.connect_tiles()
+            self.remap_pawn_data()
         
         self.pieces: List[Piece] = []
 
@@ -44,15 +56,15 @@ class Board(NormalBoard):
     def create_tiles(self) -> Dict[str, Tile]:
         tiles = {}
         top_side = True
-
         tile_id = 0
+
         for _ in range(2): 
-            for i, col in enumerate(Board.cols): 
-                for j, row in enumerate(Board.rows): 
+            for col in self.cols: 
+                for row in self.rows: 
                     name = col + row
-                    pentagon = True if name in Board.pentagons else False
-                    name += ('_T' if top_side else '_B')
-                    loop = True if col in Board.loop_cols and row in Board.loop_rows else False 
+                    pentagon = name in self.pentagons
+                    name += '_T' if top_side else '_B'
+                    loop = col in self.loop_cols and row in self.loop_rows
                     tile = Tile(name, int(row), col, self, tile_id, top_side, pentagon, loop)
                     tiles[name] = tile
                     tile_id += 1
@@ -64,7 +76,7 @@ class Board(NormalBoard):
                             tiles[additional_name] = tile
                             tile_id += 1
             top_side = not top_side
-        return tiles 
+        return tiles
     
     def connect_tiles(self) -> None: 
         top_side_directions = {
@@ -88,24 +100,25 @@ class Board(NormalBoard):
             D.DOWN_RIGHT: (-1, -1),
         }
         
+        max_row, max_col = self.size
         for name, tile in self.tiles.items():
-            col = Board.cols_dict[name[0]]
+            col = self.cols_dict[name[0]]
             row = int(name[1])
             side = '_T' if tile.top_side else '_B'
 
             directions = top_side_directions if tile.top_side else bottom_side_directions
             for direction, (dr, dc) in directions.items():
                 neighbor_row, neighbor_col = row + dr, col + dc
-                if 1 <= neighbor_row <= 8 and 1 <= neighbor_col <= 8: 
-                    neighbor_name = Board.cols_inv_dict[neighbor_col] + str(neighbor_row) + side 
+                if 1 <= neighbor_row <= max_row and 1 <= neighbor_col <= max_col: 
+                    neighbor_name = self.cols_inv_dict[neighbor_col] + str(neighbor_row) + side 
                     neighbor_tile = self.tiles[neighbor_name]
                     tile.neighbors[direction] = neighbor_tile
-                    
+
                     self.connect_additional(tile, neighbor_tile)
             tile.make_neighbors_inv()
         self.connect_manual()
         self.relate_pentagons()
-                        
+
     def connect_additional(self, tile: Tile, neighbor_tile: Tile) -> None: 
         if tile.pentagon and (neighbor_tile.loop):
             name = neighbor_tile.name
@@ -164,7 +177,11 @@ class Board(NormalBoard):
             'e5_1_B': {D.RIGHT: 'e5_B', D.UP_RIGHT: 'e6_B', D.UP: 'f6_B', D.UP_LEFT: 'f5_B', D.LEFT: 'e5_2_B', D.DOWN_LEFT: 'e5_2_T', D.DOWN: 'e5_1_T', D.DOWN_RIGHT: 'e5_T'},
             'e5_B': {D.LEFT: 'e5_1_B', D.DOWN_RIGHT: 'd5_T',D.DOWN: 'e5_T', D.DOWN_LEFT: 'e5_1_T'}
         }
-        
+
+        if self.size == (6, 6):
+            top_connections = self.remap_connections(top_connections, -1, -1)
+            bottom_connections = self.remap_connections(bottom_connections, -1, -1)
+
         self.connect_tiles_manual(top_connections)
         self.connect_tiles_manual(bottom_connections)
         
@@ -191,6 +208,57 @@ class Board(NormalBoard):
             'f6_B': {D.UP: [D.DOWN, D.ADDITIONAL_STRAIGHT], D.LEFT: [D.RIGHT, D.ADDITIONAL_STRAIGHT], D.ADDITIONAL_STRAIGHT: [D.UP, D.LEFT], D.UP_LEFT: [D.ADDITIONAL_DIAGONAL, D.DOWN_RIGHT], D.ADDITIONAL_DIAGONAL: [D.UP_LEFT]}
         }
         
+        if self.size == (6, 6):
+            additional_relations = self.remap_relations(additional_relations, -1, -1)
+
         for tile_name, relations in additional_relations.items():
             tile = self.tiles[tile_name]
             tile.set_relations(relations)
+
+    def shift_tile_name(self, name: str, row_offset: int, col_offset: int) -> str:
+        import re
+        match = re.match(r'^([a-z])(\d+)(.*)$', name)
+        if not match:
+            return name  # Not a tile name
+
+        col, row, suffix = match.groups()
+        new_col = chr(ord(col) + col_offset)
+        new_row = str(int(row) + row_offset)
+        return f"{new_col}{new_row}{suffix}"
+
+    def remap_connections(self, connections: dict, row_offset: int, col_offset: int) -> dict:
+        new_connections = {}
+        for tile_name, tile_dict in connections.items():
+            new_tile = self.shift_tile_name(tile_name, row_offset, col_offset)
+            new_tile_dict = {d: self.shift_tile_name(n, row_offset, col_offset) for d, n in tile_dict.items()}
+            new_connections[new_tile] = new_tile_dict
+        return new_connections
+    
+    def remap_relations(self, relations: dict, row_offset: int, col_offset: int) -> dict:
+        new_relations = {}
+        for tile_name, direction_map in relations.items():
+            new_tile = self.shift_tile_name(tile_name, row_offset, col_offset)
+            new_direction_map = {d: v.copy() for d, v in direction_map.items()}  # No names to shift inside values
+            new_relations[new_tile] = new_direction_map
+        return new_relations
+    
+    def remap_pawn_data(self) -> None: 
+        """ This part of the code is horrendous but I don't have time to do it better. """
+        for i in range(4): 
+            if self.size[0] < 6: 
+                Pawn.PAWNS[i]['first_row'] = -1
+            elif Pawn.PAWNS[i]['first_row'] != 2: 
+                Pawn.PAWNS[i]['first_row'] = self.size[0] - 1
+            promotion_rows = Pawn.PAWNS[i]['promotion_rows']
+            for j, row in enumerate(promotion_rows):
+                promotion_rows[j] = row.replace('8', str(self.size[0]))
+
+        if self.size == (6, 6): 
+            new_quadrants = [
+                [1, 2, 3],
+                [4, 5, 6],
+                [1, 2, 3],
+                [4, 5, 6]
+            ]
+            for i in range(4): 
+                Pawn.QUADRANTS[i]['rows'] = new_quadrants[i]

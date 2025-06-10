@@ -1,4 +1,4 @@
-from engine.core.ChessFactory import ChessFactory
+from engine.ChessFactory import ChessFactory
 
 
 def store_game(): 

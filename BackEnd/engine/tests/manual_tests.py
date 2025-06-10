@@ -10,7 +10,7 @@ from engine.core.layer.LayerBoard import *
 from engine.core.layer.LayerTile import * 
 from engine.core.layer.LayerPieces import * 
 
-from engine.core.ChessFactory import ChessFactory
+from engine.ChessFactory import ChessFactory
 
 
 def create_board(): 

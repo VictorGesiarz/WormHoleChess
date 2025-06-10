@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 
 import { API_BASE_URL } from "../../utils/ApiUrls";
 
-import initialPositions from '../../assets/configs/image_positions';
 import "./PlayLocalPage.css";
 
 
@@ -12,10 +11,12 @@ const PlayLocalPage = () => {
 
     // - - - - - - - - - - - - - - - - CONSTANTS - - - - - - - - - - - - - - - - 
     const [playerCount, setPlayerCount] = useState(4);
-    const [boardSize, setBoardSize] = useState('big');
+    const [boardSize, setBoardSize] = useState(8);
     const [gameType, setGameType] = useState('wormhole');
     const [programMode, setProgramMode] = useState('layer');
-    const [selectedPosition, setSelectedPosition] = useState(initialPositions[boardSize][0]);
+    const [boardImage, setBoardImage] = useState('/assets/images/8x8_wormhole.png');
+    const [possiblePositions, setPossiblePositions] = useState({});
+    const [selectedPosition, setSelectedPosition] = useState('default');
 
     const [playerNames, setPlayerNames] = useState(
         Array.from({ length: playerCount }, (_, i) => `Player ${i + 1}`)
@@ -34,8 +35,26 @@ const PlayLocalPage = () => {
         setPlayerTypes(Array(playerCount).fill("human"));
     }, [playerCount]);
 
+    useEffect(() => {
+        getPossiblePositions();
+    }, []);
 
     // - - - - - - - - - - - - - - - - PAGE FUNCTIONS - - - - - - - - - - - - - - - - 
+    const getPossiblePositions = async () => {
+        const response = await fetch(`${API_BASE_URL}/game-local/get-possible-positions`, {
+            method: "GET"
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            setPossiblePositions(data);
+            setSelectedPosition(data[`${playerCount}_${boardSize}x${boardSize}_${gameType}`][0])
+        } else {
+            const error = await response.json();
+            console.error("Failed to fetch possible positions:", error);
+            alert("Failed to fetch possible positions.");
+        }
+    };
     // Helper: update a single player's type
     const handleTypeChange = (index, newType) => {
         setPlayerTypes((prev) => {
@@ -51,6 +70,9 @@ const PlayLocalPage = () => {
             return updated;
         });
     };
+    const handleSelectedSize = (size, type) => {
+        setBoardImage(`/assets/images/${size}x${size}_${type}.png`);
+    }
 
 
     // - - - - - - - - - - - - - - - - FUNCTIONALITY FUNCTIONS - - - - - - - - - - - - - - - - 
@@ -73,12 +95,12 @@ const PlayLocalPage = () => {
                 programMode,
                 gameType,
                 boardSize,
-                positionId: selectedPosition.id,
+                initialPosition: selectedPosition,
             }),
         });
 
         if (response.ok) {
-            const data = await response.json(); 
+            const data = await response.json();
             navigate("/game-local", {
                 state: {
                     gameId: data.gameId,
@@ -86,7 +108,7 @@ const PlayLocalPage = () => {
                     boardSize,
                     initialState: data.initialState,
                     playerCount,
-                    turnInfo: data.turn, 
+                    turnInfo: data.turn,
                     players: playerData,
                 }
             });
@@ -114,71 +136,99 @@ const PlayLocalPage = () => {
                             <h3>Game Setup</h3>
 
                             <label htmlFor="position-dropdown">Initial Position</label>
-                            <select
-                                id="position-dropdown"
-                                className="dropdown"
-                                value={selectedPosition.id}
-                                onChange={(e) =>
-                                    setSelectedPosition(initialPositions[boardSize].find(pos => pos.id === e.target.value))
-                                }
-                            >
-                                {initialPositions[boardSize].map((position) => (
-                                    <option key={position.id} value={position.id}>
-                                        {position.name}
-                                    </option>
-                                ))}
-                            </select>
+                            {possiblePositions[`${playerCount}_${boardSize}x${boardSize}_${gameType}`] && (
+                                <select
+                                    id="position-dropdown"
+                                    className="dropdown"
+                                    value={selectedPosition}
+                                    onChange={(e) => setSelectedPosition(e.target.value)}
+                                >
+                                    {possiblePositions[`${playerCount}_${boardSize}x${boardSize}_${gameType}`].map((position, index) => (
+                                        <option key={index} value={position}>
+                                            {position}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                         </div>
 
                         <div className="board-image">
-                            <img src={selectedPosition.image} alt={selectedPosition.name} />
+                            <img src={boardImage} alt={boardImage} />
                         </div>
 
                         <div className="game-parameters-buttons">
                             <div className="player-toggle">
                                 <button
                                     className={`toggle-option ${playerCount === 2 ? 'active' : ''}`}
-                                    onClick={() => setPlayerCount(2)}
+                                    onClick={() => {setPlayerCount(2)}}
                                 >
                                     2 Players
                                 </button>
-                                <button
+                                {gameType !== 'normal' && (<button
                                     className={`toggle-option ${playerCount === 4 ? 'active' : ''}`}
                                     onClick={() => setPlayerCount(4)}
                                 >
                                     4 Players
-                                </button>
+                                </button>)}
                             </div>
 
                             <div className="player-toggle">
-                                <button
-                                    className={`toggle-option ${boardSize === 'small' ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setBoardSize('small');
-                                        setSelectedPosition(initialPositions['small'][0]);
-                                    }}>
-                                    Small (6x6)
-                                </button>
-                                <button
-                                    className={`toggle-option ${boardSize === 'big' ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setBoardSize('big');
-                                        setSelectedPosition(initialPositions['big'][0]);
-                                    }}>
-                                    Big (8x8)
-                                </button>
+                                {gameType === 'normal' ? (
+                                    [4, 5, 6, 8].map((size) => (
+                                        <button
+                                            key={size}
+                                            className={`toggle-option small ${boardSize === size ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setBoardSize(size);
+                                                handleSelectedSize(size, 'normal');
+                                            }}
+                                        >
+                                            {size} x {size}
+                                        </button>
+                                    ))
+                                ) : (
+                                    <>
+                                        <button
+                                            className={`toggle-option ${boardSize === 6 ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setBoardSize(6);
+                                                handleSelectedSize(6, 'wormhole');
+                                            }}
+                                        >
+                                            Small (6x6)
+                                        </button>
+                                        <button
+                                            className={`toggle-option ${boardSize === 8 ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setBoardSize(8);
+                                                handleSelectedSize(8, 'wormhole');
+                                            }}
+                                        >
+                                            Big (8x8)
+                                        </button>
+                                    </>
+                                )}
                             </div>
 
                             <div className="player-toggle">
                                 <button
                                     className={`toggle-option ${gameType === 'normal' ? 'active' : ''}`}
-                                    onClick={() => setGameType('normal')}
+                                    onClick={() => {
+                                        setGameType('normal');
+                                        setPlayerCount(2); 
+                                        setBoardSize(8); 
+                                        handleSelectedSize(8, 'normal');
+                                    }}
                                 >
                                     Normal
                                 </button>
                                 <button
                                     className={`toggle-option ${gameType === 'wormhole' ? 'active' : ''}`}
-                                    onClick={() => setGameType('wormhole')}
+                                    onClick={() => {
+                                        setGameType('wormhole');
+                                        setBoardSize(8); 
+                                        handleSelectedSize(8, 'wormhole');
+                                    }}
                                 >
                                     Wormhole
                                 </button>

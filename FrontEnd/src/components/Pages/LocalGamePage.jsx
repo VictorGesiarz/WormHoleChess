@@ -30,6 +30,7 @@ const LocalGamePage = () => {
     const [turn, setTurn] = useState(turnInfo);
     const [states, setStates] = useState(initialState);
     const [history, setHistory] = useState([]);
+    const [watchingState, setWatchingState] = useState(0); 
 
     const playerColors = playerCount === 2
         ? ['White', 'Black']
@@ -41,8 +42,14 @@ const LocalGamePage = () => {
         setCurrentState(states[turn.moveCount]);
     }, [turn]);
 
-    // - - - - - - - - - - - - - - - - FUNCTIONS - - - - - - - - - - - - - - - - 
+    useEffect(() => {
+        setWatchingState()
+    }, []);
 
+    // - - - - - - - - - - - - - - - - FUNCTIONS - - - - - - - - - - - - - - - - 
+    const undoMove = async () => {
+
+    };
 
     // - - - - - - - - - - - - - - - - RENDER - - - - - - - - - - - - - - - - 
     return (

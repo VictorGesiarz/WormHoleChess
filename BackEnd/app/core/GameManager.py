@@ -9,7 +9,7 @@ from app.schemas.local_game import (
     TurnInfo
 )
 
-from engine.core.ChessFactory import ChessFactory
+from engine.ChessFactory import ChessFactory
 
 
 class GameManager: 
@@ -28,7 +28,7 @@ class GameManager:
             type = 'human' if game.players[game.turn].type == 'player' else 'bot'
         elif game.program_mode == 'matrix': 
             valid_moves = [game.board.get_names(move) for move in valid_moves]
-            type = 'human' if game.players[game.turn]['opponent_type'] == 'human' else 'bot'
+            type = 'human' if game.players[game.turn]['opponent_type'] == 0 else 'bot'
 
         return TurnInfo(
             turn=game.turn, 
@@ -45,8 +45,8 @@ class GameManager:
             player_data=ChessFactory.create_player_data(len(payload.players), player_types),
             program_mode=payload.programMode,
             game_mode=payload.gameType,
-            size=payload.boardSize,
-            # initial_positions= # How do we handle this?
+            size=(payload.boardSize, payload.boardSize),
+            initial_positions=payload.initialPosition
         )
         self.games[game_id] = game
 

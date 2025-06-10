@@ -367,6 +367,7 @@ class LayerPawn(LayerPiece):
     
     def is_promoting(self) -> bool: 
         """ The game class handles the promotion of the pawn. """
-        if self.position.name[1:] in LayerPawn.PAWNS[self.team.team]['promotion_rows']:
+        promotion_rows = LayerPawn.PAWNS[self.team.team]['promotion_rows']
+        if self.position.name[1:] in promotion_rows or (len(self.position.name) == 2 and self.position.name[1] in promotion_rows):
             return True
         return False
