@@ -2,7 +2,7 @@ from typing import List, Dict, Tuple
 
 from engine.core.base.NormalBoard import NormalBoard
 from engine.core.base.Tile import Tile, D
-from engine.core.base.Pieces import Piece, Pawn
+from engine.core.base.Pieces import Piece, Pawn, Knight
 
 
 class Board(NormalBoard):
@@ -32,6 +32,7 @@ class Board(NormalBoard):
         if innitialize:
             self.tiles = self.create_tiles()
             self.connect_tiles()
+            self.remap_knight_data()
             self.remap_pawn_data()
         
         self.pieces: List[Piece] = []
@@ -241,6 +242,15 @@ class Board(NormalBoard):
             new_direction_map = {d: v.copy() for d, v in direction_map.items()}  # No names to shift inside values
             new_relations[new_tile] = new_direction_map
         return new_relations
+    
+    def remap_knight_data(self) -> None: 
+        if self.size == (6, 6):
+            new_attacks = {}
+            for tile_name, moves in Knight.ATTACKS_IN_LOOP.items():
+                new_tile = self.shift_tile_name(tile_name, -1, -1)
+                new_moves = [self.shift_tile_name(move, -1, -1) for move in moves]
+                new_attacks[new_tile] = new_moves
+            Knight.ATTACKS_IN_LOOP = new_attacks
     
     def remap_pawn_data(self) -> None: 
         """ This part of the code is horrendous but I don't have time to do it better. """

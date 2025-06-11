@@ -135,11 +135,10 @@ class LayerKnight(LayerPiece):
     def get_movements(self) -> List[LayerTile]:
         possible_moves = []
         for move in self.position.knight_layer.movements: 
-            if not move.piece:
-                possible_moves.append(move)
-            elif move.piece and move.piece.team != self.team:
-                possible_moves.append(move)
-                break
+            if move.piece and move.piece.team == self.team:
+                continue
+            possible_moves.append(move)
+            
         return possible_moves
     
 

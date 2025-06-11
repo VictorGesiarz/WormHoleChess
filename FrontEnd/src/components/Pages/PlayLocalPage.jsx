@@ -101,6 +101,7 @@ const PlayLocalPage = () => {
 
         if (response.ok) {
             const data = await response.json();
+            console.log("Redirecting to game page")
             navigate("/game-local", {
                 state: {
                     gameId: data.gameId,

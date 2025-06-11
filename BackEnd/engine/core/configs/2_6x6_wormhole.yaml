@@ -6,8 +6,8 @@ white:
   King:   d1T
 
 black:
-  Pawn:   f5T e5T d5T c5T b5T a5T
-  Tower:  f6T a6T
-  Bishop: e6T b6T
-  Queen:  c6T
-  King:   d6T
+  Pawn:   f5B e5B d5B c5B b5B a5B
+  Tower:  f6B a6B
+  Bishop: e6B b6B
+  Queen:  c6B
+  King:   d6B

@@ -4,16 +4,15 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = {extras = ["all"], version = "*"}
+fastapi = "*"
 chess = "*"
 pympler = "*"
-databases = {extras = ["postgresql"], version = "*"}
 pyjwt = "*"
 sqlalchemy = "*"
 psycopg2 = "*"
 passlib = "*"
 bcrypt = "*"
-python-jose = {extras = ["cryptography"], version = "*"}
+python-jose = "*"
 python-multipart = "*"
 websockets = "*"
 watchdog = "*"
@@ -21,6 +20,8 @@ python-chess = "*"
 pandas = "*"
 numba = "*"
 cython = "*"
+databases = "*"
+asyncpg = "*"
 
 [dev-packages]
 

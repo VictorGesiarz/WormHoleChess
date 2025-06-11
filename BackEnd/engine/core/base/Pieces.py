@@ -184,19 +184,61 @@ class Tower(Piece):
         return positions
 
 
-class Knight(Piece): 
+class Knight(Piece):
+    # Hard coded attack of the knight when its in the loop (the previous method what a little bit wrong 
+    # due to how i handled the connections between tiles) 
+    ATTACKS_IN_LOOP = {
+        "d4_T": ["e2_T", "c2_T", "b3_T", "f3_T", "c4_T", "e3_B", "c3_B", "d4_2_B", "e4_1_B"],
+        "d4_1_T": ["b2_T", "d2_T", "e3_T", "b4_T", "c5_T", "e4_B", "d3_B", "d5_2_B", "c4_B"],
+        "d4_2_T": ["c2_T", "b3_T", "d3_T", "b5_T", "c6_T", "c3_B", "c5_B", "d4_B", "d5_1_B"],
+        "d5_2_T": ["b4_T", "b6_T", "c3_T", "c7_T", "d6_T", "d4_1_B", "d5_B", "c4_B", "c6_B"],
+        "d5_1_T": ["b5_T", "b7_T", "c4_T", "d7_T", "e6_T", "e5_B", "d6_B", "d4_2_B", "c5_B"],
+        "d5_T": ["b6_T", "c7_T", "e7_T", "f6_T", "c5_T", "e5_1_B", "e6_B", "c6_B", "d5_2_B"],
+        "e4_T": ["c3_T", "d2_T", "f2_T", "g3_T", "f4_T", "f3_B", "e4_2_B", "d3_B", "d4_1_B"],
+        "e4_1_T": ["d3_T", "e2_T", "g2_T", "g4_T", "f5_T", "f4_B", "e5_2_B", "e3_B", "d4_B"],
+        "e4_2_T": ["e3_T", "f2_T", "g3_T", "g5_T", "f6_T", "f3_B", "f5_B", "e4_B", "e5_1_B"],
+        "e5_2_T": ["f3_T", "f7_T", "g4_T", "g6_T", "e6_T", "e4_1_B", "e5_B", "f4_B", "f6_B"],
+        "e5_1_T": ["d6_T", "e7_T", "g7_T", "g5_T", "f4_T", "e4_2_B", "f5_B", "e6_B", "d5_B"],
+        "e5_T": ["c6_T", "d7_T", "f7_T", "g6_T", "f5_T", "e5_2_B", "f6_B", "d6_B", "d5_1_B"], 
+        
+        "d4_B": ["e2_B", "c2_B", "b3_B", "f3_B", "c4_B", "e3_T", "c3_T", "d4_2_T", "e5_1_T"],
+        "d4_1_B": ["b2_B", "d2_B", "e3_B", "b4_B", "c5_B", "e4_T", "d3_T", "d5_2_T", "c4_T"],
+        "d4_2_B": ["c2_B", "b3_B", "d3_B", "b5_B", "c6_B", "c3_T", "c5_T", "d4_T", "d5_1_T"],
+        "d5_2_B": ["b4_B", "b6_B", "c3_B", "c7_B", "d6_B", "d4_1_T", "d5_T", "c4_T", "c6_T"],
+        "d5_1_B": ["b5_B", "b7_B", "c4_B", "d7_B", "e6_B", "e5_T", "d6_T", "d4_2_T", "c5_T"],
+        "d5_B": ["b6_B", "c7_B", "e7_B", "f6_B", "c5_B", "e5_1_T", "e6_T", "c6_T", "d5_2_T"],
+        "e4_B": ["c3_B", "d2_B", "f2_B", "g3_B", "f4_B", "f3_T", "e4_2_T", "d3_T", "d4_1_T"],
+        "e4_1_B": ["d3_B", "e2_B", "g2_B", "g4_B", "f5_B", "f4_T", "e5_2_T", "e3_T", "d4_T"],
+        "e4_2_B": ["e3_B", "f2_B", "g3_B", "g5_B", "f6_B", "f3_T", "f5_T", "e4_T", "e5_1_T"],
+        "e5_2_B": ["f3_B", "f7_B", "g4_B", "g6_B", "e6_B", "e4_1_T", "e5_T", "f4_T", "f6_T"],
+        "e5_1_B": ["d6_B", "e7_B", "g7_B", "g5_B", "f4_B", "e4_2_T", "f5_T", "e6_T", "d5_T"],
+        "e5_B": ["c6_B", "d7_B", "f7_B", "g6_B", "f5_B", "e5_2_T", "f6_T", "d6_T", "d5_1_T"], 
+    }
+
+    
     def __init__(self, position: Tile, team: Player, add_to_player: bool = True) -> None:
         super().__init__(position, team, add_to_player)
         self.type_id = 1
         
-    def get_movements(self) -> list[Tile]:
-        horizontal = [D.LEFT, D.RIGHT]
-        vertical = [D.UP, D.DOWN]
-        positions1 = self.make_pattern(horizontal, vertical)
-        if self.position.pentagon: vertical += [D.ADDITIONAL_STRAIGHT] 
-        positions2 = self.make_pattern(vertical, horizontal)
-        positions = positions1.union(positions2)
-        return list(positions)
+    def get_movements(self, verbose=0) -> list[Tile]:
+        if self.position.loop:
+            positions = []
+            position_names = Knight.ATTACKS_IN_LOOP[self.position.name]
+            for position_name in position_names:
+                tile = self.board[position_name] 
+                if tile.piece and tile.piece.team.team == self.team.team:
+                    continue 
+                positions.append(tile)
+            return positions
+            
+        else: 
+            horizontal = [D.LEFT, D.RIGHT]
+            vertical = [D.UP, D.DOWN]
+            positions1 = self.make_pattern(horizontal, vertical)
+            if self.position.pentagon: vertical += [D.ADDITIONAL_STRAIGHT] 
+            positions2 = self.make_pattern(vertical, horizontal)
+            positions = positions1.union(positions2)
+            return list(positions)
             
     def make_pattern(self, direction1: list[D], direction2: list[D]) -> set[Tile]:
         positions = set()

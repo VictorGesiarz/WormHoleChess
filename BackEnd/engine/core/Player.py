@@ -63,6 +63,8 @@ class Player:
             for piece in piece_type:
                 if not piece.captured: 
                     from_ = piece.position
+                    if piece.type == 'Knight': 
+                        print(piece.get_movements(), from_)
                     moves.extend((from_, move) for move in piece.get_movements())
         return moves
 
