@@ -148,7 +148,7 @@ class Game:
             # If we capture a king (when a player makes a movement where leaves us making check to another player) 
             if captured_piece.type == 'King' and captured_piece.team.alive: 
                 piece_movement.killed_player = captured_piece.team
-                self.kill_player(player=captured_piece.team, print_text=f"eaten by {NUMBER_TO_COLOR[moving_piece.team.team]}" if store else None)
+                self.kill_player(player=captured_piece.team, print_text=f"eaten by {moving_piece.team.color}" if store else None)
 
         moving_piece.move(destination_tile, validate=False) # We do not need to validate, we expect the move to be already valid
 
@@ -218,7 +218,7 @@ class Game:
     
     def kill_player(self, player: Player, print_text: str = None) -> None: 
         if print_text and self.verbose > 0: 
-            print(f"{NUMBER_TO_COLOR[player.team]} loses {print_text}")
+            print(f"{player.color} loses {print_text}")
         player.alive = False
         self.killed_player = player.color
 
@@ -303,7 +303,7 @@ class Game:
                     else: 
                         pieces_str.append(f"{piece.position}")
                 player_state[piece_type] = pieces_str
-            pieces_state[NUMBER_TO_COLOR[player.team]] = player_state
+            pieces_state[player.color] = player_state
         return pieces_state
 
     def get_state(self) -> List[List[str]]: 
@@ -313,7 +313,7 @@ class Game:
             for piece_type, pieces_list in player.pieces.items():
                 for piece in pieces_list:
                     if not piece.captured:
-                        team = NUMBER_TO_COLOR[player.team] if player.alive else 'dead'
+                        team = player.color if player.alive else 'dead'
                         pieces.append([piece_type.lower(), team, piece.position.name])
         return pieces
 
@@ -325,14 +325,14 @@ class Game:
                 'to': move.tile_to.name, 
                 'moving_piece': {
                     'type': move.piece.type,
-                    'color': NUMBER_TO_COLOR[move.piece.team.team]
+                    'color': move.piece.team.color
                 }, 
                 'captured_piece': None if move.captured_piece is None else {
                     'type': move.captured_piece.type, 
-                    'color': NUMBER_TO_COLOR[move.captured_piece.team.team]
+                    'color': move.captured_piece.team.color
                 }, 
                 'killed_player': None if move.killed_player is None else {
-                    'color': NUMBER_TO_COLOR[move.killed_player.team]
+                    'color': move.killed_player.color
                 }
             }
             history.append(move_dict)

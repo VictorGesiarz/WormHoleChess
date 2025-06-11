@@ -33,10 +33,10 @@ class LayerPiece:
         return self.position == other.position and self.team == other.team and self.type == other.type
     
     def __str__(self) -> str: 
-        return f"{NUMBER_TO_COLOR[self.team.team]} {self.type} at {self.position}"
+        return f"{self.team.color} {self.type} at {self.position}"
     
     def __repr__(self) -> str: 
-        return f"{NUMBER_TO_COLOR[self.team.team]} {self.type} at {self.position}"
+        return f"{self.team.color} {self.type} at {self.position}"
 
     def copy(self, new_board: LayerBoard, new_players: List[Player]) -> LayerPiece: 
         PieceObject = LayerPiece.get_piece_type(self.type)

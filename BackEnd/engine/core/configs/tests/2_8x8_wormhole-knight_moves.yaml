@@ -1,0 +1,7 @@
+white: 
+  Knight: d4T
+  King:   a1T
+
+black: 
+  King: a8B
+  Knight: e5B

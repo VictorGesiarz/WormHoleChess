@@ -426,7 +426,7 @@ def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.arr
 
     moving_piece_index = nodes[origin_tile]
     captured_piece_index = nodes[destination_tile]
-
+    
     history[history_index, 0] = moving_piece_index
     history[history_index, 1] = origin_tile
     history[history_index, 2] = destination_tile
@@ -440,6 +440,8 @@ def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.arr
     nodes[destination_tile] = moving_piece_index
 
     if captured_piece_index != -1: 
+        if pieces[captured_piece_index][0] == 3: 
+            print("CAPTURED KING?", captured_piece_index, NAMES[origin_tile], NAMES[destination_tile], pieces[moving_piece_index][0], pieces[captured_piece_index][0])
         pieces[captured_piece_index, 4] = 1 # Mark as captured
 
     # Promotion logic

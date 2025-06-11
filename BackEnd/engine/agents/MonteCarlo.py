@@ -30,7 +30,7 @@ class MonteCarlo(Agent):
         seconds = kwargs.get('time', 20)
         self.calculation_time = datetime.timedelta(seconds=seconds)
         self.simulations_per_move = kwargs.get('simulations_per_move', 30000)
-        self.max_moves = kwargs.get('max_moves', 120)
+
         self.C = kwargs.get('C', 1.4) # UCB1 Parameter
 
     def choose_move(self):
@@ -39,12 +39,14 @@ class MonteCarlo(Agent):
         print("Choosing move (MCTS)")
         
         self.max_depth = 0
-        moves, hashes = self.game.get_movements(include_hashes=True)
         player = self.game.get_turn(auto_play_bots=False)
+        moves, hashes = self.game.get_movements(include_hashes=True)
         if len(moves) == 0: 
             return 
         if len(moves) == 1: 
             return moves[0]
+
+        print(self.game.board.pieces)
 
         games = 0
         begin = datetime.datetime.now(datetime.timezone.utc)
@@ -55,8 +57,10 @@ class MonteCarlo(Agent):
         self.update_tree_time = 0
         self.back_propagation_time = 0
         self.hashing_time = 0
+        self.make_move_time = 0
         while datetime.datetime.now(datetime.timezone.utc) - begin < self.calculation_time and games < self.simulations_per_move:
             start = time.time()
+            print(f"- - - - - - RUNNING SIMULATION: {games}- - - - - - -")
             self.run_simulation()
             simulation_time += time.time() - start
             games += 1
@@ -101,6 +105,8 @@ class MonteCarlo(Agent):
         print(f"Total time spent in simulations: {simulation_time:.6f}")
         print(f" - Average time per move calculation: {self.move_calc_time / games:.6f}")
         print(f" - Total time spent calculating move: {self.move_calc_time:.6f}")
+        print(f" - Average time per do move: {self.make_move_time / games:.6f}")
+        print(f" - Total time doing moves: {self.make_move_time:.6f}")
         print(f" - Average time per copy: {self.copytime / games:.6f}")
         print(f" - Time spent copying game: {self.copytime:.6f}")
         print(f" - Average time per update: {self.update_tree_time / games:.6f}")
@@ -159,7 +165,9 @@ class MonteCarlo(Agent):
                 move, state = random.choice(moves_states)
             self.update_tree_time += time.time() - update_tree_time
 
+            make_move_time = time.time()
             game_copy.make_move(move, precomputed_hash=state)
+            self.make_move_time += time.time() - make_move_time
 
             # `player` here and below refers to the player
             # who moved into that particular state.
@@ -173,8 +181,8 @@ class MonteCarlo(Agent):
             visited_states.add((player, state))
             move_count += 1
 
-            game_copy.next_turn()
             move_calc_time = time.time()
+            game_copy.next_turn()
             player = game_copy.get_turn(auto_play_bots=False)
             self.move_calc_time += time.time() - move_calc_time
         

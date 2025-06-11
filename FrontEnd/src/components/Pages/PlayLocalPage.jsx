@@ -13,7 +13,7 @@ const PlayLocalPage = () => {
     const [playerCount, setPlayerCount] = useState(4);
     const [boardSize, setBoardSize] = useState(8);
     const [gameType, setGameType] = useState('wormhole');
-    const [programMode, setProgramMode] = useState('layer');
+    const [programMode, setProgramMode] = useState('matrix');
     const [boardImage, setBoardImage] = useState('/assets/images/8x8_wormhole.png');
     const [possiblePositions, setPossiblePositions] = useState({});
     const [selectedPosition, setSelectedPosition] = useState('default');

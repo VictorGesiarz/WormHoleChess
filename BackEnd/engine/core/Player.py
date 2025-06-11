@@ -31,7 +31,7 @@ class Player:
         self.killed_pieces = [] # The pieces that the player killed
 
     def __str__(self) -> str: 
-        return f"Player {self.team} {NUMBER_TO_COLOR[self.team]} ({self.type})"
+        return f"Player {self.team} {self.color} ({self.type})"
     
     def __eq__(self, other: "Player" | int) -> bool:
         if isinstance(other, int):

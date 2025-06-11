@@ -59,7 +59,7 @@ class Piece:
         return self.position == other.position and self.team == other.team and self.type == other.type
     
     def __str__(self):
-        return f"{NUMBER_TO_COLOR[self.team.team]} {self.type} at: {self.position}"
+        return f"{self.team.color} {self.type} at: {self.position}"
 
     def copy(self, new_board: Board, new_players: List[Player]) -> Piece: 
         PieceObject = Piece.get_piece_type(self.type)

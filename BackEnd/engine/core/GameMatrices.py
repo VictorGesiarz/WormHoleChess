@@ -1,5 +1,6 @@
 import numpy as np
 import time
+import json
 from typing import List, Tuple
 
 from engine.core.matrices.MatrixBoard import LayerMatrixBoard
@@ -155,11 +156,12 @@ class GameMatrices:
         for i in range(b.pieces.shape[0]):
             if b.pieces[i, 0] == 3 and b.pieces[i, 1] == player:
                 if not b.pieces[i, 4] == 0: 
-                    print("Erorr at", player, b.pieces[i])
+                    print("Erorr at", player, b.pieces[i], b.node_names[b.pieces[i, 2]])
                     raise RuntimeError("King is dead¿?")
                 king_tile = b.pieces[i, 2]
     
-        if not king_tile: 
+        if not king_tile:
+            print(self.board.pieces)
             raise RuntimeError("King not found for player:", player)
 
         return is_in_check(
@@ -190,12 +192,14 @@ class GameMatrices:
             self.hash = self.hasher.update_hash(self.hash, self.history[self.moves_count], self.board.pieces)
 
         if store: 
-            _, _, _, captured_piece_index, _, _ = self.history[self.moves_count]
+            moving_piece, from_, to, captured_piece_index, _, _ = self.history[self.moves_count]
             self.moves_without_capture += 1
             if captured_piece_index != -1: 
                 self.moves_without_capture = 0
                 captured_piece = self.board.pieces[captured_piece_index]
                 if captured_piece[0] == 3: # If a king is a captured
+                    print(self.board.pieces[moving_piece], captured_piece)
+                    self.board.get_names([from_, to])
                     player = captured_piece[1]
                     self.kill_player(self.players[player], print_text="by capture")
             self.positions_counter[self.hash] = self.positions_counter.get(self.hash, 0) + 1
@@ -256,7 +260,7 @@ class GameMatrices:
         # If only one player is alive, the game is finished
         alive_players = [player for player in self.players if player['is_alive']]
         if len(alive_players) == 1: 
-            if self.verbose > 0: print(f"Player {alive_players[0].team} wins!")
+            if self.verbose > 0: print(f"Player {alive_players[0]['id']} wins!")
             self.game_state = GameState.PLAYER_WON
             return True
         
@@ -296,7 +300,7 @@ class GameMatrices:
             return -1 
         alive_players = [player for player in self.players if player['is_alive']]
         if len(alive_players) == 1: 
-            return alive_players[0]['team']
+            return alive_players[0]['id']
         return -1
     
     def print_last_move(self) -> None: 
@@ -307,9 +311,17 @@ class GameMatrices:
         for i, move in enumerate(moves): 
             print(f'{i+1}: {self.board.get_names(move)}')
 
+    def print_history(self) -> None:
+        for i, move in enumerate(self.history[:self.moves_count-1, 1:3]): 
+            print(f'{i}: {self.board.get_names(move)}')
+
     def export(self, file: str) -> None: 
-        ...
-    
+        moves = {}
+        for i, move in enumerate(self.history[:self.moves_count-1, 1:3]): 
+            moves[i] = self.board.get_names(move)
+        with open(file, 'w') as f: 
+            json.dump(moves, f, indent=4)
+
     def get_state(self): 
         pieces = []
         piece_types = {

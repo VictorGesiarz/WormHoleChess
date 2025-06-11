@@ -10,7 +10,7 @@ PARAMETERS['cast_from_king'] = True
 def simulate_game(id=0): 
     game_creation_time = time.time()
     num_players = 2
-    num_montecarlo = 0
+    num_montecarlo = 1
     game = ChessFactory.create_game(
         player_data=ChessFactory.create_player_data(num_players=num_players, types=["mcts"] * num_montecarlo + ["random"] * (num_players-num_montecarlo)), 
         program_mode="matrix",
@@ -37,7 +37,7 @@ def simulate_game(id=0):
             # game.make_move(moves[0])
         # else:
             # It makes automatically the move when doing get_turn
-        game.print_last_move()
+        # game.print_last_move()
         # print(game.turn)
         game.next_turn()
         move_count += 1

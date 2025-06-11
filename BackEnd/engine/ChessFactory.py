@@ -86,9 +86,9 @@ class ChessFactory:
         players = []
         for data in player_data:
             if data[2] == 'human': 
-                player = Player(data[0], color=data[3])
+                player = Player(data[1], color=data[3])
             else: 
-                player = Bot(data[0], difficulty=data[2], color=data[3])
+                player = Bot(data[1], difficulty=data[2], color=data[3])
             players.append(player)
         return players
     
