@@ -1,0 +1,7 @@
+white: 
+  Tower: b1T
+  King: a1T
+
+black: 
+  King: a6B
+  Tower: d41T

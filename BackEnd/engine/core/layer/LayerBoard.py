@@ -150,24 +150,46 @@ class LayerBoard(NormalBoard):
         return [self.tiles[tile] for tile in movement]
 
     def _separate_pentagon_movements(self, movement: List[Tile]) -> List[List[Tile]]:
+        
+        splits_len = {
+            (6, 6): {
+                'tower_pentagon_loop': [2, 2, 3], 
+                'bishop_pentagon': [8, 5, 9],
+                'tower_pentagon': [9, 5, 10]
+            }, 
+            (8, 8): {
+                'tower_pentagon_loop': [4, 3, 5], 
+                'bishop_pentagon': [10, 6, 11], 
+                'tower_pentagon': [12, 6]
+            }
+        }
+
+        board_splits = splits_len[self.size]
+
         for i, tile in enumerate(movement): 
             if tile.pentagon:
+
                 branches = []
 
                 # No split of paths 
-                if len(movement[i+1:]) < 4: break 
+                if len(movement[i+1:]) < board_splits['tower_pentagon_loop'][0]: break 
 
                 # When tower splits at pentagon (coming from the loop) there are 2 paths, each of 2 tiles
-                elif len(movement[i+1:]) == 4: 
-                    branches = [movement[i+1:i+3], movement[i+3: i+5]]
+                elif len(movement[i+1:]) == board_splits['tower_pentagon_loop'][0]: 
+                    first_split = board_splits['tower_pentagon_loop'][1]
+                    second_split = board_splits['tower_pentagon_loop'][2]
+                    branches = [movement[i+1 : i+first_split], movement[i+first_split : i+second_split]]
                 
                 # When bishop splits at pentagon there are 2 paths, each of 5 tiles
-                elif len(movement[i+1:]) == 10: 
-                    branches = [movement[i+1:i+6], movement[i+6:i+11]]
+                elif len(movement[i+1:]) == board_splits['bishop_pentagon'][0]: 
+                    first_split = board_splits['bishop_pentagon'][1]
+                    second_split = board_splits['bishop_pentagon'][2]
+                    branches = [movement[i+1 : i+first_split], movement[i+first_split : i+second_split]]
                 
                 # When tower splits at pentagon there are 2 paths, one of 5 and the other of 7, which also splits at the next pentagon into 2 and 2 (first case) 
-                elif len(movement[i+1:]) == 12: 
-                    branches = [movement[i+1:i+6]] + self._separate_pentagon_movements(movement[i+6:])
+                elif len(movement[i+1:]) == board_splits['tower_pentagon'][0]: 
+                    first_split = board_splits['bishop_pentagon'][1]
+                    branches = [movement[i+1:i+first_split]] + self._separate_pentagon_movements(movement[i+first_split:])
 
                 if branches:
                     paths = [movement[:i+1] + branch for branch in branches]

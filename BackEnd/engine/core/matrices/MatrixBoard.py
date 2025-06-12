@@ -39,7 +39,6 @@ class LayerMatrixBoard:
         self.pieces_per_player = kwargs.get('pieces_per_player', 16)
         self.num_pieces = self.num_players * self.pieces_per_player  # e.g., 4 players × 16 pieces = 64
         self.pieces: np.array = np.full((self.num_pieces, 6), -1, dtype=np.int16)  # [[piece_type, player, position, has_moved?, captured?, custom_flags (bitmasking)], ...]
-
         self.promotion_zones = np.empty((self.num_players, self.size[1] * (self.num_players-1)), dtype=np.uint8)
 
         if innitialize: 

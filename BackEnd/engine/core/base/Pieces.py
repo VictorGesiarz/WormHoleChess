@@ -188,6 +188,7 @@ class Knight(Piece):
     # Hard coded attack of the knight when its in the loop (the previous method what a little bit wrong 
     # due to how i handled the connections between tiles) 
     ATTACKS_IN_LOOP = {
+        "config": (8, 8), 
         "d4_T": ["e2_T", "c2_T", "b3_T", "f3_T", "c4_T", "e3_B", "c3_B", "d4_2_B", "e4_1_B"],
         "d4_1_T": ["b2_T", "d2_T", "e3_T", "b4_T", "c5_T", "e4_B", "d3_B", "d5_2_B", "c4_B"],
         "d4_2_T": ["c2_T", "b3_T", "d3_T", "b5_T", "c6_T", "c3_B", "c5_B", "d4_B", "d5_1_B"],
@@ -201,7 +202,7 @@ class Knight(Piece):
         "e5_1_T": ["d6_T", "e7_T", "g7_T", "g5_T", "f4_T", "e4_2_B", "f5_B", "e6_B", "d5_B"],
         "e5_T": ["c6_T", "d7_T", "f7_T", "g6_T", "f5_T", "e5_2_B", "f6_B", "d6_B", "d5_1_B"], 
         
-        "d4_B": ["e2_B", "c2_B", "b3_B", "f3_B", "c4_B", "e3_T", "c3_T", "d4_2_T", "e5_1_T"],
+        "d4_B": ["e2_B", "c2_B", "b3_B", "f3_B", "c4_B", "e3_T", "c3_T", "d4_2_T", "e4_1_T"],
         "d4_1_B": ["b2_B", "d2_B", "e3_B", "b4_B", "c5_B", "e4_T", "d3_T", "d5_2_T", "c4_T"],
         "d4_2_B": ["c2_B", "b3_B", "d3_B", "b5_B", "c6_B", "c3_T", "c5_T", "d4_T", "d5_1_T"],
         "d5_2_B": ["b4_B", "b6_B", "c3_B", "c7_B", "d6_B", "d4_1_T", "d5_T", "c4_T", "c6_T"],
@@ -220,7 +221,7 @@ class Knight(Piece):
         super().__init__(position, team, add_to_player)
         self.type_id = 1
         
-    def get_movements(self, verbose=0) -> list[Tile]:
+    def get_movements(self) -> list[Tile]:
         if self.position.loop:
             positions = []
             position_names = Knight.ATTACKS_IN_LOOP[self.position.name]
@@ -260,8 +261,9 @@ class Knight(Piece):
                 next_next_tile = next_tile.neighbors[d2]
                 tiles = self.trace_direction(next_tile, next_next_tile, limit=2, collisions=False)
                 if len(tiles) > 1: 
-                    if tiles[1] is not None: 
-                        positions.add(tiles[1]) 
+                    for tile in tiles[1:]: 
+                        if tile is not None: 
+                            positions.add(tile) 
 
         # Remove positions that are occupied by pieces of the same team
         filtered_positions = {pos for pos in positions if pos.piece is None or self.team != pos.piece.team}

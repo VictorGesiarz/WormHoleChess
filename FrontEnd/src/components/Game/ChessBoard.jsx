@@ -330,7 +330,7 @@ const ChessBoard = ({
                 winner: data.winner,
             };
 
-            console.log("GAME STATE:", data.game_finished); 
+            console.log("GAME STATE:", data.game_finished);
             console.log("WINNER:", data.winner);
 
             setHistory(prevHistory => [...prevHistory, historyEntry]);
@@ -340,10 +340,53 @@ const ChessBoard = ({
             selectedPiece.current = null;
             setHighlightedTiles([]);
 
+            await handleBotMoves()
+
         } catch (error) {
             console.error("Move error:", error);
         }
     };
+
+    // USE EFFECT TO HANDLE BOT MOVEMENTS 
+    useEffect(() => {
+        const autoPlayBot = async () => {
+            if (true) return; 
+            const currentPlayer = players[turn];
+            if (currentPlayer?.isBot) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/game-local/make-move-bot`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId }),
+                    });
+
+                    if (!response.ok) throw new Error("Bot move failed");
+                    const data = await response.json();
+
+                    // Update game state
+                    setStates(prev => ({ ...prev, ...data.state }));
+                    setTurn(data.turn);
+
+                    const historyEntry = {
+                        move: `BOT ${currentPlayer.name || turn}`,
+                        turn: data.turn,
+                        killedPlayer: data.killed_player,
+                        winner: data.winner,
+                    };
+
+                    setHistory(prev => [...prev, historyEntry]);
+
+                    // Optionally update gameFinished state if you track it
+                    // setGameFinished(data.game_finished);
+                } catch (error) {
+                    console.error("Bot move error:", error);
+                }
+            }
+        };
+
+        autoPlayBot();
+    }, [turn]); // 🔁 runs every time 'turn' changes
+
 
 
     // - - - - - - - - - - - - PAGE CONTENT - - - - - - - - - - - - - 

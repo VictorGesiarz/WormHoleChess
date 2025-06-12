@@ -161,7 +161,7 @@ const PlayLocalPage = () => {
                             <div className="player-toggle">
                                 <button
                                     className={`toggle-option ${playerCount === 2 ? 'active' : ''}`}
-                                    onClick={() => {setPlayerCount(2)}}
+                                    onClick={() => { setPlayerCount(2) }}
                                 >
                                     2 Players
                                 </button>
@@ -216,8 +216,8 @@ const PlayLocalPage = () => {
                                     className={`toggle-option ${gameType === 'normal' ? 'active' : ''}`}
                                     onClick={() => {
                                         setGameType('normal');
-                                        setPlayerCount(2); 
-                                        setBoardSize(8); 
+                                        setPlayerCount(2);
+                                        setBoardSize(8);
                                         handleSelectedSize(8, 'normal');
                                     }}
                                 >
@@ -227,7 +227,7 @@ const PlayLocalPage = () => {
                                     className={`toggle-option ${gameType === 'wormhole' ? 'active' : ''}`}
                                     onClick={() => {
                                         setGameType('wormhole');
-                                        setBoardSize(8); 
+                                        setBoardSize(8);
                                         handleSelectedSize(8, 'wormhole');
                                     }}
                                 >
@@ -290,9 +290,13 @@ const PlayLocalPage = () => {
                                             }
                                         >
                                             <option value="human">human</option>
-                                            <option value="random">random</option>
-                                            <option value="mcts">mcts</option>
-                                            <option value="alphazero">alphazero</option>
+                                            {programMode === 'matrix' && (
+                                                <>
+                                                    <option value="random">random</option>
+                                                    <option value="mcts">mcts</option>
+                                                    <option value="alphazero">alphazero</option>
+                                                </>
+                                            )}
                                         </select>
                                     </td>
 

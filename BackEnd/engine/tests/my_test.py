@@ -15,7 +15,7 @@ def simulate_game(id=0):
         player_data=ChessFactory.create_player_data(num_players=num_players, types=["mcts"] * num_montecarlo + ["random"] * (num_players-num_montecarlo)), 
         program_mode="matrix",
         game_mode="wormhole",
-        size=(8, 8),
+        size=(6, 6),
         # initial_positions='./engine/core/configs/normal/queen_mate.yaml'
     )
     game_creation_time = time.time() - game_creation_time
@@ -37,7 +37,7 @@ def simulate_game(id=0):
             # game.make_move(moves[0])
         # else:
             # It makes automatically the move when doing get_turn
-        # game.print_last_move()
+        game.print_last_move()
         # print(game.turn)
         game.next_turn()
         move_count += 1

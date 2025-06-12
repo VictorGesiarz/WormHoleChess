@@ -113,6 +113,7 @@ class LayerTower(LayerPiece):
     def get_movements(self) -> List[LayerTile]:
         possible_moves = []
         seen = set()
+
         for path in self.position.tower_layer.directions:
             for move in path:
                 if move in seen:
@@ -124,6 +125,7 @@ class LayerTower(LayerPiece):
                 else:
                     seen.add(move)
                 possible_moves.append(move)
+
         return possible_moves
 
 

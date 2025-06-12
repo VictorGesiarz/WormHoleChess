@@ -56,6 +56,7 @@ class ChessFactory:
             file_name = f'{POSITIONS_PATH}{num_players}_{size[0]}x{size[1]}_{game_mode}.yaml'
         else: 
             files = os.listdir(POSITIONS_PATH + 'tests/')
+            file_name = f'{num_players}_{size[0]}x{size[1]}_{game_mode}-' + file_name
             for f in files: 
                 if file_name in f: 
                     file_name = POSITIONS_PATH + 'tests/' + f

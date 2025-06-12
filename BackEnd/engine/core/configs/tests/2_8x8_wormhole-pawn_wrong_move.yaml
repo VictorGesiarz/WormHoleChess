@@ -1,0 +1,8 @@
+white: 
+  Queen: c1T
+  Pawn: d51B
+  King: e51B
+
+black: 
+  King: e8T
+  Pawn: f7B c7B

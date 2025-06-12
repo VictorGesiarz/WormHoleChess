@@ -100,7 +100,7 @@ class Board(NormalBoard):
             D.DOWN: (-1, 0),
             D.DOWN_RIGHT: (-1, -1),
         }
-        
+
         max_row, max_col = self.size
         for name, tile in self.tiles.items():
             col = self.cols_dict[name[0]]
@@ -222,6 +222,7 @@ class Board(NormalBoard):
         if not match:
             return name  # Not a tile name
 
+        # print("old", name)
         col, row, suffix = match.groups()
         new_col = chr(ord(col) + col_offset)
         new_row = str(int(row) + row_offset)
@@ -244,9 +245,10 @@ class Board(NormalBoard):
         return new_relations
     
     def remap_knight_data(self) -> None: 
-        if self.size == (6, 6):
-            new_attacks = {}
+        if self.size == (6, 6) and Knight.ATTACKS_IN_LOOP['config'] != self.size:
+            new_attacks = {'config': (6, 6)}
             for tile_name, moves in Knight.ATTACKS_IN_LOOP.items():
+                if tile_name == 'config': continue
                 new_tile = self.shift_tile_name(tile_name, -1, -1)
                 new_moves = [self.shift_tile_name(move, -1, -1) for move in moves]
                 new_attacks[new_tile] = new_moves

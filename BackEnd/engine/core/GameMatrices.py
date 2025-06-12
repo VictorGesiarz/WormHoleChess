@@ -31,6 +31,7 @@ class GameMatrices:
     
         self.players = players
         self.number_of_players = len([p for p in players if p['color'] != 'none'])
+        self.rewards = [0] * self.number_of_players
         self.turn = turn 
         self.program_mode = program_mode
         self.verbose = verbose
@@ -47,7 +48,7 @@ class GameMatrices:
 
         self._cached_turn = None
         self._recalculate = True
-        self._cached_movements = np.empty((MAX_POSSIBLE_MOVES, 2), dtype=np.uint8)
+        self._cached_movements = np.empty((MAX_POSSIBLE_MOVES, 2), dtype=np.uint8) # With margin (to optimize move calculation, instead of creating a new array each time)
         self._cached_hashes = np.empty(MAX_POSSIBLE_MOVES, dtype=np.uint64)
         self._cached_count = np.zeros(1, dtype=np.uint8)
 
@@ -159,9 +160,9 @@ class GameMatrices:
                     print("Erorr at", player, b.pieces[i], b.node_names[b.pieces[i, 2]])
                     raise RuntimeError("King is dead¿?")
                 king_tile = b.pieces[i, 2]
-    
-        if not king_tile:
-            print(self.board.pieces)
+                break
+
+        if king_tile is None:
             raise RuntimeError("King not found for player:", player)
 
         return is_in_check(
@@ -183,7 +184,8 @@ class GameMatrices:
             self.board.pieces, 
             self.history, 
             self.moves_count, 
-            self.board.promotion_zones
+            self.board.promotion_zones,
+            store
         )
 
         if precomputed_hash: 
@@ -198,10 +200,9 @@ class GameMatrices:
                 self.moves_without_capture = 0
                 captured_piece = self.board.pieces[captured_piece_index]
                 if captured_piece[0] == 3: # If a king is a captured
-                    print(self.board.pieces[moving_piece], captured_piece)
-                    self.board.get_names([from_, to])
                     player = captured_piece[1]
                     self.kill_player(self.players[player], print_text="by capture")
+                    raise RuntimeError("KING CAPTURED", self.board.node_names[from_], self.board.node_names[to])
             self.positions_counter[self.hash] = self.positions_counter.get(self.hash, 0) + 1
             self.moves_count += 1
 
@@ -245,12 +246,15 @@ class GameMatrices:
             print(f"{player['color']} loses {print_text}")
         player['is_alive'] = False
         self.killed_player = player['color']
+        self.rewards[player['id']] = -1 
 
     def revive_player(self, player: int) -> None: 
         player['is_alive'] = True
     
     def is_finished(self) -> bool: 
         if self.game_state in [GameState.PLAYER_WON, GameState.DRAW]:
+            # Don't need to update player states cause already 0 
+            # Only when a player dies or wins. 
             return True
         
         if self.moves_count >= self.max_turns:
@@ -262,6 +266,7 @@ class GameMatrices:
         if len(alive_players) == 1: 
             if self.verbose > 0: print(f"Player {alive_players[0]['id']} wins!")
             self.game_state = GameState.PLAYER_WON
+            self.rewards[alive_players[0]['id']] = 1
             return True
         
         if self.is_dead_position() or self.is_draw_by_repetition() or self.is_draw_by_50_moves(): 
@@ -302,7 +307,7 @@ class GameMatrices:
         if len(alive_players) == 1: 
             return alive_players[0]['id']
         return -1
-    
+
     def print_last_move(self) -> None: 
         print("Move made:", self.board.get_names(self.history[self.moves_count-1][1:3]))
 
@@ -322,7 +327,7 @@ class GameMatrices:
         with open(file, 'w') as f: 
             json.dump(moves, f, indent=4)
 
-    def get_state(self): 
+    def get_state(self, yaml: bool = False): 
         pieces = []
         piece_types = {
             0: "Tower", 
@@ -332,20 +337,33 @@ class GameMatrices:
             4: "Pawn",
             5: "Queen"
         }
+        current_player = -1
+        current_piece = 0
+        yaml_txt = ''
         for piece in self.board.pieces: 
-            if piece[4]: 
+            if piece[0] == -1 or piece[4]: 
                 continue
-                
+            
+            if piece[1] != current_player: 
+                current_player = piece[1]
+                yaml_txt += f'\n{self.players[piece[1] % self.number_of_players]['color']}:'
+            if piece[0] != current_piece: 
+                current_piece = piece[0]
+                yaml_txt += f'\n{piece_types[piece[0]]}: '
+
             type_ = piece_types[piece[0]].lower()
 
             player = self.players[piece[1] % self.number_of_players]
             if player['is_alive']:
+                yaml_txt += f'{self.board.get_names([piece[2]])[0].replace('_', '')} '
                 player_color = player['color']
             else: 
                 player_color = "dead"
 
             tile = self.board.get_names([piece[2]])[0]
             pieces.append([type_, player_color, tile])
+        
+        print(yaml_txt)
         return pieces
     
     def valid_move(self, from_tile: str, to_tile: str) -> bool:   

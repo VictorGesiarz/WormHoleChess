@@ -5,6 +5,7 @@ import datetime
 import random 
 import time
 from math import log, sqrt
+from pympler import asizeof
 
 from engine.agents.Agent import Agent
 
@@ -30,13 +31,12 @@ class MonteCarlo(Agent):
         seconds = kwargs.get('time', 20)
         self.calculation_time = datetime.timedelta(seconds=seconds)
         self.simulations_per_move = kwargs.get('simulations_per_move', 30000)
-
         self.C = kwargs.get('C', 1.4) # UCB1 Parameter
 
     def choose_move(self):
         # Causes the AI to calculate the best move from the
         # current game state and return it.
-        print("Choosing move (MCTS)")
+        print("\n \n - - - - - - - - - - - Choosing move (MCTS) - - - - - - - - - - - - - - ")
         
         self.max_depth = 0
         player = self.game.get_turn(auto_play_bots=False)
@@ -45,8 +45,6 @@ class MonteCarlo(Agent):
             return 
         if len(moves) == 1: 
             return moves[0]
-
-        print(self.game.board.pieces)
 
         games = 0
         begin = datetime.datetime.now(datetime.timezone.utc)
@@ -58,23 +56,18 @@ class MonteCarlo(Agent):
         self.back_propagation_time = 0
         self.hashing_time = 0
         self.make_move_time = 0
+        self.invalid_player_time = 0
+        self.move_and_hash_extraction_time = 0
+        self.expansion_time = 0
         while datetime.datetime.now(datetime.timezone.utc) - begin < self.calculation_time and games < self.simulations_per_move:
             start = time.time()
-            print(f"- - - - - - RUNNING SIMULATION: {games}- - - - - - -")
             self.run_simulation()
             simulation_time += time.time() - start
             games += 1
 
         moves_states = list(zip(moves, hashes))
-        # Get the hash of the resulting state if we make each move. 
-        # moves_states = []
-        # for move in moves: 
-        #     self.game.make_move(move, store=False)
-        #     moves_states.append((move, self.game.hash))
-        #     self.game.undo_move(remove=False)
 
-        # Display the number of calls of `run_simulation` and the
-        # time elapsed.
+        # Display the number of calls of `run_simulation` and the time elapsed.
         print(games, datetime.datetime.now(datetime.timezone.utc) - begin)
         
         # Pick the move with the highest percentage of wins.
@@ -101,16 +94,23 @@ class MonteCarlo(Agent):
 
         print("Chosen move:", move)
         
+        print(f"Tree size: {asizeof.asizeof(self.plays)} (plays) + {asizeof.asizeof(self.wins)} (wins)")
         print(f"Average time per simulation: {simulation_time / games:.6f}")
         print(f"Total time spent in simulations: {simulation_time:.6f}")
         print(f" - Average time per move calculation: {self.move_calc_time / games:.6f}")
         print(f" - Total time spent calculating move: {self.move_calc_time:.6f}")
+        print(f" - Average time per skiping player: {self.invalid_player_time / games:.6f}")
+        print(f" - Total time spent skiping players: {self.invalid_player_time:.6f}")
+        print(f" - Average time per hash extraction: {self.move_and_hash_extraction_time / games:.6f}")
+        print(f" - Total time hash extraction: {self.move_and_hash_extraction_time:.6f}")
         print(f" - Average time per do move: {self.make_move_time / games:.6f}")
         print(f" - Total time doing moves: {self.make_move_time:.6f}")
         print(f" - Average time per copy: {self.copytime / games:.6f}")
         print(f" - Time spent copying game: {self.copytime:.6f}")
         print(f" - Average time per update: {self.update_tree_time / games:.6f}")
         print(f" - Total time spent updating tree: {self.update_tree_time:.6f}")
+        print(f" - Average time per expansion: {self.expansion_time / games:.6f}")
+        print(f" - Total time expanding tree: {self.expansion_time:.6f}")
         print(f" - Average time per hashing: {self.hashing_time / games:.6f}")
         print(f" - Total time spent hashing: {self.hashing_time:.6f}")
         print(f" - Average time per backpropagation: {self.back_propagation_time / games:.6f}")
@@ -132,20 +132,16 @@ class MonteCarlo(Agent):
         expand = True
         while not game_copy.is_finished():
             if player == -1: 
+                invalid_player_time = time.time()
                 game_copy.next_turn()
                 player = game_copy.get_turn(auto_play_bots=False)
+                self.invalid_player_time += time.time() - invalid_player_time
                 continue
 
+            move_and_hash_extraction_time = time.time()
             moves, hashes = game_copy.get_movements(include_hashes=True)
             moves_states = list(zip(moves, hashes))
-
-            # moves_states = []
-            # hashing_time = time.time()
-            # for move in moves: 
-            #     game_copy.make_move(move, store=False)
-            #     moves_states.append((move, game_copy.hash))
-            #     game_copy.undo_move(remove=False)
-            # self.hashing_time += time.time() - hashing_time
+            self.move_and_hash_extraction_time += time.time() - move_and_hash_extraction_time 
 
             update_tree_time = time.time()
             if all(plays.get((player, S), 0) > 0 for _, S in moves_states):
@@ -171,6 +167,7 @@ class MonteCarlo(Agent):
 
             # `player` here and below refers to the player
             # who moved into that particular state.
+            expansion_time = time.time()
             if expand and (player, state) not in plays:
                 expand = False
                 plays[(player, state)] = 0
@@ -180,13 +177,15 @@ class MonteCarlo(Agent):
 
             visited_states.add((player, state))
             move_count += 1
+            self.expansion_time += time.time() - expansion_time
 
             move_calc_time = time.time()
             game_copy.next_turn()
             player = game_copy.get_turn(auto_play_bots=False)
             self.move_calc_time += time.time() - move_calc_time
         
-        winner = game_copy.winner()
+        rewards = game_copy.rewards
+        # print(rewards)
 
         # BackPropagation 
         back_propagation_time = time.time()
@@ -194,6 +193,8 @@ class MonteCarlo(Agent):
             if (player, state) not in plays:
                 continue
             plays[(player, state)] += 1
-            if player == winner:
-                wins[(player, state)] += 1
+
+            reward = rewards[player]
+            wins[(player, state)] += reward
+
         self.back_propagation_time += time.time() - back_propagation_time

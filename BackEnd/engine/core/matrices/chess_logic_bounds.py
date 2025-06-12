@@ -5,7 +5,11 @@ import numpy as np
 from engine.core.matrices.matrix_constants import *
 
 
-NAMES = np.array(['a1_T', 'a2_T', 'a3_T', 'a4_T', 'a5_T', 'a6_T', 'a7_T', 'a8_T', 'b1_T', 'b2_T', 'b3_T', 'b4_T', 'b5_T', 'b6_T', 'b7_T', 'b8_T', 'c1_T', 'c2_T', 'c3_T', 'c4_T', 'c5_T', 'c6_T', 'c7_T', 'c8_T', 'd1_T', 'd2_T', 'd3_T', 'd4_T', 'd4_1_T', 'd4_2_T', 'd5_T', 'd5_1_T', 'd5_2_T', 'd6_T', 'd7_T', 'd8_T', 'e1_T', 'e2_T', 'e3_T', 'e4_T', 'e4_1_T', 'e4_2_T', 'e5_T', 'e5_1_T', 'e5_2_T', 'e6_T', 'e7_T', 'e8_T', 'f1_T', 'f2_T', 'f3_T', 'f4_T', 'f5_T', 'f6_T', 'f7_T', 'f8_T', 'g1_T', 'g2_T', 'g3_T', 'g4_T', 'g5_T', 'g6_T', 'g7_T', 'g8_T', 'h1_T', 'h2_T', 'h3_T', 'h4_T', 'h5_T', 'h6_T', 'h7_T', 'h8_T', 'a1_B', 'a2_B', 'a3_B', 'a4_B', 'a5_B', 'a6_B', 'a7_B', 'a8_B', 'b1_B', 'b2_B', 'b3_B', 'b4_B', 'b5_B', 'b6_B', 'b7_B', 'b8_B', 'c1_B', 'c2_B', 'c3_B', 'c4_B', 'c5_B', 'c6_B', 'c7_B', 'c8_B', 'd1_B', 'd2_B', 'd3_B', 'd4_B', 'd4_1_B', 'd4_2_B', 'd5_B', 'd5_1_B', 'd5_2_B', 'd6_B', 'd7_B', 'd8_B', 'e1_B', 'e2_B', 'e3_B', 'e4_B', 'e4_1_B', 'e4_2_B', 'e5_B', 'e5_1_B', 'e5_2_B', 'e6_B', 'e7_B', 'e8_B', 'f1_B', 'f2_B', 'f3_B', 'f4_B', 'f5_B', 'f6_B', 'f7_B', 'f8_B', 'g1_B', 'g2_B', 'g3_B', 'g4_B', 'g5_B', 'g6_B', 'g7_B', 'g8_B', 'h1_B', 'h2_B', 'h3_B', 'h4_B', 'h5_B', 'h6_B', 'h7_B', 'h8_B'], dtype=str)
+# When board is 8x8 Wormhole
+# NAMES = np.array(['a1_T', 'a2_T', 'a3_T', 'a4_T', 'a5_T', 'a6_T', 'a7_T', 'a8_T', 'b1_T', 'b2_T', 'b3_T', 'b4_T', 'b5_T', 'b6_T', 'b7_T', 'b8_T', 'c1_T', 'c2_T', 'c3_T', 'c4_T', 'c5_T', 'c6_T', 'c7_T', 'c8_T', 'd1_T', 'd2_T', 'd3_T', 'd4_T', 'd4_1_T', 'd4_2_T', 'd5_T', 'd5_1_T', 'd5_2_T', 'd6_T', 'd7_T', 'd8_T', 'e1_T', 'e2_T', 'e3_T', 'e4_T', 'e4_1_T', 'e4_2_T', 'e5_T', 'e5_1_T', 'e5_2_T', 'e6_T', 'e7_T', 'e8_T', 'f1_T', 'f2_T', 'f3_T', 'f4_T', 'f5_T', 'f6_T', 'f7_T', 'f8_T', 'g1_T', 'g2_T', 'g3_T', 'g4_T', 'g5_T', 'g6_T', 'g7_T', 'g8_T', 'h1_T', 'h2_T', 'h3_T', 'h4_T', 'h5_T', 'h6_T', 'h7_T', 'h8_T', 'a1_B', 'a2_B', 'a3_B', 'a4_B', 'a5_B', 'a6_B', 'a7_B', 'a8_B', 'b1_B', 'b2_B', 'b3_B', 'b4_B', 'b5_B', 'b6_B', 'b7_B', 'b8_B', 'c1_B', 'c2_B', 'c3_B', 'c4_B', 'c5_B', 'c6_B', 'c7_B', 'c8_B', 'd1_B', 'd2_B', 'd3_B', 'd4_B', 'd4_1_B', 'd4_2_B', 'd5_B', 'd5_1_B', 'd5_2_B', 'd6_B', 'd7_B', 'd8_B', 'e1_B', 'e2_B', 'e3_B', 'e4_B', 'e4_1_B', 'e4_2_B', 'e5_B', 'e5_1_B', 'e5_2_B', 'e6_B', 'e7_B', 'e8_B', 'f1_B', 'f2_B', 'f3_B', 'f4_B', 'f5_B', 'f6_B', 'f7_B', 'f8_B', 'g1_B', 'g2_B', 'g3_B', 'g4_B', 'g5_B', 'g6_B', 'g7_B', 'g8_B', 'h1_B', 'h2_B', 'h3_B', 'h4_B', 'h5_B', 'h6_B', 'h7_B', 'h8_B'], dtype=str)z
+
+# When board is 6x6 Wormhole
+NAMES = np.array(['a1_T', 'a2_T', 'a3_T', 'a4_T', 'a5_T', 'a6_T', 'b1_T', 'b2_T', 'b3_T', 'b4_T', 'b5_T', 'b6_T', 'c1_T', 'c2_T', 'c3_T', 'c3_1_T', 'c3_2_T', 'c4_T', 'c4_1_T', 'c4_2_T', 'c5_T', 'c6_T', 'd1_T', 'd2_T', 'd3_T', 'd3_1_T', 'd3_2_T', 'd4_T', 'd4_1_T', 'd4_2_T', 'd5_T', 'd6_T', 'e1_T', 'e2_T', 'e3_T', 'e4_T', 'e5_T', 'e6_T', 'f1_T', 'f2_T', 'f3_T', 'f4_T', 'f5_T', 'f6_T', 'a1_B', 'a2_B', 'a3_B', 'a4_B', 'a5_B', 'a6_B', 'b1_B', 'b2_B', 'b3_B', 'b4_B', 'b5_B', 'b6_B', 'c1_B', 'c2_B', 'c3_B', 'c3_1_B', 'c3_2_B', 'c4_B', 'c4_1_B', 'c4_2_B', 'c5_B', 'c6_B', 'd1_B', 'd2_B', 'd3_B', 'd3_1_B', 'd3_2_B', 'd4_B', 'd4_1_B', 'd4_2_B', 'd5_B', 'd6_B', 'e1_B', 'e2_B', 'e3_B', 'e4_B', 'e5_B', 'e6_B', 'f1_B', 'f2_B', 'f3_B', 'f4_B', 'f5_B', 'f6_B'])
 
 
 @njit(cache=True)
@@ -30,18 +34,18 @@ def basic_filter_simple(player: np.uint8, tile: np.int16, move_start: np.int16, 
             to_piece = pieces[is_piece]
             to_piece_team = to_piece[1]
             
-            if obstacles:
-                if to_piece_team != player and can_eat: 
-                    out_moves[count, 0] = tile
-                    out_moves[count, 1] = t
-                    count += 1
-                break
+            if to_piece_team != player and can_eat: 
+                out_moves[count, 0] = tile
+                out_moves[count, 1] = t
+                count += 1
+                if obstacles:
+                    break
             elif to_piece_team == player: 
                 continue
-
-        out_moves[count, 0] = tile
-        out_moves[count, 1] = t
-        count += 1
+        else: 
+            out_moves[count, 0] = tile
+            out_moves[count, 1] = t
+            count += 1
 
     return count
 
@@ -293,7 +297,7 @@ def filter_legal_moves(player: np.uint8, nodes: np.array, pieces: np.array, adja
 
     for i in range(out_count[0]): 
         move = out_moves[i]
-        make_move(move, nodes, pieces, history, history_index, promotion_zones)
+        make_move(move, nodes, pieces, history, history_index, promotion_zones, False)
         hashes[i] = update_hash(current_hash, history[history_index], pieces, hasher) 
         king_tile = player_king[2]
         if not is_in_check(player, king_tile, nodes, pieces, adjacency_list, patterns_offsets, 
@@ -420,7 +424,7 @@ def update_hash(old_hash: int, movement: np.array, pieces: np.array, hasher: np.
 
 
 @njit(cache=True)
-def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.array, history_index: int, promotions: np.array) -> None: 
+def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.array, history_index: int, promotions: np.array, store: bool) -> None: 
     origin_tile = move[0]
     destination_tile = move[1]
 
@@ -440,7 +444,7 @@ def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.arr
     nodes[destination_tile] = moving_piece_index
 
     if captured_piece_index != -1: 
-        if pieces[captured_piece_index][0] == 3: 
+        if pieces[captured_piece_index][0] == 3 and store: 
             print("CAPTURED KING?", captured_piece_index, NAMES[origin_tile], NAMES[destination_tile], pieces[moving_piece_index][0], pieces[captured_piece_index][0])
         pieces[captured_piece_index, 4] = 1 # Mark as captured
 

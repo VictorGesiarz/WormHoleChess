@@ -4,9 +4,10 @@ from typing import TYPE_CHECKING
 import datetime
 import random 
 import time
+import atexit
 from math import log, sqrt
+from multiprocessing import Manager
 from concurrent.futures import ProcessPoolExecutor, as_completed
-import multiprocessing
 
 from engine.agents.Agent import Agent
 
@@ -26,14 +27,17 @@ class MonteCarlo(Agent):
             C: UCB1 hyperparameter to encourage more or less exploration. Defaults to 1.4
         """
         self.game = game
-        self.wins = {}
-        self.plays = {}
+        self.manager = Manager()
+        self.wins = self.manager.dict()
+        self.plays = self.manager.dict()
 
         seconds = kwargs.get('time', 1)
         self.calculation_time = datetime.timedelta(seconds=seconds)
-        self.simulations_per_move = kwargs.get('simulations_per_move', 100)
-        self.max_moves = kwargs.get('max_moves', 120)
+        self.simulations_per_move = kwargs.get('simulations_per_move', 30000)
         self.C = kwargs.get('C', 1.4) # UCB1 Parameter
+
+    def cleanup(self): 
+        print("\n \n SHUTING DOWN MANAGER \n \n")
 
     def choose_move(self):
         # Causes the AI to calculate the best move from the
@@ -49,30 +53,16 @@ class MonteCarlo(Agent):
         games = 0
         begin = datetime.datetime.now(datetime.timezone.utc)
     
-        simulation_time = 0
-        self.move_calc_time = 0
-        self.copytime = 0
-        self.update_tree_time = 0
-        self.back_propagation_time = 0
-        self.hashing_time = 0
-
-        args = [(self.game.copy(), self.C, self.max_depth, self.max_moves)
-                for _ in range(self.simulations_per_move)]
-
-        print(multiprocessing.cpu_count())
-        with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-            futures = [executor.submit(run_simulation_worker, arg) for arg in args]
+        with ProcessPoolExecutor() as executor:
+            futures = []
+            for _ in range(self.simulations_per_move):
+                game_copy = self.game.copy()  # you must copy it because Game is not shared
+                args = (game_copy, self.wins, self.plays, self.C, self.max_depth, self.max_moves)
+                futures.append(executor.submit(run_simulation_worker, *args))
 
             for future in as_completed(futures):
-                if datetime.datetime.now(datetime.timezone.utc) - begin > self.calculation_time:
-                    break  # Exit early if we've spent too much time
-                sim_plays, sim_wins, depth = future.result()
+                depth = future.result()
                 self.max_depth = max(self.max_depth, depth)
-                for key, value in sim_plays.items():
-                    self.plays[key] = self.plays.get(key, 0) + value
-                for key, value in sim_wins.items():
-                    self.wins[key] = self.wins.get(key, 0) + value
-                games += 1
 
 
         # Get the hash of the resulting state if we make each move. 
