@@ -4,7 +4,7 @@ import argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8000, help="Port to run the server on")
-    parser.add_argument("--reload", type=bool, default=False, help="Watch file changes")
+    parser.add_argument("--reload", action="store_true", help="Watch file changes")
     args = parser.parse_args()
 
     uvicorn.run(

@@ -1,0 +1,6 @@
+white: 
+  Tower: g1T h1T
+  King: g2T
+
+black: 
+  King: c3T

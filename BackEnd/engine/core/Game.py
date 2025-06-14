@@ -199,6 +199,7 @@ class Game:
         move = engine.choose_move()
         move = (self.board[move[0]], self.board[move[1]])
         self.make_move(move)
+        return move
 
     def check_player_state(self, player: Player, moves: List[Tile | LayerTile]) -> bool:
         if not player.alive: 
@@ -316,6 +317,13 @@ class Game:
                         team = player.color if player.alive else 'dead'
                         pieces.append([piece_type.lower(), team, piece.position.name])
         return pieces
+
+    def get_last_move(self) -> Tuple[str, str, str]: 
+        move = self.history[-1]
+        piece = move.piece.type
+        from_ = move.tile_from.name
+        to_ = move.tile_to.name
+        return piece, from_, to_
 
     def get_game_history(self) -> List[Dict[str, str]]: 
         history = []

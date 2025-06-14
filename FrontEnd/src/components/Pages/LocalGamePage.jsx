@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import "./LocalGamePage.css";
@@ -30,21 +30,46 @@ const LocalGamePage = () => {
     const [turn, setTurn] = useState(turnInfo);
     const [states, setStates] = useState(initialState);
     const [history, setHistory] = useState([]);
-    const [watchingState, setWatchingState] = useState(0); 
+    const watchingState = useRef(turnInfo.moveCount);
 
     const playerColors = playerCount === 2
         ? ['White', 'Black']
         : ['White', 'Black', 'Blue', 'Red'];
 
 
-    // - - - - - - - - - - - - - - - - USE EFFECT FUNCTIONS - - - - - - - - - - - - - - - - 
+    // - - - - - - - - - - - - - - - - USE EFFECT FUNCTIONS - - - - - - - - - - - - - - - -     
     useEffect(() => {
         setCurrentState(states[turn.moveCount]);
+        watchingState.current = turn.moveCount;
+        console.log(watchingState.current);
     }, [turn]);
 
+
+    // - - - - - - - - - - - - - - - - EVENT LISTENERS - - - - - - - - - - - - - - - 
+    const updateBoardFromRef = () => {
+        const index = watchingState.current;
+        if (index >= 0 && index <= turn.moveCount) {
+            setCurrentState(states[index]);
+        }
+    };
+    
     useEffect(() => {
-        setWatchingState()
-    }, []);
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowLeft') {
+                watchingState.current = Math.max(0, watchingState.current - 1);
+                console.log("Left", watchingState.current)
+                updateBoardFromRef();
+            } else if (e.key === 'ArrowRight') {
+                watchingState.current = Math.min(turn.moveCount, watchingState.current + 1);
+                console.log("Right", watchingState.current)
+                updateBoardFromRef();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [states]);
+
 
     // - - - - - - - - - - - - - - - - FUNCTIONS - - - - - - - - - - - - - - - - 
     const undoMove = async () => {

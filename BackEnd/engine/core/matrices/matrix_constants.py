@@ -40,3 +40,13 @@ class PieceInfo(IntEnum):
     Position = 2
     Moved = 3
     Flag = 4
+
+
+PIECE_TYPES = {
+    0: "Tower", 
+    1: "Knight",
+    2: "Bishop",
+    3: "King",
+    4: "Pawn",
+    5: "Queen"
+}

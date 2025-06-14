@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 import os
 
-from app.schemas.local_game import StartLocalGameRequest, MoveRequest
+from app.schemas.local_game import StartLocalGameRequest, MoveRequest, BotMoveRequest
 from app.core.GameManager import GameManager
 
 router = APIRouter(prefix="/game-local", tags=["game-local"])
@@ -15,6 +15,10 @@ def start_local_game(payload: StartLocalGameRequest):
 @router.post("/make-move")
 def make_move(move: MoveRequest):
     return games.make_move(move)
+
+@router.post("/make-move-bot")
+def make_mvoe_bot(bot_move : BotMoveRequest): 
+    return games.make_move_bot(bot_move)
 
 @router.post("/reset-game")
 def reset_game():

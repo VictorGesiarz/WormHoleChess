@@ -298,7 +298,8 @@ def filter_legal_moves(player: np.uint8, nodes: np.array, pieces: np.array, adja
     for i in range(out_count[0]): 
         move = out_moves[i]
         make_move(move, nodes, pieces, history, history_index, promotion_zones, False)
-        hashes[i] = update_hash(current_hash, history[history_index], pieces, hasher) 
+        # hashes[i] = update_hash(current_hash, history[history_index], pieces, hasher) 
+        hashes[i] = nodes.copy()
         king_tile = player_king[2]
         if not is_in_check(player, king_tile, nodes, pieces, adjacency_list, patterns_offsets, 
                            pieces_offsets, tiles_offsets, king_trace): 
@@ -444,8 +445,8 @@ def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.arr
     nodes[destination_tile] = moving_piece_index
 
     if captured_piece_index != -1: 
-        if pieces[captured_piece_index][0] == 3 and store: 
-            print("CAPTURED KING?", captured_piece_index, NAMES[origin_tile], NAMES[destination_tile], pieces[moving_piece_index][0], pieces[captured_piece_index][0])
+        # if pieces[captured_piece_index][0] == 3 and store: 
+        #     print("CAPTURED KING?", captured_piece_index, NAMES[origin_tile], NAMES[destination_tile], pieces[moving_piece_index][0], pieces[captured_piece_index][0])
         pieces[captured_piece_index, 4] = 1 # Mark as captured
 
     # Promotion logic

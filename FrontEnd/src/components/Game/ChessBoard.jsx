@@ -296,63 +296,54 @@ const ChessBoard = ({
 
     // - - - - - - - - - - - - HANDLE MOVE - - - - - - - - - - - - - 
     const makeMove = async (from, to) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/game-local/make-move`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    gameId,
-                    from_tile: from,
-                    to_tile: to,
-                }),
-            });
+        if (turn.game_state === 'playing' && turn.type === 'human') {
+            try {
+                const response = await fetch(`${API_BASE_URL}/game-local/make-move`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        gameId,
+                        from_tile: from,
+                        to_tile: to,
+                    }),
+                });
 
-            if (!response.ok) throw new Error('Move failed');
+                if (!response.ok) throw new Error('Move failed');
 
-            const data = await response.json();
+                const data = await response.json();
 
-            setStates(prevStates => ({
-                ...prevStates,
-                ...data.state
-            }));
-            setTurn(data.turn);
+                setStates(prevStates => ({
+                    ...prevStates,
+                    ...data.state
+                }));
+                setTurn(data.turn);
 
-            let moveDescription = '';
-            if (players.length === 4) {
-                moveDescription = `${selectedPiece.current}\n${from}\n${to}`;
-            } else {
-                moveDescription = `${selectedPiece.current} ${from} - ${to}`;
+                const historyEntry = {
+                    move: data.moveDescription,
+                    turn: data.turn
+                };
+
+                console.log("GAME STATE:", data.turn.game_state);
+                console.log("WINNER:", data.turn.winner);
+
+                setHistory(prevHistory => [...prevHistory, historyEntry]);
+
+                selectedTile.current = null;
+                selectedPiece.current = null;
+                resetTileColors();
+                setHighlightedTiles([]);
+
+            } catch (error) {
+                console.error("Move error:", error);
             }
-            const historyEntry = {
-                move: moveDescription,
-                turn: data.turn,
-                killedPlayer: data.killed_player,
-                winner: data.winner,
-            };
-
-            console.log("GAME STATE:", data.game_finished);
-            console.log("WINNER:", data.winner);
-
-            setHistory(prevHistory => [...prevHistory, historyEntry]);
-
-            resetTileColors();
-            selectedTile.current = null;
-            selectedPiece.current = null;
-            setHighlightedTiles([]);
-
-            await handleBotMoves()
-
-        } catch (error) {
-            console.error("Move error:", error);
         }
     };
 
     // USE EFFECT TO HANDLE BOT MOVEMENTS 
     useEffect(() => {
-        const autoPlayBot = async () => {
-            if (true) return; 
-            const currentPlayer = players[turn];
-            if (currentPlayer?.isBot) {
+        const autoPlayBot = async (turn) => {
+            if (turn.game_state === 'playing' && turn.type === "bot") {
+                console.log("Bot is making a move");
                 try {
                     const response = await fetch(`${API_BASE_URL}/game-local/make-move-bot`, {
                         method: 'POST',
@@ -368,10 +359,8 @@ const ChessBoard = ({
                     setTurn(data.turn);
 
                     const historyEntry = {
-                        move: `BOT ${currentPlayer.name || turn}`,
+                        move: data.moveDescription,
                         turn: data.turn,
-                        killedPlayer: data.killed_player,
-                        winner: data.winner,
                     };
 
                     setHistory(prev => [...prev, historyEntry]);
@@ -384,7 +373,7 @@ const ChessBoard = ({
             }
         };
 
-        autoPlayBot();
+        autoPlayBot(turn);
     }, [turn]); // 🔁 runs every time 'turn' changes
 
 

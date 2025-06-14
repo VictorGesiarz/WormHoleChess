@@ -14,8 +14,8 @@ def simulate_game(id=0):
     game = ChessFactory.create_game(
         player_data=ChessFactory.create_player_data(num_players=num_players, types=["mcts"] * num_montecarlo + ["random"] * (num_players-num_montecarlo)), 
         program_mode="matrix",
-        game_mode="wormhole",
-        size=(6, 6),
+        game_mode="normal",
+        size=(5, 5),
         # initial_positions='./engine/core/configs/normal/queen_mate.yaml'
     )
     game_creation_time = time.time() - game_creation_time

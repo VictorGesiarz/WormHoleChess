@@ -13,6 +13,10 @@ class TurnInfo(BaseModel):
     type: Literal['human', 'bot']
     validMoves: List[List[str]]
     moveCount: int
+    player_killed: Optional[str] = None 
+    player_won: Optional[str] = None
+    game_state: Literal['playing', 'draw', 'checkmate'] = 'playing' # 'draw', 'checkmate'
+
 
 class StartLocalGameRequest(BaseModel):
     players: List[PlayerData]
@@ -34,6 +38,7 @@ class MoveRequest(BaseModel):
 class MoveResponse(BaseModel):
     state: Dict
     turn: TurnInfo
-    player_killed: Optional[str] = None 
-    player_won: Optional[str] = None
-    game_state: str = 'playing' # 'draw', 'checkmate'
+    moveDescription: str
+    
+class BotMoveRequest(BaseModel):
+    gameId: str

@@ -49,7 +49,7 @@ class GameMatrices:
         self._cached_turn = None
         self._recalculate = True
         self._cached_movements = np.empty((MAX_POSSIBLE_MOVES, 2), dtype=np.uint8) # With margin (to optimize move calculation, instead of creating a new array each time)
-        self._cached_hashes = np.empty(MAX_POSSIBLE_MOVES, dtype=np.uint64)
+        self._cached_hashes = np.empty((MAX_POSSIBLE_MOVES, len(self.board.nodes)), dtype=np.uint64)
         self._cached_count = np.zeros(1, dtype=np.uint8)
 
         self.history = np.zeros((max_turns, 6), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type (for promotions)]]
@@ -202,7 +202,9 @@ class GameMatrices:
                 if captured_piece[0] == 3: # If a king is a captured
                     player = captured_piece[1]
                     self.kill_player(self.players[player], print_text="by capture")
-                    raise RuntimeError("KING CAPTURED", self.board.node_names[from_], self.board.node_names[to])
+                    
+                    if self.number_of_players == 2:
+                        raise RuntimeError("KING CAPTURED", self.board.node_names[from_], self.board.node_names[to])
             self.positions_counter[self.hash] = self.positions_counter.get(self.hash, 0) + 1
             self.moves_count += 1
 
@@ -224,6 +226,7 @@ class GameMatrices:
         move = engine.choose_move()
         if move is not None: 
             self.make_move(move)
+            return move 
 
     def check_player_state(self, player: np.array, moves: np.array) -> bool:
         if not player['is_alive']: 
@@ -310,6 +313,15 @@ class GameMatrices:
 
     def print_last_move(self) -> None: 
         print("Move made:", self.board.get_names(self.history[self.moves_count-1][1:3]))
+        
+    def get_last_move(self) -> Tuple[str, str, str]: 
+        if self.moves_count == 0:
+            return None, None, None
+        move = self.history[self.moves_count-1]
+        from_tile = self.board.get_names([move[1]])[0]
+        to_tile = self.board.get_names([move[2]])[0]
+        piece_name = PIECE_TYPES[self.board.pieces[move[0]][0]]
+        return piece_name, from_tile, to_tile
 
     def print_moves(self) -> None: 
         moves = self.get_movements()
@@ -329,14 +341,6 @@ class GameMatrices:
 
     def get_state(self, yaml: bool = False): 
         pieces = []
-        piece_types = {
-            0: "Tower", 
-            1: "Knight",
-            2: "Bishop",
-            3: "King",
-            4: "Pawn",
-            5: "Queen"
-        }
         current_player = -1
         current_piece = 0
         yaml_txt = ''
@@ -349,9 +353,9 @@ class GameMatrices:
                 yaml_txt += f'\n{self.players[piece[1] % self.number_of_players]['color']}:'
             if piece[0] != current_piece: 
                 current_piece = piece[0]
-                yaml_txt += f'\n{piece_types[piece[0]]}: '
+                yaml_txt += f'\n{PIECE_TYPES[piece[0]]}: '
 
-            type_ = piece_types[piece[0]].lower()
+            type_ = PIECE_TYPES[piece[0]].lower()
 
             player = self.players[piece[1] % self.number_of_players]
             if player['is_alive']:
@@ -363,7 +367,8 @@ class GameMatrices:
             tile = self.board.get_names([piece[2]])[0]
             pieces.append([type_, player_color, tile])
         
-        print(yaml_txt)
+        if yaml: 
+            print(yaml_txt)
         return pieces
     
     def valid_move(self, from_tile: str, to_tile: str) -> bool:   

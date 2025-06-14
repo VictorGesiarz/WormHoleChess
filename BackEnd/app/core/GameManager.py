@@ -6,7 +6,8 @@ from app.schemas.local_game import (
     StartGameResponse,
     MoveRequest,
     MoveResponse,
-    TurnInfo
+    TurnInfo,
+    BotMoveRequest
 )
 
 from engine.ChessFactory import ChessFactory
@@ -30,12 +31,33 @@ class GameManager:
             valid_moves = [game.board.get_names(move) for move in valid_moves]
             type = 'human' if game.players[game.turn]['opponent_type'] == 0 else 'bot'
 
+        winner = game.winner()
+        if winner != -1: 
+            if game.program_mode == 'layer':
+                player_won = game.players[winner].color
+            elif game.program_mode == 'matrix':
+                player_won = game.players[winner]['color']
+        else:
+            player_won = None
+
         return TurnInfo(
             turn=game.turn, 
             type=type,
             validMoves=valid_moves,
-            moveCount=game.moves_count
+            moveCount=game.moves_count,
+            player_killed=game.killed_player,
+            player_won=player_won,
+            game_state=game.game_state.name.lower()
         )
+
+    def _get_move_description(self, game):
+        piece, from_tile, to_tile = game.get_last_move()
+        
+        if game.number_of_players == 4:
+            moveDescription = f'{piece}\n{from_tile}\n{to_tile}';
+        else: 
+            moveDescription = f'{piece} {from_tile}-{to_tile}';
+        return moveDescription
 
     # ---------- public API ----------------------------------------------
     def create_game(self, payload: StartLocalGameRequest): 
@@ -64,7 +86,7 @@ class GameManager:
         try:
             if game.is_finished():
                 raise HTTPException(status_code=400, detail="Game is already finished")
-            if not game.valid_move(move.from_tile, move.to_tile): 
+            if not game.valid_move(move.from_tile, move.to_tile):
                 raise HTTPException(status_code=400, detail="Invalid move")
             game_movement = game.translate_movement(move.from_tile, move.to_tile)
             game.make_move(game_movement)
@@ -74,19 +96,33 @@ class GameManager:
             raise HTTPException(status_code=400, detail='Invalid move: ' + str(e))
         
         turn = self._get_turn_info(game)
-        winner = game.winner()
-        if winner != -1: 
-            if game.program_mode == 'layer':
-                player_won = game.players[winner].color
-            elif game.program_mode == 'matrix':
-                player_won = game.players[winner]['color']
-        else:
-            player_won = None
+        moveDescription = self._get_move_description(game)
+        print(moveDescription)
         
         return MoveResponse(
             state={game.moves_count: game.get_state()}, 
-            turn=turn, 
-            player_killed=game.killed_player,
-            player_won=player_won,
-            game_finished=game.game_state.name.lower()
+            turn=turn,
+            moveDescription=moveDescription
+        )
+
+    def make_move_bot(self, bot_move: BotMoveRequest): 
+        game_id = bot_move.gameId
+        if game_id not in self.games:
+            raise HTTPException(status_code=404, detail="Game not found")
+
+        game = self.games[game_id]
+
+        if game.is_finished():
+            raise HTTPException(status_code=400, detail="Game is already finished")
+        game_movement = game.make_move_bot()
+        game.next_turn()
+        
+        turn = self._get_turn_info(game)
+        
+        moveDescription = self._get_move_description(game)
+        
+        return MoveResponse(
+            state={game.moves_count: game.get_state()}, 
+            turn=turn,
+            moveDescription=moveDescription
         )
