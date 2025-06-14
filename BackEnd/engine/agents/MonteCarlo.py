@@ -168,7 +168,6 @@ class MonteCarlo(Agent):
 
             move_and_hash_extraction_time = time.time()
             moves, hashes = game_copy.get_movements(include_hashes=True)
-            hashes = [','.join([str(i) for i in hash_]) for hash_ in hashes.tolist()]
             moves_states = list(zip(moves, hashes))
             self.move_and_hash_extraction_time += time.time() - move_and_hash_extraction_time 
 

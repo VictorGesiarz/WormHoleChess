@@ -298,11 +298,10 @@ def filter_legal_moves(player: np.uint8, nodes: np.array, pieces: np.array, adja
     for i in range(out_count[0]): 
         move = out_moves[i]
         make_move(move, nodes, pieces, history, history_index, promotion_zones, False)
-        # hashes[i] = update_hash(current_hash, history[history_index], pieces, hasher) 
-        hashes[i] = nodes.copy()
         king_tile = player_king[2]
         if not is_in_check(player, king_tile, nodes, pieces, adjacency_list, patterns_offsets, 
                            pieces_offsets, tiles_offsets, king_trace): 
+            hashes[count] = update_hash(current_hash, history[history_index], pieces, hasher) 
             out_moves[count] = move
             count += 1
         undo_move(nodes, pieces, history, history_index)
@@ -410,12 +409,14 @@ def is_in_check(player: np.uint8, king_tile: np.int16, nodes, pieces,
 
 @njit(cache=True)
 def update_hash(old_hash: int, movement: np.array, pieces: np.array, hasher: np.array) -> int: 
-    moving_piece_index, origin_tile, destination_tile, captured_piece_index, _, _ = movement
+    moving_piece_index, origin_tile, destination_tile, captured_piece_index, _, original_type = movement
 
     piece = pieces[moving_piece_index]
+    current_type = piece[0]
+    color = piece[1]
 
-    old_hash ^= hasher[piece[0]][piece[1]][origin_tile]
-    old_hash ^= hasher[piece[0]][piece[1]][destination_tile]
+    old_hash ^= hasher[original_type][color][origin_tile]
+    old_hash ^= hasher[current_type][color][destination_tile]
 
     if captured_piece_index != -1: 
         captured_piece = pieces[captured_piece_index]
@@ -455,6 +456,7 @@ def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.arr
     if piece_type == 4: 
         for promotion_tile in promotions[team]:
             if destination_tile == promotion_tile:
+                print("coronation")
                 pieces[moving_piece_index, 0] = 5
                 break
 

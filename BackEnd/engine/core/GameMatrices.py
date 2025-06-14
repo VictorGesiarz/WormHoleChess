@@ -72,6 +72,9 @@ class GameMatrices:
         game_copy.moves_without_capture = self.moves_without_capture
         return game_copy
 
+    def reset(self) -> None: 
+        ... 
+
     def next_turn(self) -> None: 
         self.turn = (self.turn + 1) % self.number_of_players
         self._recalculate = True
@@ -384,3 +387,6 @@ class GameMatrices:
             if self.board.get_names(move) == [from_tile, to_tile]:
                 return move
         raise ValueError(f"Invalid move from {from_tile} to {to_tile}")
+    
+    def translate_movement_to_str(self, move: np.array) -> Tuple[str, str]: 
+        return self.board.get_names(move)
