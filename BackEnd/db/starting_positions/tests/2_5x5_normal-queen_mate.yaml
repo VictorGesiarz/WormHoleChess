@@ -1,0 +1,6 @@
+white: 
+  Queen: b1
+  King: a1
+
+black: 
+  King: d4

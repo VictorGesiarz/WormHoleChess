@@ -4,16 +4,23 @@ from typing import TYPE_CHECKING
 import datetime
 import random 
 import time
-import atexit
+import os
+import psutil
+import sys 
 from math import log, sqrt
-from multiprocessing import Manager
 from concurrent.futures import ProcessPoolExecutor, as_completed
-
+import multiprocessing
 from engine.agents.Agent import Agent
 
 if TYPE_CHECKING: 
     from engine.core.Game import Game
     from engine.core.GameMatrices import GameMatrices
+
+
+def init_worker(shared_plays, shared_wins):
+    global PLAYS, WINS
+    PLAYS = shared_plays
+    WINS = shared_wins
 
 
 class MonteCarlo(Agent):
@@ -27,17 +34,19 @@ class MonteCarlo(Agent):
             C: UCB1 hyperparameter to encourage more or less exploration. Defaults to 1.4
         """
         self.game = game
-        self.manager = Manager()
-        self.wins = self.manager.dict()
-        self.plays = self.manager.dict()
+        self.wins = {}
+        self.plays = {}
 
-        seconds = kwargs.get('time', 1)
+        seconds = kwargs.get('time', 30)
         self.calculation_time = datetime.timedelta(seconds=seconds)
         self.simulations_per_move = kwargs.get('simulations_per_move', 30000)
         self.C = kwargs.get('C', 1.4) # UCB1 Parameter
 
-    def cleanup(self): 
-        print("\n \n SHUTING DOWN MANAGER \n \n")
+    def _merge_stats(self, sim_wins, sim_plays):
+        for key, value in sim_wins.items():
+            self.wins[key] = self.wins.get(key, 0) + value
+        for key, value in sim_plays.items():
+            self.plays[key] = self.plays.get(key, 0) + value
 
     def choose_move(self):
         # Causes the AI to calculate the best move from the
@@ -51,18 +60,71 @@ class MonteCarlo(Agent):
             return moves[0]
 
         games = 0
-        begin = datetime.datetime.now(datetime.timezone.utc)
-    
-        with ProcessPoolExecutor() as executor:
-            futures = []
-            for _ in range(self.simulations_per_move):
-                game_copy = self.game.copy()  # you must copy it because Game is not shared
-                args = (game_copy, self.wins, self.plays, self.C, self.max_depth, self.max_moves)
-                futures.append(executor.submit(run_simulation_worker, *args))
+        start_time = datetime.datetime.now(datetime.timezone.utc)
+        end_time = start_time + self.calculation_time
 
-            for future in as_completed(futures):
-                depth = future.result()
-                self.max_depth = max(self.max_depth, depth)
+        snapshot_time = 0.0
+        simulation_time = 0.0
+        dispatch_time = 0.0
+        merge_time = 0.0
+
+        max_workers = multiprocessing.cpu_count()
+        print("Max Workers", max_workers)
+        jobs_per_update = 1000
+
+        batch_index = 0
+        # LAUNCH SIMULATIONS IN PARALLEL 
+        
+        try: 
+            while (
+                datetime.datetime.now(datetime.timezone.utc) - start_time < self.calculation_time
+                and games < self.simulations_per_move
+            ):
+                print(f"\nRunning batch {batch_index}")
+                batch_index += 1
+
+                # ⏱ Snapshot timing
+                snapshot_start = time.time()
+                snapshot_plays = self.plays.copy()
+                snapshot_wins = self.wins.copy()
+                snapshot_time += time.time() - snapshot_start
+                print(f'Took {time.time() - snapshot_start:.4f} to copy dictionaries')
+
+                with ProcessPoolExecutor(
+                    max_workers=max_workers,
+                    initializer=init_worker,
+                    initargs=(snapshot_plays, snapshot_wins)
+                ) as executor:
+
+                    # ⏱ Dispatch timing
+                    dispatch_start = time.time()
+                    futures = []
+                    for _ in range(jobs_per_update):
+                        game_copy = self.game.copy()
+                        f = executor.submit(MonteCarlo.run_simulation_worker, game_copy, self.C)
+                        futures.append(f)
+                    dispatch_time += time.time() - dispatch_start
+                    print(f'Took {time.time() - dispatch_start:.4f} seconds to create jobs')
+
+                    # ⏱ Simulation timing
+                    sim_start = time.time()
+                    merge_batch_time = 0
+                    for future in as_completed(futures):
+                        sim_plays, sim_wins, depth = future.result()
+                        merge_start = time.time()
+                        self._merge_stats(sim_wins, sim_plays)
+                        merge_batch_time += time.time() - merge_start
+                        self.max_depth = max(self.max_depth, depth)
+                        games += 1
+                    simulation_time += time.time() - sim_start
+                    merge_time += merge_batch_time
+                    print(f'Took {merge_batch_time:.4f} seconds to merge dictionaries')
+                    print(f"Took {time.time()- sim_start:.4f} to run simulations")
+                    
+        except KeyboardInterrupt: 
+            print("\n[!] Caught Ctrl+C. Shutting down cleanly...")
+            executor.shutdown(wait=False, cancel_futures=True)
+            sys.exit(1)
 
 
         # Get the hash of the resulting state if we make each move. 
@@ -74,7 +136,7 @@ class MonteCarlo(Agent):
 
         # Display the number of calls of `run_simulation` and the
         # time elapsed.
-        print(games, datetime.datetime.now(datetime.timezone.utc) - begin)
+        print(games, datetime.datetime.now(datetime.timezone.utc) - start_time)
         
         # Pick the move with the highest percentage of wins.
         percent_wins, move = max(
@@ -102,78 +164,78 @@ class MonteCarlo(Agent):
         
         print("Average time per simulation:", simulation_time / games)
         print("Total time spent in simulations:", simulation_time)
-        print(" - Average time per move calculation:", self.move_calc_time / games)
-        print(" - Total time spent calculating move:", self.move_calc_time)
-        print(" - Average time per copy:", self.copytime / games)
-        print(" - Time spent copying game:", self.copytime)
-        print(" - Average time per update:", self.update_tree_time / games)
-        print(" - Total time spent updating tree:", self.update_tree_time)
-        print(" - Average time per hashing:", self.hashing_time / games)
-        print(" - Total time spent hashing:", self.hashing_time)
-        print(" - Average time per backpropagation:", self.back_propagation_time / games)
-        print(" - Total time spent backpropagating:", self.back_propagation_time)
+        print("Total time spent (copying plays and wins):", snapshot_time)
+        print(" - Time creating parallel processes:", dispatch_time)
+        print(" - Time merging dcitionaries", merge_time)
 
         return move
 
 
-def run_simulation_worker(args):
-    game, C, max_depth, max_moves = args
-    plays = {}
-    wins = {}
-    visited_states = set()
-    
-    game_copy = game.copy()
-    player = game_copy.get_turn(auto_play_bots=False)
-    move_count = 1
-    expand = True
+    @staticmethod
+    def run_simulation_worker(game, C):
+        global PLAYS, WINS
+        plays = PLAYS
+        wins = WINS
+        
+        new_plays = {}
+        new_wins = {}
+        
+        max_depth = 0
+        visited_states = set()
+        
+        game_copy = game.copy()
+        player = game_copy.get_turn(auto_play_bots=False)
+        move_count = 1
+        expand = True
 
-    while not game_copy.is_finished():
-        if player == -1:
+        while not game_copy.is_finished():
+            if player == -1:
+                game_copy.next_turn()
+                player = game_copy.get_turn(auto_play_bots=False)
+                continue
+
+            moves = game_copy.get_movements()
+            moves_states = []
+            for move in moves:
+                game_copy.make_move(move, store=False)
+                moves_states.append((move, game_copy.hash))
+                game_copy.undo_move(remove=False)
+
+            if all((player, S) in plays for _, S in moves_states):
+                log_total = log(sum(plays[(player, S)] for _, S in moves_states))
+                _, move, state = max(
+                    (
+                        ((wins[(player, S)] / plays[(player, S)]) +
+                        C * sqrt(log_total / plays[(player, S)]), move, S)
+                        for move, S in moves_states
+                    ),
+                    key=lambda x: x[0]
+                )
+            else:
+                move, state = random.choice(moves_states)
+
+            game_copy.make_move(move)
+
+            if expand and (player, state) not in plays:
+                expand = False
+                new_plays[(player, state)] = 0
+                new_wins[(player, state)] = 0
+                if move_count > max_depth:
+                    max_depth = move_count
+
+            visited_states.add((player, state))
+            move_count += 1
             game_copy.next_turn()
             player = game_copy.get_turn(auto_play_bots=False)
-            continue
 
-        moves = game_copy.get_movements()
-        moves_states = []
-        for move in moves:
-            game_copy.make_move(move, store=False)
-            moves_states.append((move, game_copy.hash))
-            game_copy.undo_move(remove=False)
+        rewards = game_copy.rewards
 
-        if all((player, S) in plays for _, S in moves_states):
-            log_total = log(sum(plays[(player, S)] for _, S in moves_states))
-            _, move, state = max(
-                (
-                    ((wins[(player, S)] / plays[(player, S)]) +
-                     C * sqrt(log_total / plays[(player, S)]), move, S)
-                    for move, S in moves_states
-                ),
-                key=lambda x: x[0]
-            )
-        else:
-            move, state = random.choice(moves_states)
+        for player, state in visited_states:
+            if (player, state) not in new_plays:
+                continue
+            
+            new_plays[(player, state)] += 1
+            reward = rewards[player]
+            new_wins[(player, state)] += reward
 
-        game_copy.make_move(move)
-
-        if expand and (player, state) not in plays:
-            expand = False
-            plays[(player, state)] = 0
-            wins[(player, state)] = 0
-            if move_count > max_depth:
-                max_depth = move_count
-
-        visited_states.add((player, state))
-        move_count += 1
-        game_copy.next_turn()
-        player = game_copy.get_turn(auto_play_bots=False)
-
-    winner = game_copy.winner()
-
-    for player, state in visited_states:
-        plays.setdefault((player, state), 0)
-        wins.setdefault((player, state), 0)
-        plays[(player, state)] += 1
-        if player == winner:
-            wins[(player, state)] += 1
-
-    return plays, wins, max_depth
+        return new_plays, new_wins, max_depth

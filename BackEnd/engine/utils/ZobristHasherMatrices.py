@@ -38,14 +38,13 @@ class ZobristHasher:
         return h
 
     def update_hash(self, old_hash: int, movement: np.array, pieces: np.array) -> int: 
-        moving_piece_index, origin_tile, destination_tile, captured_piece_index, _, original_type = movement
+        moving_piece_index, origin_tile, destination_tile, captured_piece_index, _, original_type, new_type = movement
 
         piece = pieces[moving_piece_index]
-        current_type = piece[0]
         color = piece[1]
 
         old_hash ^= self.table[original_type][color][origin_tile]
-        old_hash ^= self.table[current_type][color][destination_tile]
+        old_hash ^= self.table[new_type][color][destination_tile]
 
         if captured_piece_index != -1: 
             captured_piece = pieces[captured_piece_index]

@@ -22,6 +22,7 @@ numba = "*"
 cython = "*"
 databases = "*"
 asyncpg = "*"
+psutil = "*"
 
 [dev-packages]
 

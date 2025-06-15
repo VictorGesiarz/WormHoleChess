@@ -409,14 +409,13 @@ def is_in_check(player: np.uint8, king_tile: np.int16, nodes, pieces,
 
 @njit(cache=True)
 def update_hash(old_hash: int, movement: np.array, pieces: np.array, hasher: np.array) -> int: 
-    moving_piece_index, origin_tile, destination_tile, captured_piece_index, _, original_type = movement
+    moving_piece_index, origin_tile, destination_tile, captured_piece_index, _, original_type, new_type = movement
 
     piece = pieces[moving_piece_index]
-    current_type = piece[0]
     color = piece[1]
 
     old_hash ^= hasher[original_type][color][origin_tile]
-    old_hash ^= hasher[current_type][color][destination_tile]
+    old_hash ^= hasher[new_type][color][destination_tile]
 
     if captured_piece_index != -1: 
         captured_piece = pieces[captured_piece_index]
@@ -439,6 +438,7 @@ def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.arr
     history[history_index, 3] = captured_piece_index
     history[history_index, 4] = pieces[moving_piece_index][3]
     history[history_index, 5] = pieces[moving_piece_index][0]
+    history[history_index, 6] = pieces[moving_piece_index][0]
 
     pieces[moving_piece_index, 2] = destination_tile
     pieces[moving_piece_index, 3] = 0 # Mark as moved
@@ -456,14 +456,14 @@ def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.arr
     if piece_type == 4: 
         for promotion_tile in promotions[team]:
             if destination_tile == promotion_tile:
-                print("coronation")
                 pieces[moving_piece_index, 0] = 5
+                history[history_index, 6] = 5
                 break
 
 
 @njit(cache=True)
 def undo_move(nodes: np.array, pieces: np.array, history: np.array, history_index: int) -> None: 
-    moving_piece_index, origin_tile, destination_tile, captured_piece_index, first_move, original_type = history[history_index]
+    moving_piece_index, origin_tile, destination_tile, captured_piece_index, first_move, original_type, new_type = history[history_index]
 
     pieces[moving_piece_index, 0] = original_type
     pieces[moving_piece_index, 2] = origin_tile

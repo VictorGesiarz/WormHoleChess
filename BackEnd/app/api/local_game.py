@@ -31,7 +31,7 @@ def leave_game():
 @router.get("/get-possible-positions")
 def get_possible_positions(): 
     """ Read available files of positions in the folder """
-    folder_path = './engine/core/configs/tests/'
+    folder_path = './db/starting_positions/tests/'
     files = os.listdir(folder_path)
 
     player_counts = [2, 4]

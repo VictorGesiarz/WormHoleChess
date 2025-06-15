@@ -16,7 +16,6 @@ def simulate_game(id=0):
         program_mode="matrix",
         game_mode="normal",
         size=(5, 5),
-        # initial_positions='./engine/core/configs/normal/queen_mate.yaml'
     )
     game_creation_time = time.time() - game_creation_time
 
@@ -26,30 +25,11 @@ def simulate_game(id=0):
     move_count = 0
 
     game_time = time.time()
-
-    game_states = {}
     while not game.is_finished(): 
         turn = game.get_turn()
-        # if turn == 0: 
-            # If human player
-            # moves = game.get_valid_moves()
-            # Chose a move
-            # game.make_move(moves[0])
-        # else:
-            # It makes automatically the move when doing get_turn
         game.print_last_move()
-        # print(game.turn)
         game.next_turn()
         move_count += 1
-        # game_states[move_count] = game.get_state()
-
-
-    with open('./engine/tests/results/game_states.json', 'w') as f:
-        import json
-        json.dump(game_states, f, indent=4)
-
-    # game.export('./db/random_games/prueba.json')
-
     game_time = time.time() - game_time
 
     average_calc_time = total_calc_time / calc_count if calc_count > 0 else 0

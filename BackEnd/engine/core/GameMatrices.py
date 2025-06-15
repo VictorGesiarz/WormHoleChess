@@ -16,7 +16,7 @@ from engine.core.matrices.matrix_constants import *
 from engine.core.constants import * 
 
 from engine.agents.RandomAI import RandomAI
-from engine.agents.MonteCarlo import MonteCarlo
+from engine.agents.MonteCarloParallel import MonteCarlo
 
 
 class GameMatrices: 
@@ -49,10 +49,10 @@ class GameMatrices:
         self._cached_turn = None
         self._recalculate = True
         self._cached_movements = np.empty((MAX_POSSIBLE_MOVES, 2), dtype=np.uint8) # With margin (to optimize move calculation, instead of creating a new array each time)
-        self._cached_hashes = np.empty((MAX_POSSIBLE_MOVES, len(self.board.nodes)), dtype=np.uint64)
+        self._cached_hashes = np.empty(MAX_POSSIBLE_MOVES, dtype=np.uint64)
         self._cached_count = np.zeros(1, dtype=np.uint8)
 
-        self.history = np.zeros((max_turns, 6), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type (for promotions)]]
+        self.history = np.zeros((max_turns, 7), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type, new_type]]
         self.initial_positions = self.board.pieces.copy()
         self.positions_counter = {self.hash: 1}
         self.max_turns = max_turns
@@ -197,7 +197,7 @@ class GameMatrices:
             self.hash = self.hasher.update_hash(self.hash, self.history[self.moves_count], self.board.pieces)
 
         if store: 
-            moving_piece, from_, to, captured_piece_index, _, _ = self.history[self.moves_count]
+            moving_piece, from_, to, captured_piece_index, _, _, _ = self.history[self.moves_count]
             self.moves_without_capture += 1
             if captured_piece_index != -1: 
                 self.moves_without_capture = 0

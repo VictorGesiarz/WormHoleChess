@@ -17,7 +17,7 @@ from engine.core.constants import COLOR_TO_NUMBER, NUMBER_TO_COLOR
 
 
 BOARD_FILES = './engine/core/configs/matrix_board/'
-POSITIONS_PATH = './engine/core/configs/'
+POSITIONS_PATH = './db/starting_positions/'
 SIZES = {
     'big': (8, 8),
     'small': (6, 6),

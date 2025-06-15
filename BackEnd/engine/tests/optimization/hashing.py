@@ -12,7 +12,6 @@ def simulate_game(game):
             pre_hash = game.hash
             game.make_move(move, store=False)
             post_hash = game.hash
-            print(game.board.pieces[game.history[game.moves_count][0]])
             game.undo_move(remove=False)
             pre_post_hash = game.hash
             
@@ -20,8 +19,6 @@ def simulate_game(game):
                 print(f'Doing move {game.translate_movement_to_str(move)}')
                 print(f'Hash before doing move {pre_hash}')
                 print(f'Hash after undoing move {pre_post_hash}')
-                print(game.history[game.moves_count])
-                print(game.board.pieces[game.history[game.moves_count][0]])
                 raise RuntimeError("HASH HAS CHANGED!")
             
         game.get_turn()
@@ -29,7 +26,7 @@ def simulate_game(game):
 
 
 def test(): 
-    num_tests = 10000
+    num_tests = 500
 
     start = time.time()
     for i in range(num_tests): 

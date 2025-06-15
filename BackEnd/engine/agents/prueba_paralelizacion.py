@@ -1,4 +1,5 @@
 from multiprocessing import Process, Manager
+import multiprocessing
 import time
 import math
 import random
@@ -6,7 +7,7 @@ import random
 # Fake CPU-heavy computation
 def heavy_computation(x):
     result = 0
-    for i in range(1, 100_000):
+    for i in range(1, 10_000):
         result += math.sin(x * i) ** 2 + math.cos(x * i) ** 2
     return result
 
@@ -52,8 +53,10 @@ if __name__ == '__main__':
 
     print("Running sequentially...")
     seq_results = run_sequential(input_values)
-    print(seq_results)
+    # print(seq_results)
 
+    cpu_count = multiprocessing.cpu_count()
+    print('\nCPUs:', cpu_count)
     print("\nRunning in parallel...")
-    par_results = run_parallel(input_values)
-    print(par_results)
+    par_results = run_parallel(input_values, num_workers=cpu_count)
+    # print(par_results)
