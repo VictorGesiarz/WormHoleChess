@@ -28,7 +28,7 @@ class MonteCarlo(Agent):
         self.wins = {}
         self.plays = {}
 
-        seconds = kwargs.get('time', 20)
+        seconds = kwargs.get('time', 25)
         self.calculation_time = datetime.timedelta(seconds=seconds)
         self.simulations_per_move = kwargs.get('simulations_per_move', 30000)
         self.C = kwargs.get('C', 1.4) # UCB1 Parameter
@@ -78,8 +78,6 @@ class MonteCarlo(Agent):
             key=lambda x: x[0]  # compare only by win rate
         )
 
-        print("Taylor Swift is the best")
-
         # Display the stats for each possible play.
         for x in sorted(  # x = (percent, wins, plays, move)
             ((100 * self.wins.get((player, S), 0) /
@@ -92,31 +90,31 @@ class MonteCarlo(Agent):
         ):
             print("{3}: {0:.2f}% ({1} / {2})".format(*x))
 
-        print("Maximum depth searched:", self.max_depth)
+        # print("Maximum depth searched:", self.max_depth)
 
-        print("Chosen move:", move)
+        # print("Chosen move:", move)
         
-        print(f"Tree size: {asizeof.asizeof(self.plays)} (plays) + {asizeof.asizeof(self.wins)} (wins)")
-        print(f"Average time per simulation: {simulation_time / games:.6f}")
-        print(f"Total time spent in simulations: {simulation_time:.6f}")
-        print(f" - Average time per move calculation: {self.move_calc_time / games:.6f}")
-        print(f" - Total time spent calculating move: {self.move_calc_time:.6f}")
-        print(f" - Average time per skiping player: {self.invalid_player_time / games:.6f}")
-        print(f" - Total time spent skiping players: {self.invalid_player_time:.6f}")
-        print(f" - Average time per hash extraction: {self.move_and_hash_extraction_time / games:.6f}")
-        print(f" - Total time hash extraction: {self.move_and_hash_extraction_time:.6f}")
-        print(f" - Average time per do move: {self.make_move_time / games:.6f}")
-        print(f" - Total time doing moves: {self.make_move_time:.6f}")
-        print(f" - Average time per copy: {self.copytime / games:.6f}")
-        print(f" - Time spent copying game: {self.copytime:.6f}")
-        print(f" - Average time per update: {self.update_tree_time / games:.6f}")
-        print(f" - Total time spent updating tree: {self.update_tree_time:.6f}")
-        print(f" - Average time per expansion: {self.expansion_time / games:.6f}")
-        print(f" - Total time expanding tree: {self.expansion_time:.6f}")
-        print(f" - Average time per hashing: {self.hashing_time / games:.6f}")
-        print(f" - Total time spent hashing: {self.hashing_time:.6f}")
-        print(f" - Average time per backpropagation: {self.back_propagation_time / games:.6f}")
-        print(f" - Total time spent backpropagating: {self.back_propagation_time:.6f}")
+        # print(f"Tree size: {asizeof.asizeof(self.plays)} (plays) + {asizeof.asizeof(self.wins)} (wins)")
+        # print(f"Average time per simulation: {simulation_time / games:.6f}")
+        # print(f"Total time spent in simulations: {simulation_time:.6f}")
+        # print(f" - Average time per move calculation: {self.move_calc_time / games:.6f}")
+        # print(f" - Total time spent calculating move: {self.move_calc_time:.6f}")
+        # print(f" - Average time per skiping player: {self.invalid_player_time / games:.6f}")
+        # print(f" - Total time spent skiping players: {self.invalid_player_time:.6f}")
+        # print(f" - Average time per hash extraction: {self.move_and_hash_extraction_time / games:.6f}")
+        # print(f" - Total time hash extraction: {self.move_and_hash_extraction_time:.6f}")
+        # print(f" - Average time per do move: {self.make_move_time / games:.6f}")
+        # print(f" - Total time doing moves: {self.make_move_time:.6f}")
+        # print(f" - Average time per copy: {self.copytime / games:.6f}")
+        # print(f" - Time spent copying game: {self.copytime:.6f}")
+        # print(f" - Average time per update: {self.update_tree_time / games:.6f}")
+        # print(f" - Total time spent updating tree: {self.update_tree_time:.6f}")
+        # print(f" - Average time per expansion: {self.expansion_time / games:.6f}")
+        # print(f" - Total time expanding tree: {self.expansion_time:.6f}")
+        # print(f" - Average time per hashing: {self.hashing_time / games:.6f}")
+        # print(f" - Total time spent hashing: {self.hashing_time:.6f}")
+        # print(f" - Average time per backpropagation: {self.back_propagation_time / games:.6f}")
+        # print(f" - Total time spent backpropagating: {self.back_propagation_time:.6f}")
 
         return move
 

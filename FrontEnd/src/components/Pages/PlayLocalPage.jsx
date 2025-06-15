@@ -290,10 +290,11 @@ const PlayLocalPage = () => {
                                             }
                                         >
                                             <option value="human">human</option>
+                                            <option value="random">random</option>
                                             {programMode === 'matrix' && (
                                                 <>
-                                                    <option value="random">random</option>
                                                     <option value="mcts">mcts</option>
+                                                    <option value="mcts-parallel">mcts (parallel)</option>
                                                     <option value="alphazero">alphazero</option>
                                                 </>
                                             )}

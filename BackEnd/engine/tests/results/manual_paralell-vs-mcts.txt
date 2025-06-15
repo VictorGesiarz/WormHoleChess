@@ -1,0 +1,4 @@
+Parallel 0 
+Mcts 10 
+
+Gana todo el rato el MCTS Comparado con 

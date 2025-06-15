@@ -16,7 +16,8 @@ from engine.core.matrices.matrix_constants import *
 from engine.core.constants import * 
 
 from engine.agents.RandomAI import RandomAI
-from engine.agents.MonteCarloParallel import MonteCarlo
+from engine.agents.MonteCarlo import MonteCarlo
+from engine.agents.MonteCarloParallel import MonteCarloParallel
 
 
 class GameMatrices: 
@@ -43,7 +44,8 @@ class GameMatrices:
 
         self.bot_engines = {
             1: RandomAI(self),
-            2: MonteCarlo(self)
+            2: MonteCarlo(self),
+            3: MonteCarloParallel(self), 
         }
 
         self._cached_turn = None

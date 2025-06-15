@@ -64,35 +64,36 @@ class MonteCarloParallel(Agent):
         max_workers = 4 
 
         # Run tree construction in parallel 
-        with ProcessPoolExecutor(
-            max_workers=max_workers,
-            max_tasks_per_child=1
-        ) as executor:
+        while: 
+            with ProcessPoolExecutor(
+                max_workers=max_workers,
+                max_tasks_per_child=1
+            ) as executor:
 
-            # ⏱ Dispatch timing
-            dispatch_start = time.time()
-            futures = []
-            for _ in range(max_workers):
-                game_copy = self.game.copy()
-                f = executor.submit(MonteCarloParallel.construct_tree_worker, game_copy, self.plays, self.wins, self.C, end_time, self.simulations_per_move / max_workers)
-                futures.append(f)
-            dispatch_time += time.time() - dispatch_start
-            # print(f'Took {time.time() - dispatch_start:.4f} seconds to create jobs')
+                # ⏱ Dispatch timing
+                dispatch_start = time.time()
+                futures = []
+                for _ in range(max_workers):
+                    game_copy = self.game.copy()
+                    f = executor.submit(MonteCarloParallel.construct_tree_worker, game_copy, self.plays, self.wins, self.C, end_time, self.simulations_per_move / max_workers)
+                    futures.append(f)
+                dispatch_time += time.time() - dispatch_start
+                # print(f'Took {time.time() - dispatch_start:.4f} seconds to create jobs')
 
-            # ⏱ Simulation timing
-            sim_start = time.time()
-            merge_batch_time = 0
-            for future in as_completed(futures):
-                sim_plays, sim_wins, depth, sim_games = future.result()
-                merge_start = time.time()
-                self._merge_stats(sim_wins, sim_plays)
-                merge_batch_time += time.time() - merge_start
-                self.max_depth = max(self.max_depth, depth)
-                games += sim_games
-            simulation_time += time.time() - sim_start - merge_batch_time
-            merge_time += merge_batch_time
-            # print(f'Took {merge_batch_time:.4f} seconds to merge dictionaries')
-            # print(f"Took {time.time()- sim_start:.4f} to run simulations")
+                # ⏱ Simulation timing
+                sim_start = time.time()
+                merge_batch_time = 0
+                for future in as_completed(futures):
+                    sim_plays, sim_wins, depth, sim_games = future.result()
+                    merge_start = time.time()
+                    self._merge_stats(sim_wins, sim_plays)
+                    merge_batch_time += time.time() - merge_start
+                    self.max_depth = max(self.max_depth, depth)
+                    games += sim_games
+                simulation_time += time.time() - sim_start - merge_batch_time
+                merge_time += merge_batch_time
+                # print(f'Took {merge_batch_time:.4f} seconds to merge dictionaries')
+                # print(f"Took {time.time()- sim_start:.4f} to run simulations")
 
         # Get the hash of the resulting state if we make each move. 
         moves_states = []

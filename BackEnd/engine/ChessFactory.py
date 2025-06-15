@@ -94,7 +94,7 @@ class ChessFactory:
         return players
     
     @staticmethod
-    def create_player_data(num_players: int = 4, types: List[Literal['human', 'random', 'mcts', 'alphazero']] = ['random'] * 4) -> List[Tuple[str]]: 
+    def create_player_data(num_players: int = 4, types: List[Literal['human', 'random', 'mcts', 'mcts-parallel', 'alphazero']] = ['random'] * 4) -> List[Tuple[str]]: 
         if len(types) == 1: 
             types *= num_players
         if num_players == 4: 
@@ -214,10 +214,11 @@ class MatrixChessFactory:
     @staticmethod
     def create_players(player_data, game_mode) -> np.ndarray:
         engines_map = {
-            "human":     0,
-            "random":    1,
-            "mcts":      2,
-            "alphazero": 3,
+            "human":         0,
+            "random":        1,
+            "mcts":          2,
+            "mcts-parallel": 3, 
+            "alphazero":     4,
         }
         
         players_list = [(0, 0, False, 0, 'none') for _ in range(4)]

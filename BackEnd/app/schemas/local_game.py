@@ -5,7 +5,7 @@ from typing import List, Literal, Dict, Optional
 class PlayerData(BaseModel):
     name: str
     index: int
-    type: Literal["human", "random", "mcts", "alphazero"]
+    type: Literal["human", "random", "mcts", "mcts-parallel", "alphazero"]
     color: str
 
 class TurnInfo(BaseModel):
