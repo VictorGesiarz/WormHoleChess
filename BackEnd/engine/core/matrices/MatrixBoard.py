@@ -1,5 +1,7 @@
 from typing import List, Tuple, Dict
 import numpy as np 
+import torch 
+from torch_geometric.data import Data
 
 from engine.core.layer.LayerBoard import LayerBoard
 from engine.core.layer.LayerTile import LayerTile
@@ -73,7 +75,7 @@ class LayerMatrixBoard:
         self.promotion_zones = promotion_zones
     
     def save_matrices(self) -> None: 
-        file = f'{BOARD_FILES}{self.size[0]}x{self.size[1]}_{self.game_mode}.npz'
+        file = f'{BOARD_FILES}{self.size[0]}x{self.size[1]}_{self.game_mode}_LAYER.npz'
         np.savez(file, 
                  nodes=self.nodes,
                  node_names=self.node_names, 
@@ -93,12 +95,14 @@ class LayerMatrixBoard:
         self.tiles_offsets = matrices['tiles_offsets']
         self.promotion_zones = matrices['promotion_zones']
 
-    def create_board(self) -> None:
+    def create_board(self, add_actions=False) -> None:
         b = LayerBoard(self.size, self.game_mode)
 
         self.nodes = np.full(len(b), -1, dtype=np.int16)
         self.node_names = np.array(list(b.tiles.keys()), dtype=str)
         self.promotion_zones = np.array([b.get_promotion_zones(p) for p in range(self.num_players)], dtype=np.uint8)
+
+        self.actions = []
 
         adjacency_count = 0
         pattern_count = 0
@@ -121,38 +125,51 @@ class LayerMatrixBoard:
                 # Skip queen layer, we can use a combination of tower and bishop to get the movements
                 if piece in (Pieces.TOWER, Pieces.BISHOP): 
                     for i, direction in enumerate(layer.directions): 
-                        self.adjacency_list += self.get_ids(direction)
+                        tiles = self.get_ids(direction)
+                        self.adjacency_list += tiles
                         adjacency_count += len(direction)
                         self.patterns_offsets.append(adjacency_count)
                         pattern_count += 1
+                        self.__add_actions(tile.id, tiles, add_actions)
 
                 elif piece == Pieces.KNIGHT: 
-                    self.adjacency_list += self.get_ids(layer.movements)
+                    tiles = self.get_ids(layer.movements)
+                    self.adjacency_list += tiles
                     adjacency_count += len(layer.movements)
                     self.patterns_offsets.append(adjacency_count)
                     pattern_count += 1
+                    self.__add_actions(tile.id, tiles, add_actions)
 
                 elif piece == Pieces.KING: 
-                    self.adjacency_list += self.get_ids(layer.movements)
+                    tiles = self.get_ids(layer.movements)
+                    self.adjacency_list += tiles
                     adjacency_count += len(layer.movements)
                     self.patterns_offsets.append(adjacency_count)
                     pattern_count += 1
-                    self.adjacency_list += self.get_ids(layer.pawn_possible_atacks)
+                    self.__add_actions(tile.id, tiles, add_actions)
+
+                    tiles = self.get_ids(layer.pawn_possible_atacks)
+                    self.adjacency_list += tiles
                     adjacency_count += len(layer.pawn_possible_atacks)
                     self.patterns_offsets.append(adjacency_count)
                     pattern_count += 1
+                    self.__add_actions(tile.id, tiles, add_actions)
 
                 elif piece == Pieces.PAWN: 
                     for i, team in enumerate(Teams):
+                        tiles = self.get_ids(layer.moves[team])
                         self.adjacency_list += self.get_ids(layer.moves[team])
                         adjacency_count += len(layer.moves[team])
                         self.patterns_offsets.append(adjacency_count)
                         pattern_count += 1
+                        self.__add_actions(tile.id, tiles, add_actions)
 
+                        tiles = self.get_ids(layer.attacks[team])
                         self.adjacency_list += self.get_ids(layer.attacks[team])
                         adjacency_count += len(layer.attacks[team])
                         self.patterns_offsets.append(adjacency_count)
                         pattern_count += 1
+                        self.__add_actions(tile.id, tiles, add_actions)
 
                 self.pieces_offsets.append(pattern_count)
                 pieces_count += 1
@@ -163,7 +180,19 @@ class LayerMatrixBoard:
         self.patterns_offsets = np.array(self.patterns_offsets, dtype=np.uint16)
         self.pieces_offsets = np.array(self.pieces_offsets, dtype=np.uint16)
         self.tiles_offsets = np.array(self.tiles_offsets, dtype=np.uint16)
+        
+        if add_actions:
+            self.actions = np.array(self.actions, dtype=np.uint8)
+
+        self.save_matrices()
     
+    def __add_actions(self, tile, tiles, add_actions): 
+        if not add_actions:
+            return
+        for to_tile in tiles: 
+            if (tile, to_tile) not in self.__actions: 
+                self.actions.append((tile, to_tile))
+
     def set_piece(self, id: int, type: int, player: int, position: int, has_moved: bool = False, captured: bool = False, custom_flags: int = 0) -> None: 
         self.pieces[id] = [type, player, position, int(has_moved), captured, custom_flags]
         self.nodes[position] = id
@@ -184,17 +213,53 @@ class LayerMatrixBoard:
 
 
 class BaseMatrixBoard: 
-    def init(self, size: Tuple[int, int], gamemode: str = 'wormhole') -> None:
+    action_to_index = {}
+    index_to_action = {}
+
+    def init(self, size: Tuple[int, int], gamemode: str = 'wormhole', 
+             innitialize: bool = True, load_from_file=BIG_BOARD_FILE, **kwargs) -> None:
         self.size = size
         self.gamemode = gamemode
         
         self.nodes: np.array
         self.edges: np.array
         self.create_board()
+
+        self.num_players = kwargs.get('num_players', 2) 
+        self.piece_types = kwargs.get('piece_types', 6)
+
+        if innitialize: 
+            if load_from_file: 
+                self.load_matrices(load_from_file)
+            else:
+                self.create_board()
         
     def check_size(self) -> None:
         from pympler import asizeof
         return asizeof.asizeof(self)
+    
+    def copy(self) -> 'BaseMatrixBoard': 
+        board_copy = BaseMatrixBoard(self.size, self.gamemode, False)
+        board_copy.nodes = self.nodes.copy()
+        board_copy.edges = self.edges.copy()
+        board_copy.num_players = self.num_players
+        board_copy.piece_types = self.piece_types
+        return board_copy
+
+    def save_matrices(self) -> None: 
+        file = f'{BOARD_FILES}{self.size[0]}x{self.size[1]}_{self.game_mode}_BASE.npz'
+        np.savez(file, 
+                 nodes=self.nodes,
+                 edges=self.edges, 
+                 actions=BaseMatrixBoard.action_to_index.keys())
+        
+    def load_matrices(self, file) -> None: 
+        matrices = np.load(file)
+        self.nodes = matrices['nodes']
+        self.edges = matrices['edges']
+
+        if not BaseMatrixBoard.action_to_index: 
+            BaseMatrixBoard.action_to_index, BaseMatrixBoard.index_to_action = self.__actions_to_dict(matrices['actions'])
     
     def create_board(self) -> None: 
         if self.gamemode == 'wormhole': 
@@ -215,3 +280,45 @@ class BaseMatrixBoard:
         
         self.edges = np.array(self.edges, dtype=np.uint8)
         
+        if not BaseMatrixBoard.action_to_index: 
+            temp_board = LayerMatrixBoard(self.size, self.gamemode, innitialize=False)
+            temp_board.create_board(add_actions=True)
+            BaseMatrixBoard.action_to_index, BaseMatrixBoard.index_to_action = self.__actions_to_dict(temp_board.actions)
+
+        self.save_matrices()
+
+    def __actions_to_dict(self, actions): 
+        action_to_index = {}
+        index_to_action = {}
+        for i, action in enumerate(self.__actions): 
+            action_to_index[(action[0], action[1])] = i
+            index_to_action[i] = (action[0], action[1])
+        return action_to_index, index_to_action
+
+    def set_piece(self, type: int, player: int, position: int) -> None: 
+        piece = self.nodes[position]
+        piece[:] = 0
+
+        if type == Pieces.EMPTY:
+            piece[type] = 1 
+        else:
+            piece[type] = 1
+            piece[self.piece_types + player] = 1
+
+    def update_board(self, movement: np.array) -> None: 
+        player, origin_tile, destination_tile, captured_piece_index, _, original_type, new_type = movement
+        # moving_piece_index should not be necessary because it requires pieces list from the other class. The other variables should give all necessary info? 
+
+        self.set_piece(Pieces.EMPTY, 0, origin_tile)
+
+        # If there was a captured piece, clear the destination (might be redundant)
+        if captured_piece_index != -1:
+            self.set_piece(Pieces.EMPTY, 0, destination_tile)
+
+        # Place new piece on destination
+        self.set_piece(new_type, player, destination_tile)
+
+    def to_pyg_data(self):
+        x = torch.tensor(self.nodes, dtype=torch.uint8) 
+        edge_index = torch.tensor(self.edges, dtype=torch.uint8)
+        return Data(x=x, edge_index=edge_index)

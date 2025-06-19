@@ -1,26 +1,36 @@
-
-""" 
-File to run experiments. With arguments we decide which one to run. 
-"""
-
-import argparse
-
-from engine.tests.my_test import test
+import time 
+from engine.ChessFactory import ChessFactory
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run DQN experiments with different parameters.")
-    parser.add_argument("--experiment", type=int, choices=[1, 2, 3], required=True,
-                        help="Specify which experiment to run (1, 2, or 3).")
-    parser.add_argument("--resume", action="store_true",
-                        help="Resume the last saved experiment instead of starting over.")
+def simulate_game(game): 
+    move_count = 0
 
-    args = parser.parse_args()
+    game_time = time.time()
+    while not game.is_finished(): 
+        turn = game.get_turn()
+        game.print_last_move()
+        game.next_turn()
+        move_count += 1
+    game_time = time.time() - game_time
 
-    experiment_settings = {
-        1: {"fixed": False, "inverse": False},
-        2: {"fixed": True, "inverse": False},
-        3: {"fixed": True, "inverse": True}
-    }
+    winner = game.winner()
+    print(f'Game winner {winner}')
+    return winner
 
-    run_experiment(args.experiment, **experiment_settings[args.experiment], resume=args.resume)
+def test(num): 
+    num_players = 4
+    game = ChessFactory.create_game(
+        player_data=ChessFactory.create_player_data(num_players=num_players, types=["random"] * 3 + ['mcts']), 
+        program_mode='matrix',
+        game_mode='wormhole',
+        size=(8, 8),
+    )
+    print("game created")
+
+    winners = []
+    for i in range(num):
+        winners.append(simulate_game(game.copy()))
+
+    print(winners)
+
+test(5)

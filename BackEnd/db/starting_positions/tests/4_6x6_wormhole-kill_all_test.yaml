@@ -1,0 +1,12 @@
+white: 
+  King: a1T
+  Queen: b1T
+
+black: 
+  King: f6T
+
+blue: 
+  King: a1B
+
+red:
+  King: f6B

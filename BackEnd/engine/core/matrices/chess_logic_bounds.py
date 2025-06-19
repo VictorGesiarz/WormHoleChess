@@ -432,16 +432,17 @@ def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.arr
     moving_piece_index = nodes[origin_tile]
     captured_piece_index = nodes[destination_tile]
     
+    piece = pieces[moving_piece_index]
     history[history_index, 0] = moving_piece_index
     history[history_index, 1] = origin_tile
     history[history_index, 2] = destination_tile
     history[history_index, 3] = captured_piece_index
-    history[history_index, 4] = pieces[moving_piece_index][3]
-    history[history_index, 5] = pieces[moving_piece_index][0]
-    history[history_index, 6] = pieces[moving_piece_index][0]
+    history[history_index, 4] = piece[3]
+    history[history_index, 5] = piece[0]
+    history[history_index, 6] = piece[0]
 
-    pieces[moving_piece_index, 2] = destination_tile
-    pieces[moving_piece_index, 3] = 0 # Mark as moved
+    piece[2] = destination_tile
+    piece[3] = 0 # Mark as moved
     nodes[origin_tile] = -1
     nodes[destination_tile] = moving_piece_index
 
@@ -456,14 +457,14 @@ def make_move(move: np.array, nodes: np.array, pieces: np.array, history: np.arr
     if piece_type == 4: 
         for promotion_tile in promotions[team]:
             if destination_tile == promotion_tile:
-                pieces[moving_piece_index, 0] = 5
+                piece[0] = 5
                 history[history_index, 6] = 5
                 break
 
 
 @njit(cache=True)
 def undo_move(nodes: np.array, pieces: np.array, history: np.array, history_index: int) -> None: 
-    moving_piece_index, origin_tile, destination_tile, captured_piece_index, first_move, original_type, new_type = history[history_index]
+    moving_piece_index, origin_tile, destination_tile, captured_piece_index, first_move, original_type, _ = history[history_index]
 
     pieces[moving_piece_index, 0] = original_type
     pieces[moving_piece_index, 2] = origin_tile

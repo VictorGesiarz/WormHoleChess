@@ -31,9 +31,9 @@ class Board(NormalBoard):
         self.tiles: Dict[str, Tile] = {}
         if innitialize:
             self.tiles = self.create_tiles()
-            self.connect_tiles()
             self.remap_knight_data()
             self.remap_pawn_data()
+            self.connect_tiles()
         
         self.pieces: List[Piece] = []
 
@@ -256,21 +256,30 @@ class Board(NormalBoard):
     
     def remap_pawn_data(self) -> None: 
         """ This part of the code is horrendous but I don't have time to do it better. """
-        for i in range(4): 
-            if self.size[0] < 6: 
-                Pawn.PAWNS[i]['first_row'] = -1
-            elif Pawn.PAWNS[i]['first_row'] != 2: 
-                Pawn.PAWNS[i]['first_row'] = self.size[0] - 1
-            promotion_rows = Pawn.PAWNS[i]['promotion_rows']
-            for j, row in enumerate(promotion_rows):
-                promotion_rows[j] = row.replace('8', str(self.size[0]))
+        if Pawn.QUADRANTS_ORIGINAL: 
+            Pawn.QUADRANTS = Pawn.QUADRANTS_ORIGINAL.copy()
+            Pawn.PAWNS = Pawn.PAWNS_ORIGINAL.copy()
 
-        if self.size == (6, 6): 
-            new_quadrants = [
-                [1, 2, 3],
-                [4, 5, 6],
-                [1, 2, 3],
-                [4, 5, 6]
-            ]
+        if self.size != (8, 8): 
+            Pawn.PAWNS_ORIGINAL = Pawn.PAWNS.copy()
+            Pawn.QUADRANTS_ORIGINAL = Pawn.QUADRANTS.copy()
+            
             for i in range(4): 
-                Pawn.QUADRANTS[i]['rows'] = new_quadrants[i]
+                if self.size[0] < 6: 
+                    Pawn.PAWNS[i]['first_row'] = -1
+                elif Pawn.PAWNS[i]['first_row'] != 2: 
+                    Pawn.PAWNS[i]['first_row'] = self.size[0] - 1
+                promotion_rows = Pawn.PAWNS[i]['promotion_rows']
+                for j, row in enumerate(promotion_rows):
+                    promotion_rows[j] = row.replace('8', str(self.size[0]))
+
+            if self.size == (6, 6): 
+                new_quadrants = [
+                    [1, 2, 3],
+                    [4, 5, 6],
+                    [1, 2, 3],
+                    [4, 5, 6]
+                ]
+                for i in range(4): 
+                    Pawn.QUADRANTS[i]['rows'] = new_quadrants[i]
+            

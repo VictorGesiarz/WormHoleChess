@@ -40,7 +40,8 @@ class LayerPiece:
 
     def copy(self, new_board: LayerBoard, new_players: List[Player]) -> LayerPiece: 
         PieceObject = LayerPiece.get_piece_type(self.type)
-        piece_copy: LayerPiece = PieceObject(new_board[self.position.name], new_players[self.team.team])
+        player = [p for p in new_players if p.team == self.team.team][0]
+        piece_copy: LayerPiece = PieceObject(new_board[self.position.name], player)
         piece_copy.captured = self.captured
         piece_copy.first_move = self.first_move
         piece_copy.captured_position = None if not self.captured_position else new_board[self.captured_position.name]
@@ -328,6 +329,8 @@ class LayerKing(LayerPiece):
 
 
 class LayerPawn(LayerPiece): 
+    PAWNS_ORIGINAL = {}
+
     PAWNS = {
         0: {
             'first_row': '2_T', 

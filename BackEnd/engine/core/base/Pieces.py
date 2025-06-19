@@ -63,7 +63,8 @@ class Piece:
 
     def copy(self, new_board: Board, new_players: List[Player]) -> Piece: 
         PieceObject = Piece.get_piece_type(self.type)
-        piece_copy: Piece = PieceObject(new_board[self.position.name], new_players[self.team.team])
+        player = [p for p in new_players if p.team == self.team.team][0]
+        piece_copy: Piece = PieceObject(new_board[self.position.name], player)
         piece_copy.captured = self.captured
         piece_copy.first_move = self.first_move
         piece_copy.captured_position = None if not self.captured_position else new_board[self.captured_position.name] 
@@ -478,6 +479,9 @@ class King(Piece):
     
         
 class Pawn(Piece): 
+    PAWNS_ORIGINAL = {}
+    QUADRANTS_ORIGINAL = {}
+    
     PAWNS = {
         0: {
             'start_side': 'T',

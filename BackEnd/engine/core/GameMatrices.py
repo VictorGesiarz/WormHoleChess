@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import json
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from engine.core.matrices.MatrixBoard import LayerMatrixBoard
 from engine.utils.ZobristHasherMatrices import ZobristHasher
@@ -28,7 +28,8 @@ class GameMatrices:
                  program_mode: str = 'matrix', 
                  verbose: int = 0,
                  hasher: ZobristHasher = None, 
-                 max_turns: int = 120): 
+                 max_turns: int = 120,
+                 **kwargs): 
     
         self.players = players
         self.number_of_players = len([p for p in players if p['color'] != 'none'])
@@ -45,7 +46,7 @@ class GameMatrices:
         self.bot_engines = {
             1: RandomAI(self),
             2: MonteCarlo(self),
-            3: MonteCarloParallel(self), 
+            3: MonteCarloParallel(self, **kwargs), 
         }
 
         self._cached_turn = None
@@ -54,7 +55,7 @@ class GameMatrices:
         self._cached_hashes = np.empty(MAX_POSSIBLE_MOVES, dtype=np.uint64)
         self._cached_count = np.zeros(1, dtype=np.uint8)
 
-        self.history = np.zeros((max_turns, 7), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type, new_type]]
+        self.history = np.zeros((max_turns, 7), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type, new_type, player]]
         self.initial_positions = self.board.pieces.copy()
         self.positions_counter = {self.hash: 1}
         self.max_turns = max_turns
@@ -231,7 +232,7 @@ class GameMatrices:
         move = engine.choose_move()
         if move is not None: 
             self.make_move(move)
-            return move 
+            return move
 
     def check_player_state(self, player: np.array, moves: np.array) -> bool:
         if not player['is_alive']: 
@@ -392,3 +393,6 @@ class GameMatrices:
     
     def translate_movement_to_str(self, move: np.array) -> Tuple[str, str]: 
         return self.board.get_names(move)
+    
+    def get_action_space(self) -> Tuple[Dict[Tuple[int, int], int], Dict[int, Tuple[int, int]]]: 
+        return self.board.action_to_index, self.board.index_to_action

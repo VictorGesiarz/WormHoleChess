@@ -17,8 +17,8 @@ class LayerBoard(NormalBoard):
         self.tiles: Dict[str, LayerTile] = {}
         if innitialize: 
             self.tiles = self.create_tiles()
-            self.connect_tiles()
             self.remap_pawn_data()
+            self.connect_tiles()
         
         self.pieces: List[LayerPiece] = []
 
@@ -137,7 +137,7 @@ class LayerBoard(NormalBoard):
         filtered_movements = []
         for movement in movements: 
             if movement: 
-                if separate: 
+                if separate and self.game_mode == 'wormhole': 
                     filtered_movements += self._separate_pentagon_movements(movement)
                 else: 
                     filtered_movements.append(movement)
@@ -150,7 +150,6 @@ class LayerBoard(NormalBoard):
         return [self.tiles[tile] for tile in movement]
 
     def _separate_pentagon_movements(self, movement: List[Tile]) -> List[List[Tile]]:
-        
         splits_len = {
             (6, 6): {
                 'tower_pentagon_loop': [2, 2, 3], 
@@ -199,14 +198,20 @@ class LayerBoard(NormalBoard):
         return [movement]
     
     def remap_pawn_data(self) -> None: 
-        for i in range(4): 
-            if self.size[0] < 6: 
-                LayerPawn.PAWNS[i]['first_row'] = 'none'
-            else: 
-                LayerPawn.PAWNS[i]['first_row'] = LayerPawn.PAWNS[i]['first_row'].replace('7', str(self.size[0] - 1))
-            promotion_rows = LayerPawn.PAWNS[i]['promotion_rows']
-            for j, row in enumerate(promotion_rows): 
-                promotion_rows[j] = row.replace('8', str(self.size[0]))
+        if LayerPawn.PAWNS_ORIGINAL: 
+            LayerPawn.PAWNS = LayerPawn.PAWNS_ORIGINAL.copy()
+
+        if self.size != (8, 8): 
+            LayerPawn.PAWNS_ORIGINAL = LayerPawn.PAWNS.copy()
+
+            for i in range(4): 
+                if self.size[0] < 6: 
+                    LayerPawn.PAWNS[i]['first_row'] = 'none'
+                else: 
+                    LayerPawn.PAWNS[i]['first_row'] = LayerPawn.PAWNS[i]['first_row'].replace('7', str(self.size[0] - 1))
+                promotion_rows = LayerPawn.PAWNS[i]['promotion_rows']
+                for j, row in enumerate(promotion_rows): 
+                    promotion_rows[j] = row.replace('8', str(self.size[0]))
 
     def get_promotion_zones(self, player: int) -> List[int]: 
         promotion_rows = Pawn.PAWNS[player]['promotion_rows']
@@ -215,3 +220,4 @@ class LayerBoard(NormalBoard):
             if tile.name[1:] in promotion_rows or (len(tile.name) == 2 and tile.name[1] in promotion_rows): 
                 tiles.append(tile.id)
         return tiles 
+    

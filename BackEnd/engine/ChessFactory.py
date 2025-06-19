@@ -169,7 +169,7 @@ class MatrixChessFactory:
                     **kwargs) -> GameMatrices:
         
         load_from_file = False
-        board_file = f'{BOARD_FILES}{size[0]}x{size[1]}_{game_mode}.npz'
+        board_file = f'{BOARD_FILES}{size[0]}x{size[1]}_{game_mode}_LAYER.npz'
         if os.path.exists(board_file): 
             load_from_file = board_file
 
@@ -189,7 +189,7 @@ class MatrixChessFactory:
         max_turns = kwargs.get('max_turns', 120)
         verbose = kwargs.get('verbose', 1)
     
-        return GameMatrices(board, players, turn, verbose=verbose, max_turns=max_turns)
+        return GameMatrices(board, players, turn, verbose=verbose, max_turns=max_turns, **kwargs)
     
     @staticmethod
     def initialize_pieces(board: LayerMatrixBoard, players: np.array, initial_positions: str) -> None: 

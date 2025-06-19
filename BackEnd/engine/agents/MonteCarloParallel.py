@@ -33,6 +33,7 @@ class MonteCarloParallel(Agent):
         self.calculation_time = datetime.timedelta(seconds=seconds)
         self.simulations_per_move = kwargs.get('simulations_per_move', 30000)
         self.C = kwargs.get('C', 1.4) # UCB1 Parameter
+        self.num_workers = kwargs.get('num_workers', 8)
 
     def _merge_stats(self, sim_wins, sim_plays):
         for key, value in sim_wins.items():
@@ -61,7 +62,7 @@ class MonteCarloParallel(Agent):
         dispatch_time = 0.0
         merge_time = 0.0
 
-        max_workers = 4 
+        max_workers = self.num_workers
 
         # Run tree construction in parallel 
         with ProcessPoolExecutor(

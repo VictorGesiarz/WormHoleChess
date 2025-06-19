@@ -95,8 +95,8 @@ class MonteCarlo(Agent):
         # print("Chosen move:", move)
         
         # print(f"Tree size: {asizeof.asizeof(self.plays)} (plays) + {asizeof.asizeof(self.wins)} (wins)")
-        # print(f"Average time per simulation: {simulation_time / games:.6f}")
-        # print(f"Total time spent in simulations: {simulation_time:.6f}")
+        print(f"Average time per simulation: {simulation_time / games:.6f}")
+        print(f"Total time spent in simulations: {simulation_time:.6f}")
         # print(f" - Average time per move calculation: {self.move_calc_time / games:.6f}")
         # print(f" - Total time spent calculating move: {self.move_calc_time:.6f}")
         # print(f" - Average time per skiping player: {self.invalid_player_time / games:.6f}")
@@ -183,7 +183,7 @@ class MonteCarlo(Agent):
             game_copy.next_turn()
             player = game_copy.get_turn(auto_play_bots=False)
             self.move_calc_time += time.time() - move_calc_time
-        
+
         rewards = game_copy.rewards
         # print(rewards)
 
@@ -198,5 +198,3 @@ class MonteCarlo(Agent):
             wins[(player, state)] += reward
 
         self.back_propagation_time += time.time() - back_propagation_time
-
-        

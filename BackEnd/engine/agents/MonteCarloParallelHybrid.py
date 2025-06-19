@@ -61,21 +61,27 @@ class MonteCarloParallel(Agent):
         dispatch_time = 0.0
         merge_time = 0.0
 
-        max_workers = 4 
+        max_workers = 12
+        batches = 5
 
         # Run tree construction in parallel 
-        while: 
+        current_batch = 0
+        while datetime.datetime.now(datetime.timezone.utc) < end_time and games < self.simulations_per_move: 
+            current_batch += 1
+
             with ProcessPoolExecutor(
                 max_workers=max_workers,
                 max_tasks_per_child=1
             ) as executor:
+
+                print("Batch number", current_batch)
 
                 # ⏱ Dispatch timing
                 dispatch_start = time.time()
                 futures = []
                 for _ in range(max_workers):
                     game_copy = self.game.copy()
-                    f = executor.submit(MonteCarloParallel.construct_tree_worker, game_copy, self.plays, self.wins, self.C, end_time, self.simulations_per_move / max_workers)
+                    f = executor.submit(MonteCarloParallel.construct_tree_worker, game_copy, self.plays, self.wins, self.C, end_time, self.simulations_per_move / max_workers / batches)
                     futures.append(f)
                 dispatch_time += time.time() - dispatch_start
                 # print(f'Took {time.time() - dispatch_start:.4f} seconds to create jobs')
