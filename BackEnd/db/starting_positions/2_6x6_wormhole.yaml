@@ -1,7 +1,7 @@
 white:
   Pawn:   f2T e2T d2T c2T b2T a2T
   Knight: b1T
-  bishop: e1T
+  Bishop: e1T
   Tower:  f1T a1T
   Queen:  c1T
   King:   d1T

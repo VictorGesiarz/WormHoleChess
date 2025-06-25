@@ -23,9 +23,12 @@ cython = "*"
 databases = "*"
 asyncpg = "*"
 psutil = "*"
-torch = "*"
 torch-geometric = "*"
 matplotlib = "*"
+tqdm = "*"
+torch = "*"
+torchvision = "*"
+torchaudio = "*"
 
 [dev-packages]
 ipykernel = "*"

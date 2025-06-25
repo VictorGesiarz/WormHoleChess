@@ -25,7 +25,7 @@ class GameMatrices:
                  board: LayerMatrixBoard,
                  players: np.ndarray,
                  turn: int, 
-                 program_mode: str = 'matrix', 
+                 program_mode: str = 'matrix',
                  verbose: int = 0,
                  hasher: ZobristHasher = None, 
                  max_turns: int = 120,
@@ -35,8 +35,8 @@ class GameMatrices:
         self.number_of_players = len([p for p in players if p['color'] != 'none'])
         self.rewards = [0] * self.number_of_players
         self.turn = turn 
-        self.program_mode = program_mode
         self.verbose = verbose
+        self.program_mode = program_mode
         self.game_state = GameState.PLAYING
         
         self.board = board
@@ -68,8 +68,10 @@ class GameMatrices:
         return asizeof.asizeof(self)
 
     def copy(self) -> 'GameMatrices':
-        game_copy = GameMatrices(self.board.copy(), self.players.copy(), self.turn, hasher=self.hasher, max_turns=self.max_turns)
-        game_copy.history = self.history.copy()
+        board = self.board.copy()
+        players = self.players.copy()
+        game_copy = GameMatrices(board, players, self.turn, hasher=self.hasher, max_turns=self.max_turns)
+        game_copy.history = np.array(self.history, dtype=np.int16, copy=True)
         game_copy.positions_counter = self.positions_counter.copy()
         game_copy.moves_count = self.moves_count
         game_copy.moves_without_capture = self.moves_without_capture
@@ -96,7 +98,7 @@ class GameMatrices:
         if self._cached_turn == self.turn and not self._recalculate: 
             if include_hashes:
                 return (
-                    self._cached_movements[:self._cached_count[0]],
+                        self._cached_movements[:self._cached_count[0]],
                         self._cached_hashes[:self._cached_count[0]]
                     )
             else:   
@@ -115,7 +117,7 @@ class GameMatrices:
         
         if include_hashes:
             result = (
-                self._cached_movements[:self._cached_count[0]],
+                    self._cached_movements[:self._cached_count[0]],
                     self._cached_hashes[:self._cached_count[0]]
                 )
 
@@ -213,6 +215,10 @@ class GameMatrices:
                         raise RuntimeError("KING CAPTURED", self.board.node_names[from_], self.board.node_names[to])
             self.positions_counter[self.hash] = self.positions_counter.get(self.hash, 0) + 1
             self.moves_count += 1
+
+            # FOR ALPHA ZERO TRAINING
+            history_movement = self.history[self.moves_count - 1]
+            return self.turn, history_movement[1], history_movement[2], history_movement[6]
 
     def undo_move(self, remove: bool = True) -> None: 
         if remove:
@@ -394,5 +400,3 @@ class GameMatrices:
     def translate_movement_to_str(self, move: np.array) -> Tuple[str, str]: 
         return self.board.get_names(move)
     
-    def get_action_space(self) -> Tuple[Dict[Tuple[int, int], int], Dict[int, Tuple[int, int]]]: 
-        return self.board.action_to_index, self.board.index_to_action

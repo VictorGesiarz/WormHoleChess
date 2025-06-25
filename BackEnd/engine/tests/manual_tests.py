@@ -496,7 +496,7 @@ def test_layer_matrix_board():
 
     b.save_matrices()
         
-test_layer_matrix_board()
+# test_layer_matrix_board()
 
 
 def copy_test(): 
@@ -543,10 +543,10 @@ def create_matrix_game():
 
 def test_max_moves(): 
     game = ChessFactory.create_game(
-        player_data=ChessFactory.create_bot_data(num_bots=2), 
-        program_mode="layer",
-        game_mode="wormhole",
-        size=(8, 8),
+        player_data=ChessFactory.create_player_data(num_players=2), 
+        program_mode="matrix",
+        game_mode="normal",
+        size=(6, 6),
     )
 
     moves_count = []
@@ -564,4 +564,4 @@ def test_max_moves():
     print(max(moves_count), sum(moves_count) / len(moves_count))
 
 
-# test_max_moves()
+test_max_moves()

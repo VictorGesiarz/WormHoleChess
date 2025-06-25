@@ -1,7 +1,8 @@
 from typing import List, Tuple, Dict
 import numpy as np 
 import torch 
-from torch_geometric.data import Data
+import os
+from torch_geometric.data import Data, Batch
 
 from engine.core.layer.LayerBoard import LayerBoard
 from engine.core.layer.LayerTile import LayerTile
@@ -10,12 +11,11 @@ from engine.core.base.NormalBoard import NormalBoard
 from engine.core.matrices.matrix_constants import Pieces, Teams
 
 
-BIG_BOARD_FILE = './engine/core/configs/matrix_board/(8, 8)_wormhole.npz'
 BOARD_FILES = './engine/core/configs/matrix_board/'
 
 class LayerMatrixBoard: 
     def __init__(self, size: Tuple[int, int], game_mode: str = 'wormhole', innitialize: bool = True, 
-             load_from_file=BIG_BOARD_FILE, **kwargs) -> None:
+             load_from_file=True, **kwargs) -> None:
         """ 
         Nodes: list of nodes in the board, the element corresponds to the piece type there and the player
         Edge lists: list of adjacency lists for each piece type. 
@@ -44,8 +44,9 @@ class LayerMatrixBoard:
         self.promotion_zones = np.empty((self.num_players, self.size[1] * (self.num_players-1)), dtype=np.uint8)
 
         if innitialize: 
-            if load_from_file: 
-                self.load_matrices(load_from_file)
+            file = f'{BOARD_FILES}{self.size[0]}x{self.size[1]}_{self.game_mode}_LAYER.npz'
+            if load_from_file and os.path.exists(file): 
+                self.load_matrices(file)
             else:
                 self.create_board()
     
@@ -75,7 +76,7 @@ class LayerMatrixBoard:
         self.promotion_zones = promotion_zones
     
     def save_matrices(self) -> None: 
-        file = f'{BOARD_FILES}{self.size[0]}x{self.size[1]}_{self.game_mode}_LAYER.npz'
+        file = f'{BOARD_FILES}{self.size[0]}x{self.size[1]}_{self.game_mode}_BASE.npz'
         np.savez(file, 
                  nodes=self.nodes,
                  node_names=self.node_names, 
@@ -213,24 +214,21 @@ class LayerMatrixBoard:
 
 
 class BaseMatrixBoard: 
-    action_to_index = {}
-    index_to_action = {}
-
-    def init(self, size: Tuple[int, int], gamemode: str = 'wormhole', 
-             innitialize: bool = True, load_from_file=BIG_BOARD_FILE, **kwargs) -> None:
+    def __init__(self, size: Tuple[int, int], gamemode: str = 'wormhole', 
+             innitialize: bool = True, load_from_file=True, **kwargs) -> None:
         self.size = size
-        self.gamemode = gamemode
+        self.game_mode = gamemode
         
         self.nodes: np.array
         self.edges: np.array
-        self.create_board()
 
         self.num_players = kwargs.get('num_players', 2) 
         self.piece_types = kwargs.get('piece_types', 6)
 
         if innitialize: 
-            if load_from_file: 
-                self.load_matrices(load_from_file)
+            file = f'{BOARD_FILES}{self.size[0]}x{self.size[1]}_{self.game_mode}_BASE.npz'
+            if load_from_file and os.path.exists(file): 
+                self.load_matrices(file)
             else:
                 self.create_board()
         
@@ -239,7 +237,7 @@ class BaseMatrixBoard:
         return asizeof.asizeof(self)
     
     def copy(self) -> 'BaseMatrixBoard': 
-        board_copy = BaseMatrixBoard(self.size, self.gamemode, False)
+        board_copy = BaseMatrixBoard(self.size, self.game_mode, False)
         board_copy.nodes = self.nodes.copy()
         board_copy.edges = self.edges.copy()
         board_copy.num_players = self.num_players
@@ -251,23 +249,20 @@ class BaseMatrixBoard:
         np.savez(file, 
                  nodes=self.nodes,
                  edges=self.edges, 
-                 actions=BaseMatrixBoard.action_to_index.keys())
+            )
         
     def load_matrices(self, file) -> None: 
         matrices = np.load(file)
         self.nodes = matrices['nodes']
         self.edges = matrices['edges']
-
-        if not BaseMatrixBoard.action_to_index: 
-            BaseMatrixBoard.action_to_index, BaseMatrixBoard.index_to_action = self.__actions_to_dict(matrices['actions'])
     
     def create_board(self) -> None: 
-        if self.gamemode == 'wormhole': 
+        if self.game_mode == 'wormhole': 
             b = Board(self.size)
-        elif self.gamemode == 'normal': 
+        elif self.game_mode == 'normal': 
             b = NormalBoard(self.size)
 
-        self.nodes = np.zeros((len(b), len(Pieces) + len(Teams)), dtype=np.bool)
+        self.nodes = np.zeros((len(b), len(Pieces) + len(Teams)), dtype=np.uint8)
         self.nodes[:, Pieces.EMPTY] = 1
         
         self.edges = [[], []] 
@@ -279,21 +274,8 @@ class BaseMatrixBoard:
                     self.edges[1] += [neighbor.id, tile.id]
         
         self.edges = np.array(self.edges, dtype=np.uint8)
-        
-        if not BaseMatrixBoard.action_to_index: 
-            temp_board = LayerMatrixBoard(self.size, self.gamemode, innitialize=False)
-            temp_board.create_board(add_actions=True)
-            BaseMatrixBoard.action_to_index, BaseMatrixBoard.index_to_action = self.__actions_to_dict(temp_board.actions)
 
         self.save_matrices()
-
-    def __actions_to_dict(self, actions): 
-        action_to_index = {}
-        index_to_action = {}
-        for i, action in enumerate(self.__actions): 
-            action_to_index[(action[0], action[1])] = i
-            index_to_action[i] = (action[0], action[1])
-        return action_to_index, index_to_action
 
     def set_piece(self, type: int, player: int, position: int) -> None: 
         piece = self.nodes[position]
@@ -305,20 +287,24 @@ class BaseMatrixBoard:
             piece[type] = 1
             piece[self.piece_types + player] = 1
 
-    def update_board(self, movement: np.array) -> None: 
-        player, origin_tile, destination_tile, captured_piece_index, _, original_type, new_type = movement
+    def update_board(self, movement: Tuple) -> None: 
+        player, origin_tile, destination_tile, new_type = movement
         # moving_piece_index should not be necessary because it requires pieces list from the other class. The other variables should give all necessary info? 
 
         self.set_piece(Pieces.EMPTY, 0, origin_tile)
-
-        # If there was a captured piece, clear the destination (might be redundant)
-        if captured_piece_index != -1:
-            self.set_piece(Pieces.EMPTY, 0, destination_tile)
-
-        # Place new piece on destination
         self.set_piece(new_type, player, destination_tile)
 
-    def to_pyg_data(self):
-        x = torch.tensor(self.nodes, dtype=torch.uint8) 
-        edge_index = torch.tensor(self.edges, dtype=torch.uint8)
+    def to_pyg_data(self, device):
+        x = torch.tensor(self.nodes, dtype=torch.float32, device=device) 
+        edge_index = torch.tensor(self.edges, dtype=torch.long, device=device)
         return Data(x=x, edge_index=edge_index)
+
+    def batch_to_pyg_data(self, graph_list, device):
+        data_list = []
+        edge_index = torch.tensor(self.edges, dtype=torch.long, device=device)
+        for graph in graph_list:
+            data = Data(x=graph, edge_index=edge_index)
+            data_list.append(data)
+        batch = Batch.from_data_list(data_list)
+        return batch
+    

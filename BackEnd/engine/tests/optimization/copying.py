@@ -5,8 +5,7 @@ import time
 
 
 def test(): 
-    num_tests = 10000
-
+    num_tests = 1000
 
     game = ChessFactory.create_game(
         player_data=ChessFactory.create_player_data(num_players=2), 
@@ -16,8 +15,13 @@ def test():
     )
 
     start = time.time()
-    for i in range(num_tests): 
+
+    for _ in range(num_tests):
         game_copy = game.copy()
+        while not game_copy.is_finished(): 
+            game_copy.copy()
+            game_copy.get_turn()
+            game_copy.next_turn()
     end = time.time()
 
     print(f"Took {end - start:.4f} seconds")

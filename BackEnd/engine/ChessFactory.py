@@ -158,6 +158,10 @@ class ChessFactory:
 
         return initial_positions
     
+    @staticmethod
+    def create_representation(game: GameMatrices) -> BaseMatrixBoard:
+        return MatrixChessFactory.create_representation(game)
+    
 
 class MatrixChessFactory: 
     @staticmethod
@@ -168,28 +172,21 @@ class MatrixChessFactory:
                     piece_positions: Dict = {},
                     **kwargs) -> GameMatrices:
         
-        load_from_file = False
-        board_file = f'{BOARD_FILES}{size[0]}x{size[1]}_{game_mode}_LAYER.npz'
-        if os.path.exists(board_file): 
-            load_from_file = board_file
-
         # Create board and players
         num_players = 4
         if game_mode == 'normal': 
             num_players = 2
-        board = LayerMatrixBoard(size, game_mode, load_from_file=load_from_file, num_players=num_players, **kwargs)
-        if not load_from_file: 
-            board.save_matrices()
+        board = LayerMatrixBoard(size, game_mode, num_players=num_players, **kwargs)
+
         players = MatrixChessFactory.create_players(player_data, game_mode)
 
         MatrixChessFactory.initialize_pieces(board, players, piece_positions)
 
         # Get other arguments
         turn = kwargs.get('turn', 0)
-        max_turns = kwargs.get('max_turns', 120)
         verbose = kwargs.get('verbose', 1)
     
-        return GameMatrices(board, players, turn, verbose=verbose, max_turns=max_turns, **kwargs)
+        return GameMatrices(board, players, turn, verbose=verbose, **kwargs)
     
     @staticmethod
     def initialize_pieces(board: LayerMatrixBoard, players: np.array, initial_positions: str) -> None: 
@@ -245,3 +242,19 @@ class MatrixChessFactory:
             return Pieces.KING
         elif "Pawn" == piece_name: 
             return Pieces.PAWN
+        
+
+    @staticmethod
+    def create_representation(game: GameMatrices) -> BaseMatrixBoard:
+        representation = BaseMatrixBoard(game.board.size, game.board.game_mode)
+
+        for piece in game.board.pieces: 
+            if piece[4]: 
+                continue 
+
+            piece_type = piece[0]
+            player = piece[1]
+            position = piece[2]
+            representation.set_piece(piece_type, player, position)
+
+        return representation
