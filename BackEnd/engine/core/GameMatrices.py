@@ -14,10 +14,10 @@ from engine.core.matrices.chess_logic_bounds import (
 )
 from engine.core.matrices.matrix_constants import * 
 from engine.core.constants import * 
-
 from engine.agents.RandomAI import RandomAI
 from engine.agents.MonteCarlo import MonteCarlo
 from engine.agents.MonteCarloParallel import MonteCarloParallel
+from engine.agents.AlphaZero import AlphaZero
 
 
 class GameMatrices: 
@@ -39,6 +39,9 @@ class GameMatrices:
         self.program_mode = program_mode
         self.game_state = GameState.PLAYING
         
+        self.representation = None
+        self.network = AlphaZero.load_network('./engine/agents/alpha_zero_training/models/backups_0/version_8.pt')
+
         self.board = board
         self.hasher = ZobristHasher() if hasher is None else hasher
         self.hash = self.hasher.compute_hash(self.board.pieces)
@@ -55,7 +58,7 @@ class GameMatrices:
         self._cached_hashes = np.empty(MAX_POSSIBLE_MOVES, dtype=np.uint64)
         self._cached_count = np.zeros(1, dtype=np.uint8)
 
-        self.history = np.zeros((max_turns, 7), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type, new_type, player]]
+        self.history = np.zeros((max_turns + 20, 7), dtype=np.int16) # [[moving_piece_index, from_tile, to_tile, captured_piece_index, first_move, original_type, new_type, player]]
         self.initial_positions = self.board.pieces.copy()
         self.positions_counter = {self.hash: 1}
         self.max_turns = max_turns
@@ -79,6 +82,10 @@ class GameMatrices:
 
     def reset(self) -> None: 
         ... 
+
+    def set_representation(self, representation) -> None: 
+        self.representation = representation
+        self.bot_engines[4] = AlphaZero(self, self.representation, self.network, 1000)
 
     def next_turn(self) -> None: 
         self.turn = (self.turn + 1) % self.number_of_players
@@ -399,4 +406,5 @@ class GameMatrices:
     
     def translate_movement_to_str(self, move: np.array) -> Tuple[str, str]: 
         return self.board.get_names(move)
-    
+
+        

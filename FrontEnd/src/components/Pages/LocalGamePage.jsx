@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import "./LocalGamePage.css";
 
+import { API_BASE_URL } from "../../utils/ApiUrls";
 
 import ChessGame from "../Game/ChessGame";
 
@@ -25,6 +26,8 @@ const LocalGamePage = () => {
     const topPlayers = players.slice(0, Math.floor(players.length / 2));
     const bottomPlayers = players.slice(Math.floor(players.length / 2));
 
+    const [gameName, setGameName] = useState('');
+
     // - - - - - - - - - - - - - - - - GAME VARIABLES - - - - - - - - - - - - - - - - 
     const [currentState, setCurrentState] = useState([])
     const [turn, setTurn] = useState(turnInfo);
@@ -39,6 +42,12 @@ const LocalGamePage = () => {
 
     // - - - - - - - - - - - - - - - - USE EFFECT FUNCTIONS - - - - - - - - - - - - - - - -     
     useEffect(() => {
+        setStates(initialState);
+        setCurrentState(initialState[turn.moveCount]);
+        watchingState.current = turn.moveCount;
+    }, []);  // empty deps → runs once
+
+    useEffect(() => {
         setCurrentState(states[turn.moveCount]);
         watchingState.current = turn.moveCount;
         console.log(watchingState.current);
@@ -52,7 +61,7 @@ const LocalGamePage = () => {
             setCurrentState(states[index]);
         }
     };
-    
+
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'ArrowLeft') {
@@ -72,8 +81,22 @@ const LocalGamePage = () => {
 
 
     // - - - - - - - - - - - - - - - - FUNCTIONS - - - - - - - - - - - - - - - - 
-    const undoMove = async () => {
-
+    const storeGame = async () => {
+        const nameToSend = gameName || '';
+        try {
+            const response = await fetch(`${API_BASE_URL}/game-local/store-game`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ name: nameToSend }),
+            });
+            if (!response.ok) throw new Error("Failed to store game");
+            alert("Game stored successfully!");
+        } catch (err) {
+            console.error(err);
+            alert("Error storing game.");
+        }
     };
 
     // - - - - - - - - - - - - - - - - RENDER - - - - - - - - - - - - - - - - 
@@ -158,8 +181,15 @@ const LocalGamePage = () => {
                 </div>
 
                 <div className="game-options">
-                    <button className="button leave-btn" onClick={() => {}}>Leave Game</button>
-                    <button className="button undo-btn" onClick={() => {}}>Undo Move</button>
+                    {/* <button className="button leave-btn" onClick={() => {}}>Leave Game</button> */}
+                    <input
+                        type="text"
+                        placeholder="Enter game name..."
+                        value={gameName}
+                        onChange={(e) => setGameName(e.target.value)}
+                        className="input game-name-input"
+                    />
+                    <button className="button undo-btn" onClick={storeGame}>Store Game</button>
                 </div>
             </div>
         </div>

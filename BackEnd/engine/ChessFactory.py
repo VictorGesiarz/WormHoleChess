@@ -16,6 +16,7 @@ from engine.core.GameMatrices import GameMatrices
 from engine.core.constants import COLOR_TO_NUMBER, NUMBER_TO_COLOR
 
 
+GAMES_FOLDER = './db/games/'
 BOARD_FILES = './engine/core/configs/matrix_board/'
 POSITIONS_PATH = './db/starting_positions/'
 SIZES = {
@@ -162,6 +163,53 @@ class ChessFactory:
     def create_representation(game: GameMatrices) -> BaseMatrixBoard:
         return MatrixChessFactory.create_representation(game)
     
+    @staticmethod
+    def store_game(game: GameMatrices, name: str): 
+        if not name:
+            files = [f for f in os.listdir(GAMES_FOLDER) if os.path.isfile(os.path.join(GAMES_FOLDER, f))]
+            name = f"game_{len(files)}"
+
+        file_name = os.path.join(GAMES_FOLDER, name)
+        np.savez(file_name, 
+            turns=np.array([game.max_turns]),
+            game_mode=np.array([game.board.game_mode]), 
+            players=game.players, 
+            num_players=np.array([game.number_of_players]),
+            size=np.array(game.board.size),
+            initial_state=game.initial_positions,
+            history=game.history[:game.moves_count, 1:3]
+        )
+
+    @staticmethod
+    def load_game(name: str):
+        file_name = os.path.join(GAMES_FOLDER, name)
+
+        data = np.load(file_name)
+
+        players = data['num_players']
+        game = ChessFactory.create_game(
+            player_data=ChessFactory.create_player_data(players), 
+            program_mode='matrix',
+            game_mode=data['game_mode'][0],
+            size=tuple(data['size']),
+            max_turns=data['turns'][0],
+        )
+
+        players = data['players']
+        for i in range(len(players)):
+            if players[i]['color'] != 'none':
+                players[i]['is_alive'] = True 
+        game.players = players
+        game.board.pieces = data['initial_state'].copy()
+        game.initial_positions = data['initial_state'].copy()
+        
+        game.board.nodes[:] = -1
+        for i, piece in enumerate(game.board.pieces): 
+            if piece[2] != -1: 
+                game.board.nodes[piece[2]] = i
+
+        return game, data['history']
+
 
 class MatrixChessFactory: 
     @staticmethod
@@ -186,7 +234,10 @@ class MatrixChessFactory:
         turn = kwargs.get('turn', 0)
         verbose = kwargs.get('verbose', 1)
     
-        return GameMatrices(board, players, turn, verbose=verbose, **kwargs)
+        game = GameMatrices(board, players, turn, verbose=verbose, **kwargs)
+        representation = MatrixChessFactory.create_representation(game)
+        game.set_representation(representation)
+        return game
     
     @staticmethod
     def initialize_pieces(board: LayerMatrixBoard, players: np.array, initial_positions: str) -> None: 

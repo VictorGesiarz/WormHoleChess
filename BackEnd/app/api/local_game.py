@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 import os
 
-from app.schemas.local_game import StartLocalGameRequest, MoveRequest, BotMoveRequest
+from app.schemas.local_game import StartLocalGameRequest, MoveRequest, BotMoveRequest, GameStoreRequest
 from app.core.GameManager import GameManager
 
 router = APIRouter(prefix="/game-local", tags=["game-local"])
@@ -27,6 +27,20 @@ def reset_game():
 @router.post("/leave-game")
 def leave_game(): 
     games.remove_game()
+
+@router.post("/store-game")
+def store_game(data: GameStoreRequest): 
+    games.store_game(data)
+
+@router.post("/load-game")
+def load_game(data: GameStoreRequest):
+    return games.load_game(data)
+
+@router.get("/get-games")
+def get_games(): 
+    folder_path = './db/games/'
+    files = os.listdir(folder_path)
+    return files
 
 @router.get("/get-possible-positions")
 def get_possible_positions(): 

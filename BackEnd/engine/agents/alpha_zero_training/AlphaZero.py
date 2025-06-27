@@ -111,11 +111,11 @@ class AlphaZero:
                 self.plot_loss(iteration, losses)
                 self.plot_avg_loss(all_avg_losses)
 
-            wins = 0
-            print(" - Evaluate")
-            for _ in tqdm(range(self.play_per_eval), desc="Evaluation games"):
-                wins += self.evaluate_model(self.game.copy(), self.representation.copy())
-            self.update_frozen(wins)
+            # wins = 0
+            # print(" - Evaluate")
+            # for _ in tqdm(range(self.play_per_eval), desc="Evaluation games"):
+            #     wins += self.evaluate_model(self.game.copy(), self.representation.copy())
+            self.update_frozen(self.play_per_eval)
 
             self.update_temperature(iteration)
 
@@ -291,7 +291,7 @@ class AlphaZero:
 
             pbar.update(1)
 
-        winner = game.winner
+        winner = game.winner()
         if winner != frozen_team and winner != -1: 
             return +1 
         return 0
@@ -370,3 +370,11 @@ class AlphaZero:
         full_path = os.path.join(self.plots_path, filename)
         fig.savefig(full_path)
         plt.close(fig)
+
+    @staticmethod
+    def load_network(network_path): 
+        network = AlphaZeroGNN(13, 256)
+        state_dict = torch.load(network_path)
+        network.load_state_dict(state_dict)
+        network.eval()
+        return network

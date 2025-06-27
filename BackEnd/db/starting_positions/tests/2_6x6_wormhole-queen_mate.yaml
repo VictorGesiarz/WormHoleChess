@@ -1,0 +1,5 @@
+white:
+  Queen: b2T
+  King: a3T
+black:
+  King: c5T

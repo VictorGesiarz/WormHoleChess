@@ -24,7 +24,7 @@ class AlphaZero(Agent):
         self.game = game
         self.representation = representation
     
-        self.network = network
+        self.network = network.to(device)
 
         self.mcts_simulations = mcts_simulations
         self.C = C

@@ -1,0 +1,54 @@
+/* Grid layout */
+.boxes1 {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: 2fr 1fr;
+    gap: 10px;
+    width: 100%;
+}
+
+/* General section box */
+.box {
+    padding: 1rem 2rem;
+    text-align: center;
+    border-radius: 15px;
+    background-color: #121417;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Header styling */
+h3 {
+    margin-bottom: 20px;
+}
+
+/* Game setup box position */
+.game-setup {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+}
+
+/* List of game files */
+.game-file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+/* Game file item */
+.game-file-item {
+    background-color: #2A2D33;
+    color: #EDEDED;
+    padding: 0.75rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s ease;
+}
+
+.game-file-item:hover {
+    background-color: #40444B;
+}

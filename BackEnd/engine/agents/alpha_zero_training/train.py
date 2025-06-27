@@ -16,7 +16,8 @@ def train():
     )
     representation = ChessFactory.create_representation(game)
 
-    trainer = AlphaZero(game, representation)
+    network = AlphaZero.load_network('./engine/agents/alpha_zero_training/models/backups_0/version_8.pt')
+    trainer = AlphaZero(game, representation, network)
 
     trainer.train()
     

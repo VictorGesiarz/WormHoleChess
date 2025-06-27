@@ -3,6 +3,8 @@ import random
 from engine.ChessFactory import ChessFactory
 from engine.agents.AlphaZero import AlphaZero
 from engine.agents.RandomAI import RandomAI
+from engine.agents.MonteCarlo import MonteCarlo
+from engine.agents.MonteCarloParallel import MonteCarloParallel
 
 
 def arena(game, representation, agents): 
@@ -13,12 +15,11 @@ def arena(game, representation, agents):
         if turn == -1: 
             continue
 
-        if game.moves_count > game.max_turns - 10: 
-            game.game_state = 2
-            break
-
         agent = agents[turn]
+        start = time.time()
         move = agent.choose_move()
+        end = time.time()
+        print(f'Took: {end - start:.4f} seconds')
         history_movement = game.make_move(move)
         representation.update_board(history_movement)
 
@@ -40,34 +41,43 @@ def test(num):
         program_mode='matrix',
         game_mode='wormhole',
         size=(6, 6),
-        max_turns=70,
+        max_turns=60,
+        # initial_positions='queen_mate'
     )
 
     representation = ChessFactory.create_representation(game)
 
-    network = AlphaZero.load_network('./engine/agents/alpha_zero_training/models/backups/version_1.pt')
+    network_old = AlphaZero.load_network('./engine/agents/alpha_zero_training/models/backups_0/version_0.pt')
+    network_new = AlphaZero.load_network('./engine/agents/alpha_zero_training/models/backups_0/version_4.pt')
 
     wins, draws, loses = 0, 0, 0
     for i in range(num):
         game_copy = game.copy()
         representation_copy = representation.copy()
-        agents = [RandomAI(game_copy), AlphaZero(game_copy, representation_copy, network, 400)]
+        agents = [
+            # AlphaZero(game_copy, representation_copy, network_old, 1500),
+            MonteCarlo(game_copy),
+            # MonteCarloParallel(game_copy),
+            AlphaZero(game_copy, representation_copy, network_new, 1500)
+            # RandomAI(game_copy),
+        ]
 
-        alphazero_team = random.randint(0, 1)
-        if alphazero_team == 0: 
+        new_network_team = random.randint(0, 1)
+        # new_network_team = 0
+        if new_network_team == 0: 
             agents = agents[::-1]
 
-        print(f'\n - - - - - - Playing game: {i}, AlphaZero Team: {alphazero_team} - - - - - -')
+        print(f'\n - - - - - - Playing game: {i}, New network Team: {new_network_team} - - - - - -')
         winner = arena(game_copy, representation_copy, agents)
-        if winner == alphazero_team: 
-            print("Alpha zero won")
+        if winner == new_network_team: 
+            print("New network won")
             wins += 1
         elif winner == -1: 
             draws += 1
             print("Draw")
         else: 
             loses += 1
-            print("Alpha zero lost")
+            print("New network lost")
 
     print(f"Wins: {wins}, Draws: {draws}, Loses: {loses}")
 

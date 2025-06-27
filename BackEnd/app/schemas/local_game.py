@@ -15,7 +15,7 @@ class TurnInfo(BaseModel):
     moveCount: int
     player_killed: Optional[str] = None 
     player_won: Optional[str] = None
-    game_state: Literal['playing', 'draw', 'checkmate'] = 'playing' # 'draw', 'checkmate'
+    game_state: Literal['playing', 'draw', 'checkmate', 'player_won'] = 'playing' # 'draw', 'checkmate'
 
 
 class StartLocalGameRequest(BaseModel):
@@ -42,3 +42,15 @@ class MoveResponse(BaseModel):
     
 class BotMoveRequest(BaseModel):
     gameId: str
+
+class LoadGameResponse(BaseModel): 
+    gameId: str
+    gameType: str
+    boardSize: str
+    states: Dict
+    playerCount: int
+    turn: TurnInfo
+    players: List[PlayerData]
+
+class GameStoreRequest(BaseModel):
+    name: str

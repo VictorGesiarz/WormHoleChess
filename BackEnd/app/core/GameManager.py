@@ -7,9 +7,13 @@ from app.schemas.local_game import (
     MoveRequest,
     MoveResponse,
     TurnInfo,
-    BotMoveRequest
+    BotMoveRequest,
+    PlayerData,
+    LoadGameResponse, 
+    GameStoreRequest
 )
 
+import os
 from engine.ChessFactory import ChessFactory
 
 
@@ -23,7 +27,10 @@ class GameManager:
             while game.get_turn(auto_play_bots=False) == -1: 
                 game.next_turn()
 
-        valid_moves = game.get_movements()
+
+        valid_moves = []
+        if not game.is_finished():
+            valid_moves = game.get_movements()
         if game.program_mode == 'layer':
             valid_moves = [[m[0].name, m[1].name] for m in valid_moves]
             type = 'human' if game.players[game.turn].type == 'player' else 'bot'
@@ -126,3 +133,55 @@ class GameManager:
             turn=turn,
             moveDescription=moveDescription
         )
+    
+    def store_game(self, data: GameStoreRequest): 
+        ChessFactory.store_game(self.games['0'], data.name)
+
+    def load_game(self, data: GameStoreRequest): 
+        game, moves = ChessFactory.load_game(data.name)
+        self.games['0'] = game
+
+        states = {0: game.get_state()}
+
+        for move in moves: 
+            game.get_turn(auto_play_bots=False)
+            game.make_move(move)
+            game.next_turn()
+            states[game.moves_count] = game.get_state()
+
+        engines_map = {
+            0: "human",
+            1: "random",
+            2: "mcts",
+            3: "mcts-parallel",
+            4: "alphazero",
+        }
+
+        turn_info = TurnInfo(
+            turn=-1, 
+            type='human',
+            validMoves=[[]], 
+            moveCount=game.moves_count, 
+            game_state='checkmate', 
+        )
+
+        players = [
+            PlayerData(
+                name=f'Player {p['id']}',
+                index=p['id'], 
+                type=engines_map[p['opponent_type']], 
+                color=p['color']
+            )
+            for p in game.players if p['color'] != 'none'
+        ]
+
+        return LoadGameResponse(
+            gameId='0', 
+            gameType=game.board.game_mode, 
+            boardSize=str(game.board.size[0]), 
+            states=states, 
+            playerCount=game.number_of_players, 
+            turn=turn_info, 
+            players=players
+        )
+    

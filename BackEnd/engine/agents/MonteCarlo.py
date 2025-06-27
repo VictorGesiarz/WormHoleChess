@@ -36,7 +36,7 @@ class MonteCarlo(Agent):
     def choose_move(self):
         # Causes the AI to calculate the best move from the
         # current game state and return it.
-        print("\n \n - - - - - - - - - - - Choosing move (MCTS) - - - - - - - - - - - - - - ")
+        # print("\n \n - - - - - - - - - - - Choosing move (MCTS) - - - - - - - - - - - - - - ")
         
         self.max_depth = 0
         player = self.game.get_turn(auto_play_bots=False)
@@ -79,24 +79,24 @@ class MonteCarlo(Agent):
         )
 
         # Display the stats for each possible play.
-        for x in sorted(  # x = (percent, wins, plays, move)
-            ((100 * self.wins.get((player, S), 0) /
-            self.plays.get((player, S), 1),
-            self.wins.get((player, S), 0),
-            self.plays.get((player, S), 0), move)
-            for move, S in moves_states),
-            key=lambda x: x[0],  # sort only by percent
-            reverse=True
-        ):
-            print("{3}: {0:.2f}% ({1} / {2})".format(*x))
+        # for x in sorted(  # x = (percent, wins, plays, move)
+        #     ((100 * self.wins.get((player, S), 0) /
+        #     self.plays.get((player, S), 1),
+        #     self.wins.get((player, S), 0),
+        #     self.plays.get((player, S), 0), move)
+        #     for move, S in moves_states),
+        #     key=lambda x: x[0],  # sort only by percent
+        #     reverse=True
+        # ):
+        #     print("{3}: {0:.2f}% ({1} / {2})".format(*x))
 
         # print("Maximum depth searched:", self.max_depth)
 
         # print("Chosen move:", move)
         
         # print(f"Tree size: {asizeof.asizeof(self.plays)} (plays) + {asizeof.asizeof(self.wins)} (wins)")
-        print(f"Average time per simulation: {simulation_time / games:.6f}")
-        print(f"Total time spent in simulations: {simulation_time:.6f}")
+        # print(f"Average time per simulation: {simulation_time / games:.6f}")
+        # print(f"Total time spent in simulations: {simulation_time:.6f}")
         # print(f" - Average time per move calculation: {self.move_calc_time / games:.6f}")
         # print(f" - Total time spent calculating move: {self.move_calc_time:.6f}")
         # print(f" - Average time per skiping player: {self.invalid_player_time / games:.6f}")
